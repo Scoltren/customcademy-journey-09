@@ -7,32 +7,23 @@
   :root {
     --background: 222 47% 11%;
     --foreground: 210 40% 98%;
-
     --card: 222 47% 11%;
     --card-foreground: 210 40% 98%;
-
     --popover: 222 47% 11%;
     --popover-foreground: 210 40% 98%;
-
     --primary: 217 91% 60%;
     --primary-foreground: 210 40% 98%;
-
     --secondary: 217 33% 17%;
     --secondary-foreground: 210 40% 98%;
-
     --muted: 217 33% 17%;
     --muted-foreground: 215 20% 65%;
-
     --accent: 217 33% 17%;
     --accent-foreground: 210 40% 98%;
-
     --destructive: 0 63% 31%;
     --destructive-foreground: 210 40% 98%;
-
     --border: 217 33% 17%;
     --input: 217 33% 17%;
     --ring: 224 76% 48%;
-
     --radius: 0.75rem;
   }
 }
@@ -44,10 +35,8 @@
 
   body {
     @apply bg-midnight text-foreground antialiased overflow-x-hidden;
-    font-feature-settings: "ss01", "ss02", "cv01", "cv02", "cv03";
   }
 
-  /* Smooth scrolling */
   html {
     @apply scroll-smooth;
   }
@@ -59,19 +48,15 @@
   }
   
   .nav-link {
-    @apply relative px-3 py-2 text-slate-300 hover:text-white transition-colors duration-300 ease-in-out after:content-[''] after:absolute after:w-full after:scale-x-0 after:h-0.5 after:bottom-0 after:left-0 after:bg-blue-light after:origin-bottom-right after:transition-transform after:duration-300 hover:after:scale-x-100 hover:after:origin-bottom-left;
+    @apply relative px-3 py-2 text-slate-300 hover:text-white transition-colors duration-300;
   }
   
   .button-primary {
-    @apply px-6 py-3 bg-blue hover:bg-blue-dark text-white font-medium rounded-lg transition-all duration-300 ease-in-out transform hover:-translate-y-1 hover:shadow-soft;
+    @apply px-6 py-3 bg-blue hover:bg-blue-dark text-white font-medium rounded-lg transition-all duration-300;
   }
   
   .button-secondary {
-    @apply px-6 py-3 bg-navy hover:bg-slate-700 text-white font-medium rounded-lg transition-all duration-300 ease-in-out transform hover:-translate-y-1 hover:shadow-soft;
-  }
-  
-  .card-hover {
-    @apply transition-all duration-300 ease-in-out transform hover:-translate-y-2 hover:shadow-soft;
+    @apply px-6 py-3 bg-navy hover:bg-slate-700 text-white font-medium rounded-lg transition-all duration-300;
   }
   
   .section-padding {
@@ -101,7 +86,7 @@
 }
 
 .progress-bar-fill {
-  @apply h-full bg-gradient-to-r from-blue to-sky transition-all duration-500 ease-out;
+  @apply h-full bg-gradient-to-r from-blue to-sky;
 }
 
 /* Custom Scrollbar */

@@ -5,19 +5,13 @@ import { ArrowRight, BookOpen, Users, Award } from 'lucide-react';
 
 const Hero = () => {
   return (
-    <section className="relative min-h-screen flex items-center pt-16 overflow-hidden">
+    <section className="relative min-h-screen flex items-center pt-16">
       {/* Background gradient */}
       <div className="absolute inset-0 bg-gradient-to-b from-midnight via-midnight to-navy z-0"></div>
       
-      {/* Animated background elements */}
-      <div className="absolute inset-0 z-0">
-        <div className="absolute top-1/4 right-1/4 w-64 h-64 rounded-full bg-blue/5 blur-3xl animate-float"></div>
-        <div className="absolute bottom-1/3 left-1/3 w-80 h-80 rounded-full bg-sky/5 blur-3xl animate-float" style={{ animationDelay: '1s' }}></div>
-      </div>
-      
       <div className="container mx-auto px-6 relative z-10">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
-          <div className="animate-fade-in-right [animation-delay:0.2s] opacity-0">
+          <div>
             <span className="inline-block py-1 px-3 rounded-full bg-blue/10 text-blue-light border border-blue/20 text-sm font-medium mb-6">
               Transform Your Learning Journey
             </span>
@@ -74,8 +68,8 @@ const Hero = () => {
           </div>
           
           {/* Hero image */}
-          <div className="relative hidden lg:block animate-fade-in-left [animation-delay:0.4s] opacity-0">
-            <div className="glass-card p-6 relative z-10 animate-float">
+          <div className="relative hidden lg:block">
+            <div className="glass-card p-6 relative z-10">
               <img 
                 src="https://images.unsplash.com/photo-1516321318423-f06f85e504b3?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2070&q=80" 
                 alt="Learning platform" 
@@ -83,14 +77,14 @@ const Hero = () => {
               />
               
               {/* Floating elements */}
-              <div className="absolute -top-8 -left-8 glass-card px-4 py-3 animate-float" style={{ animationDelay: '1s' }}>
+              <div className="absolute -top-8 -left-8 glass-card px-4 py-3">
                 <div className="flex items-center gap-3">
                   <div className="w-10 h-10 rounded-full bg-blue-dark flex items-center justify-center text-white text-sm font-bold">85%</div>
                   <p className="text-sm text-white">Course Completion</p>
                 </div>
               </div>
               
-              <div className="absolute -bottom-8 -right-8 glass-card px-4 py-3 animate-float" style={{ animationDelay: '1.5s' }}>
+              <div className="absolute -bottom-8 -right-8 glass-card px-4 py-3">
                 <div className="flex items-center gap-3">
                   <div className="w-10 h-10 rounded-full bg-blue-dark flex items-center justify-center text-white text-sm font-bold">4.9</div>
                   <div>
@@ -104,10 +98,6 @@ const Hero = () => {
                 </div>
               </div>
             </div>
-            
-            {/* Background design elements */}
-            <div className="absolute -z-10 top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-[120%] h-[120%] rounded-full border border-slate-700 opacity-20"></div>
-            <div className="absolute -z-10 top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-[140%] h-[140%] rounded-full border border-slate-700 opacity-10"></div>
           </div>
         </div>
       </div>

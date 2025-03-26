@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { Search, User, Book, Menu, X } from 'lucide-react';
+import { Search, User, Menu, X } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 const Navbar = () => {
@@ -10,23 +10,17 @@ const Navbar = () => {
 
   useEffect(() => {
     const handleScroll = () => {
-      if (window.scrollY > 10) {
-        setScrolled(true);
-      } else {
-        setScrolled(false);
-      }
+      setScrolled(window.scrollY > 10);
     };
 
     window.addEventListener('scroll', handleScroll);
-    return () => {
-      window.removeEventListener('scroll', handleScroll);
-    };
+    return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
   return (
     <header 
       className={cn(
-        'fixed top-0 left-0 right-0 z-50 transition-all duration-300 ease-in-out px-6 lg:px-12',
+        'fixed top-0 left-0 right-0 z-50 transition-all duration-300 px-6 lg:px-12',
         scrolled ? 'py-3 bg-midnight/90 backdrop-blur-md shadow-md' : 'py-5 bg-transparent'
       )}
     >
@@ -73,7 +67,7 @@ const Navbar = () => {
 
       {/* Mobile Menu */}
       <div className={cn(
-        "fixed inset-0 bg-midnight/95 backdrop-blur-lg z-40 transition-all duration-300 ease-in-out flex flex-col pt-20 px-6 md:hidden",
+        "fixed inset-0 bg-midnight/95 backdrop-blur-lg z-40 transition-all duration-300 flex flex-col pt-20 px-6 md:hidden",
         mobileMenuOpen ? "opacity-100 pointer-events-auto" : "opacity-0 pointer-events-none"
       )}>
         <div className="flex flex-col gap-6 items-center">

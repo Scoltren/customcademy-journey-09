@@ -56,7 +56,7 @@ const Footer = () => {
             </div>
           </div>
           
-          {/* Learning - with specified items removed */}
+          {/* Learning */}
           <div>
             <h3 className="font-bold text-lg mb-6">Learning</h3>
             <ul className="space-y-3">
@@ -72,7 +72,7 @@ const Footer = () => {
             </ul>
           </div>
           
-          {/* Contact - without Newsletter subscription */}
+          {/* Contact Info */}
           <div>
             <h3 className="font-bold text-lg mb-6">Contact Info</h3>
             <ul className="space-y-4">
