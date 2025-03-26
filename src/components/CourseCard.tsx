@@ -38,10 +38,11 @@ const CourseCard: React.FC<{ course: CourseProps; className?: string }> = ({
     featured
   } = course;
 
+  // Enhanced level colors with higher contrast
   const levelColor = {
-    Beginner: 'bg-green-500/10 text-green-500 border-green-500/20',
-    Intermediate: 'bg-yellow-500/10 text-yellow-500 border-yellow-500/20',
-    Advanced: 'bg-red-500/10 text-red-500 border-red-500/20'
+    Beginner: 'bg-green-500/30 text-green-400 border-green-500/40 font-semibold',
+    Intermediate: 'bg-yellow-500/30 text-yellow-400 border-yellow-500/40 font-semibold',
+    Advanced: 'bg-red-500/30 text-red-400 border-red-500/40 font-semibold'
   };
 
   return (
@@ -65,11 +66,11 @@ const CourseCard: React.FC<{ course: CourseProps; className?: string }> = ({
           />
         </div>
         <div className="absolute top-4 left-4 flex flex-col gap-2">
-          <span className="py-1 px-3 rounded-full bg-blue/10 text-blue-light border border-blue/20 text-xs font-medium">
+          <span className="py-1.5 px-4 rounded-full bg-blue/30 text-blue-light border border-blue/40 text-xs font-semibold shadow-sm">
             {category}
           </span>
           <span className={cn(
-            "py-1 px-3 rounded-full text-xs font-medium border",
+            "py-1.5 px-4 rounded-full text-xs shadow-sm border",
             levelColor[level]
           )}>
             {level}

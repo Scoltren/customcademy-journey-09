@@ -43,8 +43,6 @@ const Navbar = () => {
         <nav className="hidden md:flex items-center gap-8">
           <Link to="/" className="nav-link">Home</Link>
           <Link to="/courses" className="nav-link">Courses</Link>
-          <Link to="/about" className="nav-link">About</Link>
-          <Link to="/contact" className="nav-link">Contact</Link>
         </nav>
 
         {/* Search and User Actions */}
@@ -81,8 +79,6 @@ const Navbar = () => {
         <div className="flex flex-col gap-6 items-center">
           <Link to="/" className="text-xl text-white hover:text-blue" onClick={() => setMobileMenuOpen(false)}>Home</Link>
           <Link to="/courses" className="text-xl text-white hover:text-blue" onClick={() => setMobileMenuOpen(false)}>Courses</Link>
-          <Link to="/about" className="text-xl text-white hover:text-blue" onClick={() => setMobileMenuOpen(false)}>About</Link>
-          <Link to="/contact" className="text-xl text-white hover:text-blue" onClick={() => setMobileMenuOpen(false)}>Contact</Link>
         </div>
         
         <div className="mt-10 flex flex-col gap-4 items-center">
