@@ -9,7 +9,7 @@ const Footer = () => {
   return (
     <footer className="bg-slate-900 text-white pt-16 pb-8">
       <div className="container mx-auto px-6">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 mb-12">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 mb-12">
           {/* Company Info */}
           <div>
             <Link to="/" className="flex items-center gap-2 mb-6">
@@ -56,32 +56,7 @@ const Footer = () => {
             </div>
           </div>
           
-          {/* Quick Links */}
-          <div>
-            <h3 className="font-bold text-lg mb-6">Quick Links</h3>
-            <ul className="space-y-3">
-              <li>
-                <Link to="/about" className="text-slate-400 hover:text-blue-light transition-colors duration-300">About Us</Link>
-              </li>
-              <li>
-                <Link to="/courses" className="text-slate-400 hover:text-blue-light transition-colors duration-300">Browse Courses</Link>
-              </li>
-              <li>
-                <Link to="/teachers" className="text-slate-400 hover:text-blue-light transition-colors duration-300">Our Teachers</Link>
-              </li>
-              <li>
-                <Link to="/pricing" className="text-slate-400 hover:text-blue-light transition-colors duration-300">Pricing Plans</Link>
-              </li>
-              <li>
-                <Link to="/blog" className="text-slate-400 hover:text-blue-light transition-colors duration-300">Blog & News</Link>
-              </li>
-              <li>
-                <Link to="/contact" className="text-slate-400 hover:text-blue-light transition-colors duration-300">Contact Us</Link>
-              </li>
-            </ul>
-          </div>
-          
-          {/* Learning */}
+          {/* Learning - with specified items removed */}
           <div>
             <h3 className="font-bold text-lg mb-6">Learning</h3>
             <ul className="space-y-3">
@@ -92,21 +67,12 @@ const Footer = () => {
                 <Link to="/account" className="text-slate-400 hover:text-blue-light transition-colors duration-300">Account Settings</Link>
               </li>
               <li>
-                <Link to="/cart" className="text-slate-400 hover:text-blue-light transition-colors duration-300">My Cart</Link>
-              </li>
-              <li>
-                <Link to="/wishlist" className="text-slate-400 hover:text-blue-light transition-colors duration-300">Wishlist</Link>
-              </li>
-              <li>
-                <Link to="/certificate" className="text-slate-400 hover:text-blue-light transition-colors duration-300">Certificate</Link>
-              </li>
-              <li>
                 <Link to="/teach" className="text-slate-400 hover:text-blue-light transition-colors duration-300">Become a Teacher</Link>
               </li>
             </ul>
           </div>
           
-          {/* Contact */}
+          {/* Contact - without Newsletter subscription */}
           <div>
             <h3 className="font-bold text-lg mb-6">Contact Info</h3>
             <ul className="space-y-4">
@@ -127,20 +93,6 @@ const Footer = () => {
                 </a>
               </li>
             </ul>
-            
-            <div className="mt-6">
-              <h4 className="font-medium mb-3">Subscribe to Newsletter</h4>
-              <div className="flex">
-                <input 
-                  type="email" 
-                  placeholder="Your email" 
-                  className="bg-slate-800 border border-slate-700 rounded-l-lg px-4 py-2 text-white w-full focus:outline-none focus:border-blue"
-                />
-                <button className="bg-blue hover:bg-blue-dark text-white px-4 py-2 rounded-r-lg transition-colors duration-300">
-                  Subscribe
-                </button>
-              </div>
-            </div>
           </div>
         </div>
         
