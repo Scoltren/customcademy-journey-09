@@ -6,6 +6,7 @@ export interface Chapter {
   title?: string;
   course_id?: number;
   quiz_id?: number | null;
+  progress_when_finished?: number | null;
 }
 
 export interface Course {
