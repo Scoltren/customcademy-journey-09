@@ -1,106 +1,109 @@
 
-import React, { createContext, useContext, useState, useEffect } from 'react';
-import { supabase } from '@/integrations/supabase/client';
-import { toast } from 'sonner';
+import React, { createContext, useContext, useState, useEffect, ReactNode } from "react";
+import { supabase } from "../integrations/supabase/client";
+import { User } from "@supabase/supabase-js";
 
-type AuthContextType = {
-  user: any | null;
+interface AuthContextType {
+  user: User | null;
   loading: boolean;
-  isEnrolled: (courseId: number | string) => Promise<boolean>;
   login: (email: string, password: string) => Promise<void>;
+  signup: (email: string, password: string, username: string) => Promise<void>;
   logout: () => Promise<void>;
-  getSession: () => Promise<any>;
-};
+}
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
-  const [user, setUser] = useState<any | null>(null);
+export function AuthProvider({ children }: { children: ReactNode }) {
+  const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Set up auth state listener
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (event, session) => {
-        setUser(session?.user ?? null);
+    // Check for active session on load
+    const checkSession = async () => {
+      try {
+        const { data } = await supabase.auth.getSession();
+        setUser(data.session?.user || null);
+      } catch (error) {
+        console.error("Error checking session:", error);
+        setUser(null);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    checkSession();
+
+    // Listen for auth changes
+    const { data: authListener } = supabase.auth.onAuthStateChange(
+      async (event, session) => {
+        setUser(session?.user || null);
+        setLoading(false);
       }
     );
 
-    // Check for existing session
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setUser(session?.user ?? null);
-      setLoading(false);
-    });
-
-    return () => subscription.unsubscribe();
+    return () => {
+      authListener.subscription.unsubscribe();
+    };
   }, []);
 
-  const isEnrolled = async (courseId: number | string) => {
-    if (!user) return false;
+  const login = async (email: string, password: string) => {
+    const { error } = await supabase.auth.signInWithPassword({
+      email,
+      password,
+    });
 
-    try {
-      const { data, error } = await supabase
-        .from('subscribed_courses')
-        .select('*')
-        .eq('course_id', typeof courseId === 'string' ? parseInt(courseId) : courseId)
-        .eq('user_id', user.id)
-        .single();
-
-      if (error) {
-        console.error('Error checking enrollment:', error);
-        return false;
-      }
-
-      return !!data;
-    } catch (error) {
-      console.error('Error checking enrollment:', error);
-      return false;
-    }
+    if (error) throw error;
   };
 
-  const login = async (email: string, password: string) => {
-    try {
-      const { data, error } = await supabase.auth.signInWithPassword({
-        email,
-        password
-      });
+  const signup = async (email: string, password: string, username: string) => {
+    // Create the user in Supabase Auth
+    const { error, data } = await supabase.auth.signUp({
+      email,
+      password,
+      options: {
+        data: {
+          username: username,
+        },
+      },
+    });
 
-      if (error) throw error;
-      toast.success('Login successful!');
-    } catch (error: any) {
-      toast.error(error.message || 'Failed to login');
-      throw error;
+    if (error) throw error;
+
+    // If we successfully created the user, update the username in the profiles table
+    if (data.user) {
+      const { error: profileError } = await supabase
+        .from('profiles')
+        .upsert({
+          id: data.user.id,
+          username: username,
+          email: email,
+          updated_at: new Date().toISOString(),
+        });
+
+      if (profileError) throw profileError;
     }
   };
 
   const logout = async () => {
-    try {
-      const { error } = await supabase.auth.signOut();
-      if (error) throw error;
-      toast.success('Logged out successfully');
-    } catch (error: any) {
-      toast.error(error.message || 'Failed to logout');
-      throw error;
-    }
-  };
-
-  const getSession = async () => {
-    const { data, error } = await supabase.auth.getSession();
+    const { error } = await supabase.auth.signOut();
     if (error) throw error;
-    return data.session;
   };
 
-  return (
-    <AuthContext.Provider value={{ user, loading, isEnrolled, login, logout, getSession }}>
-      {children}
-    </AuthContext.Provider>
-  );
-};
+  const value = {
+    user,
+    loading,
+    login,
+    signup,
+    logout,
+  };
 
-export const useAuth = () => {
+  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
+}
+
+export function useAuth() {
   const context = useContext(AuthContext);
   if (context === undefined) {
-    throw new Error('useAuth must be used within an AuthProvider');
+    throw new Error("useAuth must be used within an AuthProvider");
   }
   return context;
-};
+}

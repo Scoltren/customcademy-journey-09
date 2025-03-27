@@ -1,142 +1,182 @@
 
-import React, { useState, useEffect } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
-import { Search, User, Menu, X, LogOut } from 'lucide-react';
-import { cn } from '@/lib/utils';
-import { useAuth } from '@/contexts/AuthContext';
+import { useState, useEffect } from "react";
+import { Link, useNavigate } from "react-router-dom";
+import { Button } from "@/components/ui/button";
+import { useAuth } from "../contexts/AuthContext";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { useMobile } from "../hooks/use-mobile";
+import { Menu, X } from "lucide-react";
 
 const Navbar = () => {
   const [scrolled, setScrolled] = useState(false);
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [menuOpen, setMenuOpen] = useState(false);
   const { user, logout } = useAuth();
   const navigate = useNavigate();
+  const isMobile = useMobile();
 
   useEffect(() => {
     const handleScroll = () => {
-      setScrolled(window.scrollY > 10);
+      const isScrolled = window.scrollY > 10;
+      if (isScrolled !== scrolled) {
+        setScrolled(isScrolled);
+      }
     };
 
-    window.addEventListener('scroll', handleScroll);
-    return () => window.removeEventListener('scroll', handleScroll);
-  }, []);
+    window.addEventListener("scroll", handleScroll);
+    return () => {
+      window.removeEventListener("scroll", handleScroll);
+    };
+  }, [scrolled]);
 
   const handleLogout = async () => {
     try {
       await logout();
-      navigate('/');
+      navigate("/");
     } catch (error) {
-      console.error('Logout error:', error);
+      console.error("Logout error:", error);
     }
   };
 
+  const handleMenuToggle = () => {
+    setMenuOpen(!menuOpen);
+  };
+
+  const navbarClasses = `fixed w-full z-50 transition-all duration-300 ${
+    scrolled ? "bg-white/80 dark:bg-black/80 backdrop-blur-md shadow-sm" : "bg-transparent"
+  }`;
+
   return (
-    <header 
-      className={cn(
-        'fixed top-0 left-0 right-0 z-50 transition-all duration-300 px-6 lg:px-12',
-        scrolled ? 'py-3 bg-midnight/90 backdrop-blur-md shadow-md' : 'py-5 bg-transparent'
-      )}
-    >
-      <div className="max-w-7xl mx-auto flex items-center justify-between">
-        {/* Logo */}
-        <Link to="/" className="flex items-center gap-2">
-          <img 
-            src="/lovable-uploads/e0870d71-c1c8-4790-83ba-ba11a0892a0a.png" 
-            alt="CustomCademy Logo" 
-            className="h-10 w-auto"
-          />
-        </Link>
-
-        {/* Desktop Navigation */}
-        <nav className="hidden md:flex items-center gap-8">
-          <Link to="/" className="nav-link">Home</Link>
-          <Link to="/courses" className="nav-link">Courses</Link>
-        </nav>
-
-        {/* Search and User Actions */}
-        <div className="hidden md:flex items-center gap-4">
-          <div className="relative">
-            <input 
-              type="text" 
-              placeholder="Search courses..." 
-              className="py-2 pl-10 pr-4 rounded-lg bg-navy border border-slate-700 text-white placeholder:text-slate-400 focus:outline-none focus:border-blue focus:ring-1 focus:ring-blue transition-all duration-300 w-48 lg:w-64"
-            />
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400" size={18} />
+    <nav className={navbarClasses}>
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="flex justify-between h-16">
+          <div className="flex items-center">
+            <Link
+              to="/"
+              className="text-xl font-semibold bg-clip-text text-transparent bg-gradient-to-r from-black to-black/70 dark:from-white dark:to-white/70"
+            >
+              CustomCademy
+            </Link>
           </div>
-          
-          {user ? (
-            <div className="flex items-center gap-2">
-              <Link to="/dashboard" className="button-secondary py-2">Dashboard</Link>
-              <button 
-                onClick={handleLogout}
-                className="text-slate-300 hover:text-white p-2 rounded-full bg-navy hover:bg-slate-700 transition-all duration-300"
-                title="Log out"
+
+          {isMobile ? (
+            <div className="flex items-center">
+              <button
+                onClick={handleMenuToggle}
+                className="text-gray-500 dark:text-gray-300 focus:outline-none"
               >
-                <LogOut size={20} />
+                {menuOpen ? <X size={24} /> : <Menu size={24} />}
               </button>
             </div>
           ) : (
-            <>
-              <Link to="/login" className="button-secondary py-2">Login</Link>
-              <Link to="/dashboard" className="text-slate-300 hover:text-white p-2 rounded-full bg-navy hover:bg-slate-700 transition-all duration-300">
-                <User size={20} />
+            <div className="flex items-center space-x-4">
+              <Link
+                to="/courses"
+                className="text-gray-600 dark:text-gray-300 hover:text-black dark:hover:text-white transition-colors"
+              >
+                Courses
               </Link>
-            </>
+              {user ? (
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Avatar className="h-8 w-8 cursor-pointer">
+                      <AvatarFallback className="bg-primary/10 text-primary">
+                        {user.email?.charAt(0).toUpperCase()}
+                      </AvatarFallback>
+                    </Avatar>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end" className="w-56">
+                    <DropdownMenuLabel>My Account</DropdownMenuLabel>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem onClick={() => navigate("/dashboard")}>
+                      Dashboard
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={handleLogout}>
+                      Logout
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              ) : (
+                <div className="flex space-x-2">
+                  <Button
+                    variant="outline"
+                    className="border-gray-200 hover:bg-gray-100 dark:border-gray-800 dark:hover:bg-gray-800"
+                    onClick={() => navigate("/login")}
+                  >
+                    Sign In
+                  </Button>
+                  <Button
+                    className="bg-black text-white hover:bg-black/90 dark:bg-white dark:text-black dark:hover:bg-white/90"
+                    onClick={() => navigate("/signup")}
+                  >
+                    Sign Up
+                  </Button>
+                </div>
+              )}
+            </div>
           )}
         </div>
-
-        {/* Mobile Menu Button */}
-        <button 
-          className="md:hidden text-white focus:outline-none"
-          onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-        >
-          {mobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
-        </button>
       </div>
 
-      {/* Mobile Menu */}
-      <div className={cn(
-        "fixed inset-0 bg-midnight/95 backdrop-blur-lg z-40 transition-all duration-300 flex flex-col pt-20 px-6 md:hidden",
-        mobileMenuOpen ? "opacity-100 pointer-events-auto" : "opacity-0 pointer-events-none"
-      )}>
-        <div className="flex flex-col gap-6 items-center">
-          <Link to="/" className="text-xl text-white hover:text-blue" onClick={() => setMobileMenuOpen(false)}>Home</Link>
-          <Link to="/courses" className="text-xl text-white hover:text-blue" onClick={() => setMobileMenuOpen(false)}>Courses</Link>
-        </div>
-        
-        <div className="mt-10 flex flex-col gap-4 items-center">
-          <div className="relative w-full max-w-sm">
-            <input 
-              type="text" 
-              placeholder="Search courses..." 
-              className="w-full py-3 pl-10 pr-4 rounded-lg bg-navy border border-slate-700 text-white placeholder:text-slate-400 focus:outline-none focus:border-blue focus:ring-1 focus:ring-blue"
-            />
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400" size={18} />
-          </div>
-          
-          <div className="flex gap-4 mt-4">
+      {/* Mobile menu */}
+      {isMobile && menuOpen && (
+        <div className="md:hidden bg-white dark:bg-black shadow-lg">
+          <div className="px-2 pt-2 pb-3 space-y-1 sm:px-3">
+            <Link
+              to="/courses"
+              className="block px-3 py-2 text-base font-medium text-gray-600 dark:text-gray-300 hover:text-black dark:hover:text-white"
+              onClick={() => setMenuOpen(false)}
+            >
+              Courses
+            </Link>
             {user ? (
               <>
-                <Link to="/dashboard" className="button-secondary py-2 flex-1 text-center" onClick={() => setMobileMenuOpen(false)}>Dashboard</Link>
-                <button 
+                <Link
+                  to="/dashboard"
+                  className="block px-3 py-2 text-base font-medium text-gray-600 dark:text-gray-300 hover:text-black dark:hover:text-white"
+                  onClick={() => setMenuOpen(false)}
+                >
+                  Dashboard
+                </Link>
+                <button
                   onClick={() => {
                     handleLogout();
-                    setMobileMenuOpen(false);
-                  }} 
-                  className="button-primary py-2 flex-1 text-center"
+                    setMenuOpen(false);
+                  }}
+                  className="block w-full text-left px-3 py-2 text-base font-medium text-gray-600 dark:text-gray-300 hover:text-black dark:hover:text-white"
                 >
-                  Log Out
+                  Logout
                 </button>
               </>
             ) : (
               <>
-                <Link to="/login" className="button-secondary py-2 flex-1 text-center" onClick={() => setMobileMenuOpen(false)}>Login</Link>
-                <Link to="/signup" className="button-primary py-2 flex-1 text-center" onClick={() => setMobileMenuOpen(false)}>Sign Up</Link>
+                <Link
+                  to="/login"
+                  className="block px-3 py-2 text-base font-medium text-gray-600 dark:text-gray-300 hover:text-black dark:hover:text-white"
+                  onClick={() => setMenuOpen(false)}
+                >
+                  Sign In
+                </Link>
+                <Link
+                  to="/signup"
+                  className="block px-3 py-2 text-base font-medium text-gray-600 dark:text-gray-300 hover:text-black dark:hover:text-white"
+                  onClick={() => setMenuOpen(false)}
+                >
+                  Sign Up
+                </Link>
               </>
             )}
           </div>
         </div>
-      </div>
-    </header>
+      )}
+    </nav>
   );
 };
 

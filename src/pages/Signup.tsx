@@ -8,25 +8,34 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { toast } from "sonner";
 
-const Login = () => {
+const Signup = () => {
   const [email, setEmail] = useState("");
+  const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
-  const { login } = useAuth();
+  const { signup } = useAuth();
   const navigate = useNavigate();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    if (password !== confirmPassword) {
+      toast.error("Passwords don't match");
+      return;
+    }
+    
     try {
       setIsLoading(true);
-      await login(email, password);
+      await signup(email, password, username);
+      toast.success("Account created successfully!");
       navigate("/");
     } catch (error) {
-      console.error("Login error:", error);
+      console.error("Signup error:", error);
       if (error instanceof Error) {
-        toast.error(error.message || "Failed to login");
+        toast.error(error.message || "Failed to create account");
       } else {
-        toast.error("Failed to login");
+        toast.error("Failed to create account");
       }
     } finally {
       setIsLoading(false);
@@ -38,9 +47,9 @@ const Login = () => {
       <div className="w-full max-w-md">
         <Card className="backdrop-blur-sm bg-white/90 dark:bg-black/80 border-none shadow-xl transition-all duration-300">
           <CardHeader className="space-y-1 text-center">
-            <CardTitle className="text-3xl font-bold tracking-tight">Welcome back</CardTitle>
+            <CardTitle className="text-3xl font-bold tracking-tight">Create an account</CardTitle>
             <CardDescription className="text-muted-foreground">
-              Enter your credentials to sign in to your account
+              Enter your information to get started
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -60,20 +69,43 @@ const Login = () => {
                 />
               </div>
               <div className="space-y-2">
-                <div className="flex items-center justify-between">
-                  <Label htmlFor="password" className="text-sm font-medium">
-                    Password
-                  </Label>
-                  <Button variant="link" className="p-0 h-auto text-xs">
-                    Forgot password?
-                  </Button>
-                </div>
+                <Label htmlFor="username" className="text-sm font-medium">
+                  Username
+                </Label>
+                <Input
+                  id="username"
+                  type="text"
+                  value={username}
+                  onChange={(e) => setUsername(e.target.value)}
+                  placeholder="Your display name"
+                  required
+                  className="h-11 bg-background/50"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="password" className="text-sm font-medium">
+                  Password
+                </Label>
                 <Input
                   id="password"
                   type="password"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  placeholder="Enter your password"
+                  placeholder="Create a password"
+                  required
+                  className="h-11 bg-background/50"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="confirmPassword" className="text-sm font-medium">
+                  Confirm Password
+                </Label>
+                <Input
+                  id="confirmPassword"
+                  type="password"
+                  value={confirmPassword}
+                  onChange={(e) => setConfirmPassword(e.target.value)}
+                  placeholder="Confirm your password"
                   required
                   className="h-11 bg-background/50"
                 />
@@ -83,19 +115,19 @@ const Login = () => {
                 className="w-full h-11 bg-black text-white dark:bg-white dark:text-black hover:bg-black/90 dark:hover:bg-white/90 transition-all duration-300"
                 disabled={isLoading}
               >
-                {isLoading ? "Signing in..." : "Sign In"}
+                {isLoading ? "Creating Account..." : "Sign Up"}
               </Button>
             </form>
           </CardContent>
           <CardFooter className="flex justify-center text-sm border-t p-6">
             <div className="flex items-center gap-1">
-              Don't have an account?
+              Already have an account?
               <Button
                 variant="link"
                 className="p-0 h-auto font-semibold text-black dark:text-white"
-                onClick={() => navigate("/signup")}
+                onClick={() => navigate("/login")}
               >
-                Sign up
+                Sign in
               </Button>
             </div>
           </CardFooter>
@@ -105,4 +137,4 @@ const Login = () => {
   );
 };
 
-export default Login;
+export default Signup;
