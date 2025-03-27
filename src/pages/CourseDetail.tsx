@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import { useCourseData } from '@/hooks/useCourseData';
@@ -8,16 +8,38 @@ import CourseContent from '@/components/course/CourseContent';
 import ReviewsSection from '@/components/course/ReviewsSection';
 import LoadingState from '@/components/course/LoadingState';
 import NotFoundState from '@/components/course/NotFoundState';
+import { useAuth } from '@/contexts/AuthContext';
+import { supabase } from '@/integrations/supabase/client';
+import { useParams } from 'react-router-dom';
 
 const CourseDetail = () => {
   const { course, chapters, comments, isLoading } = useCourseData();
+  const { user } = useAuth();
+  const { id } = useParams<{ id: string }>();
+  const [courseProgress, setCourseProgress] = useState<number>(0);
   
-  // Log data for debugging
-  React.useEffect(() => {
-    console.log('CourseDetail - course:', course);
-    console.log('CourseDetail - chapters:', chapters);
-    console.log('CourseDetail - comments:', comments);
-  }, [course, chapters, comments]);
+  useEffect(() => {
+    // Fetch course progress if user is logged in
+    const fetchProgress = async () => {
+      if (user && id) {
+        try {
+          const { data, error } = await supabase
+            .from('subscribed_courses')
+            .select('progress')
+            .eq('course_id', parseInt(id))
+            .eq('user_id', user.id)
+            .single();
+          
+          if (error) throw error;
+          setCourseProgress(data?.progress || 0);
+        } catch (error) {
+          console.error('Error fetching course progress:', error);
+        }
+      }
+    };
+    
+    fetchProgress();
+  }, [user, id]);
 
   if (isLoading) {
     return <LoadingState />;
@@ -33,7 +55,7 @@ const CourseDetail = () => {
       
       <main className="pt-24 pb-16">
         {/* Course Header */}
-        <div className="container mx-auto px-6 mb-12">
+        <div className="container mx-auto px-6 mb-12 course-header">
           <CourseHeader course={course} />
         </div>
         
@@ -42,6 +64,7 @@ const CourseDetail = () => {
           chapters={chapters || []} 
           courseId={course.id}
           isLoading={isLoading}
+          progress={courseProgress}
         />
         
         {/* Reviews */}

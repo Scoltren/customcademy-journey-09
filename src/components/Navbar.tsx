@@ -1,12 +1,15 @@
 
 import React, { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
-import { Search, User, Menu, X } from 'lucide-react';
+import { Link, useNavigate } from 'react-router-dom';
+import { Search, User, Menu, X, LogOut } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { useAuth } from '@/contexts/AuthContext';
 
 const Navbar = () => {
   const [scrolled, setScrolled] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const { user, logout } = useAuth();
+  const navigate = useNavigate();
 
   useEffect(() => {
     const handleScroll = () => {
@@ -16,6 +19,15 @@ const Navbar = () => {
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
+
+  const handleLogout = async () => {
+    try {
+      await logout();
+      navigate('/');
+    } catch (error) {
+      console.error('Logout error:', error);
+    }
+  };
 
   return (
     <header 
@@ -51,10 +63,25 @@ const Navbar = () => {
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400" size={18} />
           </div>
           
-          <Link to="/login" className="button-secondary py-2">Login</Link>
-          <Link to="/dashboard" className="text-slate-300 hover:text-white p-2 rounded-full bg-navy hover:bg-slate-700 transition-all duration-300">
-            <User size={20} />
-          </Link>
+          {user ? (
+            <div className="flex items-center gap-2">
+              <Link to="/dashboard" className="button-secondary py-2">Dashboard</Link>
+              <button 
+                onClick={handleLogout}
+                className="text-slate-300 hover:text-white p-2 rounded-full bg-navy hover:bg-slate-700 transition-all duration-300"
+                title="Log out"
+              >
+                <LogOut size={20} />
+              </button>
+            </div>
+          ) : (
+            <>
+              <Link to="/login" className="button-secondary py-2">Login</Link>
+              <Link to="/dashboard" className="text-slate-300 hover:text-white p-2 rounded-full bg-navy hover:bg-slate-700 transition-all duration-300">
+                <User size={20} />
+              </Link>
+            </>
+          )}
         </div>
 
         {/* Mobile Menu Button */}
@@ -87,8 +114,25 @@ const Navbar = () => {
           </div>
           
           <div className="flex gap-4 mt-4">
-            <Link to="/login" className="button-secondary py-2 flex-1 text-center" onClick={() => setMobileMenuOpen(false)}>Login</Link>
-            <Link to="/signup" className="button-primary py-2 flex-1 text-center" onClick={() => setMobileMenuOpen(false)}>Sign Up</Link>
+            {user ? (
+              <>
+                <Link to="/dashboard" className="button-secondary py-2 flex-1 text-center" onClick={() => setMobileMenuOpen(false)}>Dashboard</Link>
+                <button 
+                  onClick={() => {
+                    handleLogout();
+                    setMobileMenuOpen(false);
+                  }} 
+                  className="button-primary py-2 flex-1 text-center"
+                >
+                  Log Out
+                </button>
+              </>
+            ) : (
+              <>
+                <Link to="/login" className="button-secondary py-2 flex-1 text-center" onClick={() => setMobileMenuOpen(false)}>Login</Link>
+                <Link to="/signup" className="button-primary py-2 flex-1 text-center" onClick={() => setMobileMenuOpen(false)}>Sign Up</Link>
+              </>
+            )}
           </div>
         </div>
       </div>

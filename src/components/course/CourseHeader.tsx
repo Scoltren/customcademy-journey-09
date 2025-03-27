@@ -1,25 +1,60 @@
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Star, Users, Clock, BarChart } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
 import { Course } from '@/types/course';
+import { useAuth } from '@/contexts/AuthContext';
+import { supabase } from '@/integrations/supabase/client';
+import { useNavigate } from 'react-router-dom';
 
 interface CourseHeaderProps {
   course: Course;
 }
 
 const CourseHeader: React.FC<CourseHeaderProps> = ({ course }) => {
+  const { user, isEnrolled } = useAuth();
+  const [enrollmentStatus, setEnrollmentStatus] = useState<boolean>(false);
+  const [isEnrolling, setIsEnrolling] = useState<boolean>(false);
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    const checkEnrollment = async () => {
+      if (user && course.id) {
+        const status = await isEnrolled(course.id);
+        setEnrollmentStatus(status);
+      }
+    };
+
+    checkEnrollment();
+  }, [user, course.id, isEnrolled]);
+
   const handleEnroll = async () => {
-    try {
-      // This would typically be implemented with authentication
+    if (!user) {
       toast.info('Please log in to enroll in this course');
-      // Uncomment when authentication is implemented
-      // await userApi.enrollCourse(id);
-      // toast.success('Successfully enrolled in the course');
-    } catch (error) {
+      navigate('/login');
+      return;
+    }
+
+    setIsEnrolling(true);
+    try {
+      const { error } = await supabase
+        .from('subscribed_courses')
+        .insert({
+          course_id: course.id,
+          user_id: user.id,
+          progress: 0
+        });
+
+      if (error) throw error;
+      
+      setEnrollmentStatus(true);
+      toast.success('Successfully enrolled in the course');
+    } catch (error: any) {
       console.error('Error enrolling in course:', error);
       toast.error('Failed to enroll in the course');
+    } finally {
+      setIsEnrolling(false);
     }
   };
 
@@ -70,12 +105,22 @@ const CourseHeader: React.FC<CourseHeaderProps> = ({ course }) => {
             <div className="text-2xl font-bold">
               {course.price ? `$${course.price}` : 'Free'}
             </div>
-            <Button 
-              className="button-primary"
-              onClick={handleEnroll}
-            >
-              Enroll Now
-            </Button>
+            {enrollmentStatus ? (
+              <Button 
+                className="button-secondary"
+                disabled
+              >
+                Enrolled
+              </Button>
+            ) : (
+              <Button 
+                className="button-primary"
+                onClick={handleEnroll}
+                disabled={isEnrolling}
+              >
+                {isEnrolling ? 'Enrolling...' : 'Enroll Now'}
+              </Button>
+            )}
           </div>
         </div>
       </div>

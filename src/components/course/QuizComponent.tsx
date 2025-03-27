@@ -1,328 +1,313 @@
-
 import React, { useState, useEffect } from 'react';
-import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
-import { CheckCircle, XCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Checkbox } from '@/components/ui/checkbox';
-import { Form, FormControl, FormField, FormItem, FormLabel } from '@/components/ui/form';
-import { useForm } from 'react-hook-form';
+import { Skeleton } from '@/components/ui/skeleton';
+import { CheckCircle, XCircle } from 'lucide-react';
 import { toast } from 'sonner';
-import { Progress } from '@/components/ui/progress';
+
+interface QuizComponentProps {
+  quizId: number;
+}
 
 interface Question {
   id: number;
   question_text: string;
-  quiz_id: number | null;
   answers: Answer[];
 }
 
 interface Answer {
   id: number;
   answer_text: string;
-  points: number | null;
+  points: number;
   explanation: string | null;
-  question_id: number | null;
 }
 
-interface QuizComponentProps {
-  quizId: number;
+interface QuizResult {
+  score: number;
+  maxScore: number;
+  passed: boolean;
 }
 
 const QuizComponent: React.FC<QuizComponentProps> = ({ quizId }) => {
-  const [userAnswers, setUserAnswers] = useState<Record<number, number[]>>({});
-  const [submitted, setSubmitted] = useState(false);
-  const [userScore, setUserScore] = useState<number>(0);
-  const [totalPossibleScore, setTotalPossibleScore] = useState<number>(0);
-  const [userPassed, setUserPassed] = useState<boolean | null>(null);
-  
-  const form = useForm();
-  
-  // Fetch quiz questions and answers
-  const { data: questions = [], isLoading, error } = useQuery({
-    queryKey: ['quiz', quizId],
-    queryFn: async () => {
-      console.log('Fetching quiz with ID:', quizId);
-      
-      // First fetch the questions
-      const { data: questionsData, error: questionsError } = await supabase
-        .from('questions')
-        .select('*')
-        .eq('quiz_id', quizId);
-      
-      if (questionsError) {
-        console.error('Error fetching questions:', questionsError);
-        throw questionsError;
-      }
-      
-      console.log('Questions data:', questionsData);
-      
-      if (!questionsData || questionsData.length === 0) {
-        return [];
-      }
-      
-      // Then fetch answers for all questions
-      const questionIds = questionsData.map(q => q.id);
-      
-      const { data: answersData, error: answersError } = await supabase
-        .from('answers')
-        .select('*')
-        .in('question_id', questionIds);
-      
-      if (answersError) {
-        console.error('Error fetching answers:', answersError);
-        throw answersError;
-      }
-      
-      console.log('Answers data:', answersData);
-      
-      // Combine questions with their answers
-      return questionsData.map(question => ({
-        ...question,
-        answers: answersData.filter(answer => answer.question_id === question.id) || []
-      })) as Question[];
-    },
-    enabled: !!quizId,
-  });
-  
-  // Calculate total possible score when questions data is loaded
-  useEffect(() => {
-    if (questions.length > 0) {
-      let total = 0;
-      questions.forEach(question => {
-        const correctAnswers = question.answers.filter(a => a.points && a.points > 0);
-        correctAnswers.forEach(answer => {
-          if (answer.points) {
-            total += answer.points;
-          }
-        });
-      });
-      setTotalPossibleScore(total);
-    }
-  }, [questions]);
-  
-  // Reset state when quiz ID changes
-  useEffect(() => {
-    setUserAnswers({});
-    setSubmitted(false);
-    setUserScore(0);
-    setUserPassed(null);
-    form.reset();
-  }, [quizId, form]);
+  const [questions, setQuestions] = useState<Question[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [selectedAnswers, setSelectedAnswers] = useState<{[key: number]: number[]}>({});
+  const [submittedAnswers, setSubmittedAnswers] = useState<{[key: number]: number[]}>({});
+  const [showResults, setShowResults] = useState(false);
+  const [quizResult, setQuizResult] = useState<QuizResult | null>(null);
 
-  const handleAnswerToggle = (questionId: number, answerId: number) => {
-    setUserAnswers(prev => {
-      const prevAnswers = prev[questionId] || [];
+  useEffect(() => {
+    const fetchQuizData = async () => {
+      try {
+        setIsLoading(true);
+        
+        // First get the questions for this quiz
+        const { data: questionsData, error: questionsError } = await supabase
+          .from('questions')
+          .select('*')
+          .eq('quiz_id', quizId);
+        
+        if (questionsError) throw questionsError;
+        
+        if (!questionsData || questionsData.length === 0) {
+          console.log('No questions found for quiz ID:', quizId);
+          setQuestions([]);
+          setIsLoading(false);
+          return;
+        }
+        
+        // For each question, get its answers
+        const questionsWithAnswers = await Promise.all(
+          questionsData.map(async (question) => {
+            const { data: answersData, error: answersError } = await supabase
+              .from('answers')
+              .select('*')
+              .eq('question_id', question.id);
+            
+            if (answersError) throw answersError;
+            
+            return {
+              ...question,
+              answers: answersData || []
+            };
+          })
+        );
+        
+        console.log('Questions with answers:', questionsWithAnswers);
+        setQuestions(questionsWithAnswers);
+      } catch (error) {
+        console.error('Error fetching quiz data:', error);
+        toast.error('Failed to load quiz');
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    
+    if (quizId) {
+      fetchQuizData();
+    }
+  }, [quizId]);
+
+  const handleAnswerSelect = (questionId: number, answerId: number) => {
+    setSelectedAnswers(prev => {
+      const currentAnswers = prev[questionId] || [];
       
-      // Check if answer is already selected
-      if (prevAnswers.includes(answerId)) {
-        // Remove it
+      // If the answer is already selected, remove it
+      if (currentAnswers.includes(answerId)) {
         return {
           ...prev,
-          [questionId]: prevAnswers.filter(id => id !== answerId)
-        };
-      } else {
-        // Add it
-        return {
-          ...prev,
-          [questionId]: [...prevAnswers, answerId]
+          [questionId]: currentAnswers.filter(id => id !== answerId)
         };
       }
+      
+      // Otherwise add it to the selection
+      return {
+        ...prev,
+        [questionId]: [...currentAnswers, answerId]
+      };
     });
   };
 
-  const handleSubmit = () => {
-    if (Object.keys(userAnswers).length < questions.length) {
-      toast.error("Please answer all questions before submitting");
-      return;
-    }
-    
-    // Calculate score
+  const calculateScore = () => {
     let score = 0;
+    let maxScore = 0;
     
     questions.forEach(question => {
-      const selectedAnswerIds = userAnswers[question.id] || [];
+      const correctAnswers = question.answers.filter(answer => answer.points > 0);
+      const selectedAnswerIds = selectedAnswers[question.id] || [];
       
-      // Get points for each selected answer
-      selectedAnswerIds.forEach(answerId => {
-        const answer = question.answers.find(a => a.id === answerId);
-        if (answer && answer.points) {
-          score += answer.points;
+      // Calculate max possible score
+      correctAnswers.forEach(answer => {
+        maxScore += answer.points;
+      });
+      
+      // Calculate user's score
+      question.answers.forEach(answer => {
+        if (selectedAnswerIds.includes(answer.id)) {
+          score += answer.points > 0 ? answer.points : 0;
         }
       });
     });
     
-    setUserScore(score);
-    setUserPassed(score === totalPossibleScore);
-    setSubmitted(true);
+    return {
+      score,
+      maxScore,
+      passed: score === maxScore
+    };
+  };
+
+  const handleSubmit = () => {
+    const result = calculateScore();
+    setQuizResult(result);
+    setSubmittedAnswers({...selectedAnswers});
+    setShowResults(true);
     
-    if (score === totalPossibleScore) {
-      toast.success("Congratulations! You passed the quiz!");
+    if (result.passed) {
+      toast.success('Congratulations! You passed the quiz!');
     } else {
-      toast.error("You didn't pass the quiz. Try again!");
+      toast.error(`You scored ${result.score}/${result.maxScore}. Try again!`);
     }
   };
 
-  const isAnswerCorrect = (questionId: number, answerId: number) => {
-    if (!submitted) return null;
-    
-    const question = questions.find(q => q.id === questionId);
-    if (!question) return null;
-    
-    const answer = question.answers.find(a => a.id === answerId);
-    return answer?.points && answer.points > 0;
+  const handleRetry = () => {
+    setSelectedAnswers({});
+    setSubmittedAnswers({});
+    setShowResults(false);
+    setQuizResult(null);
+  };
+
+  // Helper function to check if an answer is correct
+  const isCorrectAnswer = (answer: Answer) => {
+    return answer.points > 0;
   };
 
   if (isLoading) {
     return (
-      <div className="p-6 bg-slate-800/30 rounded-lg animate-pulse">
-        <p className="text-center text-slate-400">Loading quiz questions...</p>
+      <div className="bg-navy/50 rounded-lg p-6">
+        <Skeleton className="h-8 w-3/4 mb-6 bg-slate-700/50" />
+        
+        {[1, 2, 3].map((item) => (
+          <div key={item} className="mb-6">
+            <Skeleton className="h-6 w-full mb-4 bg-slate-700/50" />
+            <div className="space-y-3">
+              {[1, 2, 3, 4].map((option) => (
+                <Skeleton key={option} className="h-5 w-full bg-slate-700/50" />
+              ))}
+            </div>
+          </div>
+        ))}
+        
+        <Skeleton className="h-10 w-32 mt-6 bg-slate-700/50" />
       </div>
     );
   }
-
-  if (error) {
-    console.error('Quiz loading error:', error);
+  
+  if (questions.length === 0) {
     return (
-      <div className="p-6 bg-slate-800/30 rounded-lg">
-        <p className="text-center text-red-400">Failed to load quiz questions. Please try again later.</p>
-      </div>
-    );
-  }
-
-  if (!questions || questions.length === 0) {
-    return (
-      <div className="p-6 bg-slate-800/30 rounded-lg">
-        <p className="text-center text-slate-400">No questions available for this quiz.</p>
+      <div className="bg-navy/50 rounded-lg p-6 text-center">
+        <p className="text-slate-400">No questions available for this quiz.</p>
       </div>
     );
   }
 
   return (
-    <div className="bg-slate-800/30 rounded-lg p-6">
-      <h3 className="text-xl font-semibold mb-6">Quiz</h3>
+    <div className="bg-navy/50 rounded-lg p-6">
+      <h3 className="text-xl font-bold mb-6">Quiz Assessment</h3>
       
-      {submitted && (
-        <div className="mb-6 bg-slate-700/30 p-4 rounded-lg">
-          <div className="flex justify-between items-center mb-2">
-            <h4 className="font-medium">Your Score: {userScore}/{totalPossibleScore}</h4>
-            <span className={userPassed ? "text-green-500" : "text-red-500"}>
-              {userPassed ? "Passed" : "Failed"}
-            </span>
-          </div>
-          <Progress value={(userScore / totalPossibleScore) * 100} className="h-2" />
-        </div>
-      )}
-      
-      <div className="space-y-8">
-        {questions.map((question) => (
-          <div key={question.id} className="bg-slate-700/20 p-4 rounded-lg">
-            <h4 className="text-lg font-medium mb-3">{question.question_text}</h4>
-            
-            <Form {...form}>
-              <FormField
-                control={form.control}
-                name={`question-${question.id}`}
-                render={() => (
-                  <FormItem className="space-y-3">
-                    <div className="space-y-2">
-                      {question.answers.map((answer) => {
-                        const isSelected = (userAnswers[question.id] || []).includes(answer.id);
-                        const isCorrect = isAnswerCorrect(question.id, answer.id);
-                        
-                        let className = "flex items-start space-x-2 p-3 rounded-md";
-                        
-                        if (submitted && isSelected) {
-                          className += isCorrect 
-                            ? " bg-green-500/20 border border-green-500/40" 
-                            : " bg-red-500/20 border border-red-500/40";
-                        } else if (isSelected) {
-                          className += " bg-blue-500/20 border border-blue-500/40";
-                        } else {
-                          className += " hover:bg-slate-700/30";
-                        }
-                        
-                        return (
-                          <div key={answer.id} className="relative">
-                            <FormItem className={className}>
-                              <FormControl>
-                                <Checkbox 
-                                  checked={isSelected}
-                                  onCheckedChange={() => !submitted && handleAnswerToggle(question.id, answer.id)}
-                                  disabled={submitted}
-                                />
-                              </FormControl>
-                              <FormLabel className="font-normal cursor-pointer ml-2">
-                                {answer.answer_text}
-                              </FormLabel>
-                              
-                              {submitted && isSelected && (
-                                isCorrect ? (
-                                  <CheckCircle className="absolute right-2 top-3 text-green-500" size={18} />
-                                ) : (
-                                  <XCircle className="absolute right-2 top-3 text-red-500" size={18} />
-                                )
-                              )}
-                            </FormItem>
-                            
-                            {submitted && isSelected && !isCorrect && answer.explanation && (
-                              <div className="mt-2 ml-8 p-3 bg-red-500/10 border border-red-500/20 rounded text-sm text-red-200">
-                                <p>{answer.explanation}</p>
-                              </div>
-                            )}
-                            
-                            {submitted && isSelected && isCorrect && answer.explanation && (
-                              <div className="mt-2 ml-8 p-3 bg-green-500/10 border border-green-500/20 rounded text-sm text-green-200">
-                                <p>{answer.explanation}</p>
-                              </div>
-                            )}
-                            
-                            {/* Show correct answers that weren't selected */}
-                            {submitted && !isSelected && isCorrect && (
-                              <div className="mt-2 ml-8 p-3 bg-yellow-500/10 border border-yellow-500/20 rounded text-sm text-yellow-200">
-                                <p>This was a correct answer you missed.</p>
-                                {answer.explanation && <p className="mt-1">{answer.explanation}</p>}
-                              </div>
-                            )}
-                          </div>
-                        );
-                      })}
+      {questions.map((question, qIndex) => (
+        <div key={question.id} className="mb-8">
+          <h4 className="text-lg font-medium mb-3">
+            {qIndex + 1}. {question.question_text}
+          </h4>
+          
+          <div className="space-y-3">
+            {question.answers.map((answer) => {
+              const isSelected = (selectedAnswers[question.id] || []).includes(answer.id);
+              const wasSubmitted = showResults && (submittedAnswers[question.id] || []).includes(answer.id);
+              const correct = isCorrectAnswer(answer);
+              
+              return (
+                <div 
+                  key={answer.id} 
+                  className={`
+                    p-3 rounded-lg border transition-colors cursor-pointer
+                    ${showResults 
+                      ? wasSubmitted 
+                        ? correct 
+                          ? 'border-green-500 bg-green-500/10' 
+                          : 'border-red-500 bg-red-500/10'
+                        : correct 
+                          ? 'border-green-500 bg-green-500/10' 
+                          : 'border-slate-700 bg-transparent'
+                      : isSelected 
+                        ? 'border-blue-400 bg-blue-400/10' 
+                        : 'border-slate-700 hover:border-blue-400/50'
+                    }
+                  `}
+                  onClick={() => !showResults && handleAnswerSelect(question.id, answer.id)}
+                >
+                  <div className="flex items-start gap-3">
+                    <div className="flex-shrink-0 mt-0.5">
+                      <div 
+                        className={`
+                          w-5 h-5 rounded border flex items-center justify-center
+                          ${showResults 
+                            ? wasSubmitted 
+                              ? correct 
+                                ? 'border-green-500 bg-green-500 text-white' 
+                                : 'border-red-500 bg-red-500 text-white'
+                              : 'border-slate-500' 
+                            : isSelected 
+                              ? 'border-blue-400 bg-blue-400 text-white' 
+                              : 'border-slate-500'
+                          }
+                        `}
+                      >
+                        {showResults ? (
+                          wasSubmitted ? (
+                            correct ? <CheckCircle size={14} /> : <XCircle size={14} />
+                          ) : null
+                        ) : (
+                          isSelected && <div className="w-3 h-3 bg-white rounded-sm"></div>
+                        )}
+                      </div>
                     </div>
-                  </FormItem>
-                )}
-              />
-            </Form>
+                    <div className="flex-1">
+                      <p className={`
+                        ${showResults && correct ? 'font-medium' : ''}
+                      `}>
+                        {answer.answer_text}
+                      </p>
+                      
+                      {showResults && answer.explanation && (
+                        <p className="mt-2 text-sm text-slate-400">
+                          {answer.explanation}
+                        </p>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
           </div>
-        ))}
-      </div>
+        </div>
+      ))}
       
-      {!submitted && (
-        <div className="mt-6 flex justify-end">
+      <div className="mt-6">
+        {showResults ? (
+          <div className="space-y-4">
+            <div className={`
+              p-4 rounded-lg text-center
+              ${quizResult?.passed ? 'bg-green-500/20 border border-green-500' : 'bg-red-500/20 border border-red-500'}
+            `}>
+              <p className="font-bold text-lg">
+                {quizResult?.passed 
+                  ? 'Congratulations! You passed the quiz.' 
+                  : 'You did not pass the quiz.'}
+              </p>
+              <p className="text-slate-300 mt-1">
+                Your score: {quizResult?.score}/{quizResult?.maxScore}
+              </p>
+            </div>
+            
+            <Button 
+              onClick={handleRetry}
+              variant="outline"
+              className="w-full"
+            >
+              Try Again
+            </Button>
+          </div>
+        ) : (
           <Button 
             onClick={handleSubmit}
-            disabled={Object.keys(userAnswers).length < questions.length}
+            className="button-primary"
+            disabled={Object.keys(selectedAnswers).length === 0}
           >
             Submit Answers
           </Button>
-        </div>
-      )}
-      
-      {submitted && (
-        <div className="mt-6 flex justify-end">
-          <Button 
-            onClick={() => {
-              setSubmitted(false);
-              setUserAnswers({});
-              setUserScore(0);
-              setUserPassed(null);
-              form.reset();
-            }}
-            variant="outline"
-          >
-            Retry Quiz
-          </Button>
-        </div>
-      )}
+        )}
+      </div>
     </div>
   );
 };

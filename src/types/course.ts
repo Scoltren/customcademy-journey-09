@@ -35,3 +35,8 @@ export interface Comment {
     username: string;
   };
 }
+
+export interface EnrollmentStatus {
+  enrolled: boolean;
+  progress: number;
+}

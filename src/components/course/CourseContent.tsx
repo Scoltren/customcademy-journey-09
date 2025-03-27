@@ -1,28 +1,46 @@
 
-import React, { useState } from 'react';
-import { BookOpen, Play, FileCheck, CheckCircle } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { BookOpen, Play, FileCheck, CheckCircle, Lock } from 'lucide-react';
 import { Chapter } from '@/types/course';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Button } from '@/components/ui/button';
+import { Progress } from '@/components/ui/progress';
 import QuizComponent from './QuizComponent';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
-import { useParams } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
+import { useAuth } from '@/contexts/AuthContext';
 
 interface CourseContentProps {
   chapters: Chapter[];
   courseId?: number;
   isLoading?: boolean;
+  progress?: number;
 }
 
 const CourseContent: React.FC<CourseContentProps> = ({ 
   chapters, 
   courseId,
-  isLoading = false 
+  isLoading = false,
+  progress = 0
 }) => {
   const [activeQuiz, setActiveQuiz] = useState<number | null>(null);
   const [completedChapters, setCompletedChapters] = useState<number[]>([]);
   const { id } = useParams<{ id: string }>();
+  const { user, isEnrolled } = useAuth();
+  const [userEnrolled, setUserEnrolled] = useState<boolean>(false);
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    const checkEnrollment = async () => {
+      if (user && id) {
+        const enrolled = await isEnrolled(id);
+        setUserEnrolled(enrolled);
+      }
+    };
+
+    checkEnrollment();
+  }, [user, id, isEnrolled]);
   
   // Toggle quiz visibility
   const handleToggleQuiz = (quizId: number | null) => {
@@ -31,7 +49,10 @@ const CourseContent: React.FC<CourseContentProps> = ({
 
   // Mark chapter as completed
   const handleMarkAsDone = async (chapterId: number, progressValue: number | null) => {
-    if (!id || !progressValue) return;
+    if (!id || !progressValue || !user) {
+      toast.error('You must be logged in to track progress');
+      return;
+    }
     
     try {
       // First check if user is already subscribed to this course
@@ -39,7 +60,7 @@ const CourseContent: React.FC<CourseContentProps> = ({
         .from('subscribed_courses')
         .select('*')
         .eq('course_id', parseInt(id))
-        .eq('user_id', 1) // Using a placeholder user ID for now
+        .eq('user_id', user.id)
         .single();
       
       if (checkError && checkError.code !== 'PGRST116') {
@@ -54,7 +75,7 @@ const CourseContent: React.FC<CourseContentProps> = ({
             progress: (existingSubscription.progress || 0) + progressValue 
           })
           .eq('course_id', parseInt(id))
-          .eq('user_id', 1);
+          .eq('user_id', user.id);
         
         if (updateError) throw updateError;
       } else {
@@ -63,7 +84,7 @@ const CourseContent: React.FC<CourseContentProps> = ({
           .from('subscribed_courses')
           .insert({
             course_id: parseInt(id),
-            user_id: 1, // Using a placeholder user ID for now
+            user_id: user.id,
             progress: progressValue
           });
         
@@ -80,8 +101,18 @@ const CourseContent: React.FC<CourseContentProps> = ({
     }
   };
 
-  // For debugging
-  console.log("Chapters with quiz data:", chapters.map(ch => ({ id: ch.id, quiz_id: ch.quiz_id })));
+  const handleLoginRedirect = () => {
+    toast.info('Please log in to access course content');
+    navigate('/login');
+  };
+
+  const handleEnrollRedirect = () => {
+    toast.info('You need to enroll in this course to access its content');
+    const courseSection = document.querySelector('.course-header');
+    if (courseSection) {
+      courseSection.scrollIntoView({ behavior: 'smooth' });
+    }
+  };
 
   if (isLoading) {
     return (
@@ -105,9 +136,50 @@ const CourseContent: React.FC<CourseContentProps> = ({
     );
   }
 
+  if (!user) {
+    return (
+      <section className="container mx-auto px-6 mb-12">
+        <h2 className="heading-md mb-6">Course Content</h2>
+        <div className="glass-card p-8 text-center">
+          <Lock className="mx-auto h-12 w-12 text-slate-400 mb-4" />
+          <h3 className="text-xl font-medium mb-2">Login Required</h3>
+          <p className="text-slate-400 mb-6">You need to be logged in to view course content.</p>
+          <Button onClick={handleLoginRedirect} className="button-primary">
+            Login to Continue
+          </Button>
+        </div>
+      </section>
+    );
+  }
+
+  if (!userEnrolled) {
+    return (
+      <section className="container mx-auto px-6 mb-12">
+        <h2 className="heading-md mb-6">Course Content</h2>
+        <div className="glass-card p-8 text-center">
+          <Lock className="mx-auto h-12 w-12 text-slate-400 mb-4" />
+          <h3 className="text-xl font-medium mb-2">Enrollment Required</h3>
+          <p className="text-slate-400 mb-6">You need to enroll in this course to access its content.</p>
+          <Button onClick={handleEnrollRedirect} className="button-primary">
+            Enroll Now
+          </Button>
+        </div>
+      </section>
+    );
+  }
+
   return (
     <section className="container mx-auto px-6 mb-12">
-      <h2 className="heading-md mb-6">Course Content</h2>
+      <div className="flex justify-between items-center mb-6">
+        <h2 className="heading-md">Course Content</h2>
+        <div className="flex items-center gap-2">
+          <span className="text-sm text-slate-400">Progress:</span>
+          <div className="w-64">
+            <Progress value={progress} className="h-2" />
+          </div>
+          <span className="text-sm font-medium">{Math.round(progress)}%</span>
+        </div>
+      </div>
       
       {Array.isArray(chapters) && chapters.length > 0 ? (
         <div className="glass-card divide-y divide-slate-700/50">
