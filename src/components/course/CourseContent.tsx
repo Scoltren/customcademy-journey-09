@@ -1,10 +1,13 @@
 
 import React, { useState } from 'react';
-import { BookOpen, Play, FileCheck } from 'lucide-react';
+import { BookOpen, Play, FileCheck, CheckCircle } from 'lucide-react';
 import { Chapter } from '@/types/course';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Button } from '@/components/ui/button';
 import QuizComponent from './QuizComponent';
+import { supabase } from '@/integrations/supabase/client';
+import { toast } from 'sonner';
+import { useParams } from 'react-router-dom';
 
 interface CourseContentProps {
   chapters: Chapter[];
@@ -18,10 +21,63 @@ const CourseContent: React.FC<CourseContentProps> = ({
   isLoading = false 
 }) => {
   const [activeQuiz, setActiveQuiz] = useState<number | null>(null);
-
+  const [completedChapters, setCompletedChapters] = useState<number[]>([]);
+  const { id } = useParams<{ id: string }>();
+  
   // Toggle quiz visibility
   const handleToggleQuiz = (quizId: number | null) => {
     setActiveQuiz(activeQuiz === quizId ? null : quizId);
+  };
+
+  // Mark chapter as completed
+  const handleMarkAsDone = async (chapterId: number, progressValue: number | null) => {
+    if (!id || !progressValue) return;
+    
+    try {
+      // First check if user is already subscribed to this course
+      const { data: existingSubscription, error: checkError } = await supabase
+        .from('subscribed_courses')
+        .select('*')
+        .eq('course_id', parseInt(id))
+        .eq('user_id', 1) // Using a placeholder user ID for now
+        .single();
+      
+      if (checkError && checkError.code !== 'PGRST116') {
+        throw checkError;
+      }
+      
+      if (existingSubscription) {
+        // Update existing subscription
+        const { error: updateError } = await supabase
+          .from('subscribed_courses')
+          .update({ 
+            progress: (existingSubscription.progress || 0) + progressValue 
+          })
+          .eq('course_id', parseInt(id))
+          .eq('user_id', 1);
+        
+        if (updateError) throw updateError;
+      } else {
+        // Create new subscription
+        const { error: insertError } = await supabase
+          .from('subscribed_courses')
+          .insert({
+            course_id: parseInt(id),
+            user_id: 1, // Using a placeholder user ID for now
+            progress: progressValue
+          });
+        
+        if (insertError) throw insertError;
+      }
+      
+      // Update UI to show chapter as completed
+      setCompletedChapters(prev => [...prev, chapterId]);
+      toast.success("Chapter marked as completed!");
+      
+    } catch (error) {
+      console.error("Error marking chapter as completed:", error);
+      toast.error("Failed to mark chapter as completed");
+    }
   };
 
   // For debugging
@@ -81,6 +137,24 @@ const CourseContent: React.FC<CourseContentProps> = ({
                           <Play size={16} />
                           <span>Watch Video Lecture</span>
                         </a>
+                      )}
+                      
+                      {!completedChapters.includes(chapter.id) && (
+                        <Button 
+                          variant="outline" 
+                          className="flex items-center gap-2 border-green-500 text-green-500 hover:bg-green-500/10"
+                          onClick={() => handleMarkAsDone(chapter.id, chapter.progress_when_finished)}
+                        >
+                          <CheckCircle size={16} />
+                          Mark as Done
+                        </Button>
+                      )}
+                      
+                      {completedChapters.includes(chapter.id) && (
+                        <span className="flex items-center gap-2 text-green-500">
+                          <CheckCircle size={16} />
+                          Completed
+                        </span>
                       )}
                     </div>
                     

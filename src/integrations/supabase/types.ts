@@ -14,7 +14,6 @@ export type Database = {
           answer_text: string
           explanation: string | null
           id: number
-          is_correct: boolean | null
           points: number | null
           question_id: number | null
         }
@@ -22,7 +21,6 @@ export type Database = {
           answer_text: string
           explanation?: string | null
           id?: number
-          is_correct?: boolean | null
           points?: number | null
           question_id?: number | null
         }
@@ -30,7 +28,6 @@ export type Database = {
           answer_text?: string
           explanation?: string | null
           id?: number
-          is_correct?: boolean | null
           points?: number | null
           question_id?: number | null
         }
@@ -64,6 +61,7 @@ export type Database = {
           chapter_text: string
           course_id: number | null
           id: number
+          progress_when_finished: number | null
           quiz_id: number | null
           video_link: string | null
         }
@@ -71,6 +69,7 @@ export type Database = {
           chapter_text: string
           course_id?: number | null
           id?: never
+          progress_when_finished?: number | null
           quiz_id?: number | null
           video_link?: string | null
         }
@@ -78,6 +77,7 @@ export type Database = {
           chapter_text?: string
           course_id?: number | null
           id?: never
+          progress_when_finished?: number | null
           quiz_id?: number | null
           video_link?: string | null
         }

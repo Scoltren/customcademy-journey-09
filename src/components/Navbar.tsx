@@ -27,10 +27,11 @@ const Navbar = () => {
       <div className="max-w-7xl mx-auto flex items-center justify-between">
         {/* Logo */}
         <Link to="/" className="flex items-center gap-2">
-          <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-blue to-sky flex items-center justify-center">
-            <span className="text-white font-bold text-lg">C</span>
-          </div>
-          <span className="text-white font-bold text-xl hidden sm:block">CustomCademy</span>
+          <img 
+            src="/lovable-uploads/e0870d71-c1c8-4790-83ba-ba11a0892a0a.png" 
+            alt="CustomCademy Logo" 
+            className="h-10 w-auto"
+          />
         </Link>
 
         {/* Desktop Navigation */}

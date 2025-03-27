@@ -4,10 +4,11 @@ import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { CheckCircle, XCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
+import { Checkbox } from '@/components/ui/checkbox';
 import { Form, FormControl, FormField, FormItem, FormLabel } from '@/components/ui/form';
 import { useForm } from 'react-hook-form';
 import { toast } from 'sonner';
+import { Progress } from '@/components/ui/progress';
 
 interface Question {
   id: number;
@@ -19,7 +20,7 @@ interface Question {
 interface Answer {
   id: number;
   answer_text: string;
-  is_correct: boolean | null;
+  points: number | null;
   explanation: string | null;
   question_id: number | null;
 }
@@ -29,8 +30,11 @@ interface QuizComponentProps {
 }
 
 const QuizComponent: React.FC<QuizComponentProps> = ({ quizId }) => {
-  const [userAnswers, setUserAnswers] = useState<Record<number, number>>({});
+  const [userAnswers, setUserAnswers] = useState<Record<number, number[]>>({});
   const [submitted, setSubmitted] = useState(false);
+  const [userScore, setUserScore] = useState<number>(0);
+  const [totalPossibleScore, setTotalPossibleScore] = useState<number>(0);
+  const [userPassed, setUserPassed] = useState<boolean | null>(null);
   
   const form = useForm();
   
@@ -81,18 +85,50 @@ const QuizComponent: React.FC<QuizComponentProps> = ({ quizId }) => {
     enabled: !!quizId,
   });
   
+  // Calculate total possible score when questions data is loaded
+  useEffect(() => {
+    if (questions.length > 0) {
+      let total = 0;
+      questions.forEach(question => {
+        const correctAnswers = question.answers.filter(a => a.points && a.points > 0);
+        correctAnswers.forEach(answer => {
+          if (answer.points) {
+            total += answer.points;
+          }
+        });
+      });
+      setTotalPossibleScore(total);
+    }
+  }, [questions]);
+  
   // Reset state when quiz ID changes
   useEffect(() => {
     setUserAnswers({});
     setSubmitted(false);
+    setUserScore(0);
+    setUserPassed(null);
     form.reset();
   }, [quizId, form]);
 
-  const handleAnswerSelect = (questionId: number, answerId: number) => {
-    setUserAnswers(prev => ({
-      ...prev,
-      [questionId]: answerId
-    }));
+  const handleAnswerToggle = (questionId: number, answerId: number) => {
+    setUserAnswers(prev => {
+      const prevAnswers = prev[questionId] || [];
+      
+      // Check if answer is already selected
+      if (prevAnswers.includes(answerId)) {
+        // Remove it
+        return {
+          ...prev,
+          [questionId]: prevAnswers.filter(id => id !== answerId)
+        };
+      } else {
+        // Add it
+        return {
+          ...prev,
+          [questionId]: [...prevAnswers, answerId]
+        };
+      }
+    });
   };
 
   const handleSubmit = () => {
@@ -100,7 +136,31 @@ const QuizComponent: React.FC<QuizComponentProps> = ({ quizId }) => {
       toast.error("Please answer all questions before submitting");
       return;
     }
+    
+    // Calculate score
+    let score = 0;
+    
+    questions.forEach(question => {
+      const selectedAnswerIds = userAnswers[question.id] || [];
+      
+      // Get points for each selected answer
+      selectedAnswerIds.forEach(answerId => {
+        const answer = question.answers.find(a => a.id === answerId);
+        if (answer && answer.points) {
+          score += answer.points;
+        }
+      });
+    });
+    
+    setUserScore(score);
+    setUserPassed(score === totalPossibleScore);
     setSubmitted(true);
+    
+    if (score === totalPossibleScore) {
+      toast.success("Congratulations! You passed the quiz!");
+    } else {
+      toast.error("You didn't pass the quiz. Try again!");
+    }
   };
 
   const isAnswerCorrect = (questionId: number, answerId: number) => {
@@ -110,7 +170,7 @@ const QuizComponent: React.FC<QuizComponentProps> = ({ quizId }) => {
     if (!question) return null;
     
     const answer = question.answers.find(a => a.id === answerId);
-    return answer?.is_correct || false;
+    return answer?.points && answer.points > 0;
   };
 
   if (isLoading) {
@@ -142,6 +202,18 @@ const QuizComponent: React.FC<QuizComponentProps> = ({ quizId }) => {
     <div className="bg-slate-800/30 rounded-lg p-6">
       <h3 className="text-xl font-semibold mb-6">Quiz</h3>
       
+      {submitted && (
+        <div className="mb-6 bg-slate-700/30 p-4 rounded-lg">
+          <div className="flex justify-between items-center mb-2">
+            <h4 className="font-medium">Your Score: {userScore}/{totalPossibleScore}</h4>
+            <span className={userPassed ? "text-green-500" : "text-red-500"}>
+              {userPassed ? "Passed" : "Failed"}
+            </span>
+          </div>
+          <Progress value={(userScore / totalPossibleScore) * 100} className="h-2" />
+        </div>
+      )}
+      
       <div className="space-y-8">
         {questions.map((question) => (
           <div key={question.id} className="bg-slate-700/20 p-4 rounded-lg">
@@ -151,18 +223,11 @@ const QuizComponent: React.FC<QuizComponentProps> = ({ quizId }) => {
               <FormField
                 control={form.control}
                 name={`question-${question.id}`}
-                render={({ field }) => (
+                render={() => (
                   <FormItem className="space-y-3">
-                    <RadioGroup
-                      onValueChange={(value) => {
-                        field.onChange(value);
-                        handleAnswerSelect(question.id, parseInt(value, 10));
-                      }}
-                      value={field.value}
-                      className="space-y-2"
-                    >
+                    <div className="space-y-2">
                       {question.answers.map((answer) => {
-                        const isSelected = userAnswers[question.id] === answer.id;
+                        const isSelected = (userAnswers[question.id] || []).includes(answer.id);
                         const isCorrect = isAnswerCorrect(question.id, answer.id);
                         
                         let className = "flex items-start space-x-2 p-3 rounded-md";
@@ -181,9 +246,13 @@ const QuizComponent: React.FC<QuizComponentProps> = ({ quizId }) => {
                           <div key={answer.id} className="relative">
                             <FormItem className={className}>
                               <FormControl>
-                                <RadioGroupItem value={answer.id.toString()} />
+                                <Checkbox 
+                                  checked={isSelected}
+                                  onCheckedChange={() => !submitted && handleAnswerToggle(question.id, answer.id)}
+                                  disabled={submitted}
+                                />
                               </FormControl>
-                              <FormLabel className="font-normal cursor-pointer">
+                              <FormLabel className="font-normal cursor-pointer ml-2">
                                 {answer.answer_text}
                               </FormLabel>
                               
@@ -207,10 +276,18 @@ const QuizComponent: React.FC<QuizComponentProps> = ({ quizId }) => {
                                 <p>{answer.explanation}</p>
                               </div>
                             )}
+                            
+                            {/* Show correct answers that weren't selected */}
+                            {submitted && !isSelected && isCorrect && (
+                              <div className="mt-2 ml-8 p-3 bg-yellow-500/10 border border-yellow-500/20 rounded text-sm text-yellow-200">
+                                <p>This was a correct answer you missed.</p>
+                                {answer.explanation && <p className="mt-1">{answer.explanation}</p>}
+                              </div>
+                            )}
                           </div>
                         );
                       })}
-                    </RadioGroup>
+                    </div>
                   </FormItem>
                 )}
               />
@@ -236,6 +313,8 @@ const QuizComponent: React.FC<QuizComponentProps> = ({ quizId }) => {
             onClick={() => {
               setSubmitted(false);
               setUserAnswers({});
+              setUserScore(0);
+              setUserPassed(null);
               form.reset();
             }}
             variant="outline"
