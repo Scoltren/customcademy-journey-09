@@ -34,7 +34,7 @@ const QuizComponent: React.FC<QuizComponentProps> = ({ quizId }) => {
   const form = useForm();
   
   // Fetch quiz questions and answers
-  const { data: questions = [], isLoading } = useQuery({
+  const { data: questions = [], isLoading, error } = useQuery({
     queryKey: ['quiz', quizId],
     queryFn: async () => {
       // First fetch the questions
@@ -100,6 +100,14 @@ const QuizComponent: React.FC<QuizComponentProps> = ({ quizId }) => {
     return (
       <div className="p-6 bg-slate-800/30 rounded-lg animate-pulse">
         <p className="text-center text-slate-400">Loading quiz questions...</p>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="p-6 bg-slate-800/30 rounded-lg">
+        <p className="text-center text-red-400">Failed to load quiz questions. Please try again later.</p>
       </div>
     );
   }

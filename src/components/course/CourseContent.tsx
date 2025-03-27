@@ -93,9 +93,9 @@ const CourseContent: React.FC<CourseContentProps> = ({
                     )}
                   </div>
                   
-                  {activeQuiz === chapter.quiz_id && (
+                  {activeQuiz === chapter.quiz_id && chapter.quiz_id && (
                     <div className="mt-6">
-                      <QuizComponent quizId={chapter.quiz_id as number} />
+                      <QuizComponent quizId={chapter.quiz_id} />
                     </div>
                   )}
                 </div>
