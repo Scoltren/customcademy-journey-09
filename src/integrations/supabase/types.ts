@@ -64,18 +64,21 @@ export type Database = {
           chapter_text: string
           course_id: number | null
           id: number
+          quiz_id: number | null
           video_link: string | null
         }
         Insert: {
           chapter_text: string
           course_id?: number | null
           id?: never
+          quiz_id?: number | null
           video_link?: string | null
         }
         Update: {
           chapter_text?: string
           course_id?: number | null
           id?: never
+          quiz_id?: number | null
           video_link?: string | null
         }
         Relationships: [
@@ -84,6 +87,13 @@ export type Database = {
             columns: ["course_id"]
             isOneToOne: false
             referencedRelation: "courses"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "chapters_quiz_id_fkey"
+            columns: ["quiz_id"]
+            isOneToOne: false
+            referencedRelation: "quizzes"
             referencedColumns: ["id"]
           },
         ]
@@ -229,19 +239,16 @@ export type Database = {
       quizzes: {
         Row: {
           category_id: number | null
-          chapter_id: number | null
           id: number
           title: string
         }
         Insert: {
           category_id?: number | null
-          chapter_id?: number | null
           id?: number
           title: string
         }
         Update: {
           category_id?: number | null
-          chapter_id?: number | null
           id?: number
           title?: string
         }
@@ -251,13 +258,6 @@ export type Database = {
             columns: ["category_id"]
             isOneToOne: false
             referencedRelation: "categories"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "quizzes_chapter_id_fkey"
-            columns: ["chapter_id"]
-            isOneToOne: false
-            referencedRelation: "chapters"
             referencedColumns: ["id"]
           },
         ]
