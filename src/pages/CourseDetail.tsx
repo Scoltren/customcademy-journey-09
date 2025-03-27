@@ -45,7 +45,7 @@ const CourseDetail = () => {
       const { data, error } = await supabase
         .from('courses')
         .select('*')
-        .eq('id', id)
+        .eq('id', parseInt(id, 10))
         .single();
       
       if (error) throw error;
@@ -67,7 +67,7 @@ const CourseDetail = () => {
       const { data, error } = await supabase
         .from('chapters')
         .select('*')
-        .eq('course_id', id)
+        .eq('course_id', parseInt(id, 10))
         .order('id', { ascending: true });
       
       if (error) throw error;
