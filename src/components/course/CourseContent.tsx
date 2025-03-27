@@ -1,6 +1,6 @@
 
-import React from 'react';
-import { BookOpen } from 'lucide-react';
+import React, { useEffect } from 'react';
+import { BookOpen, Play } from 'lucide-react';
 import { Chapter } from '@/types/course';
 
 interface CourseContentProps {
@@ -8,11 +8,16 @@ interface CourseContentProps {
 }
 
 const CourseContent: React.FC<CourseContentProps> = ({ chapters }) => {
+  // Log chapters data for debugging
+  useEffect(() => {
+    console.log('CourseContent chapters:', chapters);
+  }, [chapters]);
+
   return (
     <section className="container mx-auto px-6 mb-12">
       <h2 className="heading-md mb-6">Course Content</h2>
       
-      {chapters && chapters.length > 0 ? (
+      {Array.isArray(chapters) && chapters.length > 0 ? (
         <div className="glass-card divide-y divide-slate-700/50">
           {chapters.map((chapter, index) => (
             <div key={chapter.id} className="p-6">
@@ -30,7 +35,7 @@ const CourseContent: React.FC<CourseContentProps> = ({ chapters }) => {
                   
                   {chapter.video_link && (
                     <div className="flex items-center gap-2 text-blue-light">
-                      <BookOpen size={16} />
+                      <Play size={16} />
                       <span>Video Lecture</span>
                     </div>
                   )}

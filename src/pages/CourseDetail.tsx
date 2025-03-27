@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
@@ -13,6 +13,13 @@ import NotFoundState from '@/components/course/NotFoundState';
 
 const CourseDetail = () => {
   const { course, chapters, comments, isLoading } = useCourseData();
+  
+  // Log data for debugging
+  useEffect(() => {
+    console.log('CourseDetail - course:', course);
+    console.log('CourseDetail - chapters:', chapters);
+    console.log('CourseDetail - comments:', comments);
+  }, [course, chapters, comments]);
 
   if (isLoading) {
     return <LoadingState />;
@@ -33,7 +40,7 @@ const CourseDetail = () => {
         </div>
         
         {/* Course Content */}
-        <CourseContent chapters={chapters} />
+        <CourseContent chapters={chapters || []} />
         
         {/* What You'll Learn */}
         <CourseFeatures />

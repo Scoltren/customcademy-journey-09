@@ -26,6 +26,7 @@ export const useCourseData = () => {
         .single();
       
       if (error) throw error;
+      console.log('Course data:', data);
       return data as Course;
     },
     enabled: !!id,
@@ -41,14 +42,25 @@ export const useCourseData = () => {
     queryFn: async () => {
       if (!id) throw new Error('Course ID is required');
       
+      console.log('Fetching chapters for course ID:', id);
+      
       const { data, error } = await supabase
         .from('chapters')
         .select('*')
         .eq('course_id', parseInt(id, 10))
         .order('id', { ascending: true });
       
-      if (error) throw error;
-      console.log('Chapters data:', data); // Add logging to debug
+      if (error) {
+        console.error('Error fetching chapters:', error);
+        throw error;
+      }
+      
+      console.log('Chapters data:', data);
+      
+      if (!data || data.length === 0) {
+        console.log('No chapters found for this course');
+      }
+      
       return data as Chapter[];
     },
     enabled: !!id,
