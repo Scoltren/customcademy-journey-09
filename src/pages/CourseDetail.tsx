@@ -1,39 +1,93 @@
+
 import React, { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import { Star, Users, Clock, BarChart, BookOpen, CheckCircle } from 'lucide-react';
-import { courseApi } from '@/services/api';
 import { toast } from 'sonner';
+import { supabase } from '@/integrations/supabase/client';
+import { useQuery } from '@tanstack/react-query';
+
+interface Chapter {
+  id: number;
+  chapter_text: string;
+  video_link: string | null;
+  title?: string;
+}
+
+interface Course {
+  id: number;
+  title: string;
+  description: string | null;
+  thumbnail: string | null;
+  difficulty_level: string | null;
+  overall_rating: number | null;
+  price: number | null;
+  media: string | null;
+  category_id: number | null;
+  creator_id: number | null;
+  created_at: string | null;
+}
 
 const CourseDetail = () => {
   const { id } = useParams<{ id: string }>();
-  const [course, setCourse] = useState<any>(null);
-  const [chapters, setChapters] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    const fetchCourseDetails = async () => {
-      if (!id) return;
+  
+  // Fetch course data
+  const { 
+    data: course, 
+    isLoading: courseLoading, 
+    error: courseError 
+  } = useQuery({
+    queryKey: ['course', id],
+    queryFn: async () => {
+      if (!id) throw new Error('Course ID is required');
       
-      try {
-        setLoading(true);
-        const courseData = await courseApi.getCourse(id);
-        setCourse(courseData);
-        
-        // Fetch chapters
-        const chaptersData = await courseApi.getCourseChapters(id);
-        setChapters(chaptersData);
-      } catch (error) {
-        console.error('Error fetching course details:', error);
-        toast.error('Failed to load course details');
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchCourseDetails();
-  }, [id]);
+      const { data, error } = await supabase
+        .from('courses')
+        .select('*')
+        .eq('id', id)
+        .single();
+      
+      if (error) throw error;
+      return data as Course;
+    },
+    enabled: !!id,
+  });
+  
+  // Fetch chapters data
+  const { 
+    data: chapters = [], 
+    isLoading: chaptersLoading, 
+    error: chaptersError 
+  } = useQuery({
+    queryKey: ['chapters', id],
+    queryFn: async () => {
+      if (!id) throw new Error('Course ID is required');
+      
+      const { data, error } = await supabase
+        .from('chapters')
+        .select('*')
+        .eq('course_id', id)
+        .order('id', { ascending: true });
+      
+      if (error) throw error;
+      return data as Chapter[];
+    },
+    enabled: !!id,
+  });
+  
+  // Show error messages
+  useEffect(() => {
+    if (courseError) {
+      console.error('Error fetching course:', courseError);
+      toast.error('Failed to load course details');
+    }
+    
+    if (chaptersError) {
+      console.error('Error fetching chapters:', chaptersError);
+      toast.error('Failed to load course chapters');
+    }
+  }, [courseError, chaptersError]);
 
   const handleEnroll = async () => {
     if (!id) return;
@@ -50,7 +104,9 @@ const CourseDetail = () => {
     }
   };
 
-  if (loading) {
+  const isLoading = courseLoading || chaptersLoading;
+
+  if (isLoading) {
     return (
       <div className="min-h-screen bg-midnight">
         <Navbar />
@@ -131,7 +187,7 @@ const CourseDetail = () => {
                 {/* Price and Enroll Button */}
                 <div className="flex items-center justify-between mt-auto pt-4 border-t border-slate-700">
                   <div className="text-2xl font-bold">
-                    {course.price > 0 ? `$${course.price}` : 'Free'}
+                    {course.price ? `$${course.price}` : 'Free'}
                   </div>
                   <button 
                     className="button-primary"
