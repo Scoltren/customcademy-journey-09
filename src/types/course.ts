@@ -5,6 +5,7 @@ export interface Chapter {
   video_link: string | null;
   title?: string;
   course_id?: number;
+  quiz_id?: number | null;
 }
 
 export interface Course {

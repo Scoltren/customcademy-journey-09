@@ -7,6 +7,19 @@ import { useEffect } from 'react';
 import { toast } from 'sonner';
 
 export const useCourseData = () => {
+  // Check if we're in a browser environment before using hooks
+  if (typeof window === 'undefined') {
+    return {
+      course: null,
+      chapters: [],
+      comments: [],
+      isLoading: false,
+      courseError: null,
+      chaptersError: null,
+      commentsError: null
+    };
+  }
+
   const { id } = useParams<{ id: string }>();
   
   // Fetch course data
