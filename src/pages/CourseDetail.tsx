@@ -1,11 +1,10 @@
-
 import React, { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import { Star, Users, Clock, BarChart, BookOpen, CheckCircle } from 'lucide-react';
 import { courseApi } from '@/services/api';
-import { toast } from '@/components/ui/sonner';
+import { toast } from 'sonner';
 
 const CourseDetail = () => {
   const { id } = useParams<{ id: string }>();

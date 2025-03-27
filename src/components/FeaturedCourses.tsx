@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import CourseCard from './CourseCard';
 import { courseApi } from '@/services/api';
-import { toast } from '@/components/ui/sonner';
+import { toast } from 'sonner';
 
 const FeaturedCourses = () => {
   const [courses, setCourses] = useState<any[]>([]);
