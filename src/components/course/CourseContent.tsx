@@ -55,11 +55,13 @@ const CourseContent: React.FC<CourseContentProps> = ({
     }
     
     try {
+      const numericCourseId = parseInt(id, 10);
+      
       // First check if user is already subscribed to this course
       const { data: existingSubscription, error: checkError } = await supabase
         .from('subscribed_courses')
         .select('*')
-        .eq('course_id', parseInt(id))
+        .eq('course_id', numericCourseId)
         .eq('user_id', user.id)
         .single();
       
@@ -74,7 +76,7 @@ const CourseContent: React.FC<CourseContentProps> = ({
           .update({ 
             progress: (existingSubscription.progress || 0) + progressValue 
           })
-          .eq('course_id', parseInt(id))
+          .eq('course_id', numericCourseId)
           .eq('user_id', user.id);
         
         if (updateError) throw updateError;
@@ -83,7 +85,7 @@ const CourseContent: React.FC<CourseContentProps> = ({
         const { error: insertError } = await supabase
           .from('subscribed_courses')
           .insert({
-            course_id: parseInt(id),
+            course_id: numericCourseId,
             user_id: user.id,
             progress: progressValue
           });

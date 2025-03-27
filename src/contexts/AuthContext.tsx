@@ -9,6 +9,7 @@ interface AuthContextType {
   login: (email: string, password: string) => Promise<void>;
   signup: (email: string, password: string, username: string) => Promise<void>;
   logout: () => Promise<void>;
+  isEnrolled: (courseId: string | number) => Promise<boolean>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -69,15 +70,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     if (error) throw error;
 
-    // If we successfully created the user, update the username in the profiles table
+    // If we successfully created the user, update the username in the users table
     if (data.user) {
       const { error: profileError } = await supabase
-        .from('profiles')
+        .from('users')
         .upsert({
           id: data.user.id,
           username: username,
           email: email,
-          updated_at: new Date().toISOString(),
+          created_at: new Date().toISOString(),
+          password: '', // Placeholder, not storing actual password
+          admin: false,
+          profile_picture: null
         });
 
       if (profileError) throw profileError;
@@ -89,12 +93,39 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     if (error) throw error;
   };
 
+  // Check if a user is enrolled in a specific course
+  const isEnrolled = async (courseId: string | number): Promise<boolean> => {
+    if (!user) return false;
+    
+    try {
+      const parsedCourseId = typeof courseId === 'string' ? parseInt(courseId, 10) : courseId;
+      
+      const { data, error } = await supabase
+        .from('subscribed_courses')
+        .select('*')
+        .eq('course_id', parsedCourseId)
+        .eq('user_id', user.id)
+        .single();
+      
+      if (error && error.code !== 'PGRST116') { // PGRST116 means no rows returned
+        console.error('Error checking enrollment:', error);
+        return false;
+      }
+      
+      return !!data;
+    } catch (error) {
+      console.error('Error checking enrollment:', error);
+      return false;
+    }
+  };
+
   const value = {
     user,
     loading,
     login,
     signup,
     logout,
+    isEnrolled
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

@@ -23,10 +23,12 @@ const CourseDetail = () => {
     const fetchProgress = async () => {
       if (user && id) {
         try {
+          const numericCourseId = parseInt(id, 10);
+          
           const { data, error } = await supabase
             .from('subscribed_courses')
             .select('progress')
-            .eq('course_id', parseInt(id))
+            .eq('course_id', numericCourseId)
             .eq('user_id', user.id)
             .single();
           
