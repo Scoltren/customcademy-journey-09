@@ -24,6 +24,9 @@ const CourseContent: React.FC<CourseContentProps> = ({
     setActiveQuiz(activeQuiz === quizId ? null : quizId);
   };
 
+  // For debugging
+  console.log("Chapters with quiz data:", chapters.map(ch => ({ id: ch.id, quiz_id: ch.quiz_id })));
+
   if (isLoading) {
     return (
       <section className="container mx-auto px-6 mb-12">

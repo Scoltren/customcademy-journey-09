@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Form, FormControl, FormField, FormItem, FormLabel } from '@/components/ui/form';
 import { useForm } from 'react-hook-form';
+import { toast } from 'sonner';
 
 interface Question {
   id: number;
@@ -37,13 +38,20 @@ const QuizComponent: React.FC<QuizComponentProps> = ({ quizId }) => {
   const { data: questions = [], isLoading, error } = useQuery({
     queryKey: ['quiz', quizId],
     queryFn: async () => {
+      console.log('Fetching quiz with ID:', quizId);
+      
       // First fetch the questions
       const { data: questionsData, error: questionsError } = await supabase
         .from('questions')
         .select('*')
         .eq('quiz_id', quizId);
       
-      if (questionsError) throw questionsError;
+      if (questionsError) {
+        console.error('Error fetching questions:', questionsError);
+        throw questionsError;
+      }
+      
+      console.log('Questions data:', questionsData);
       
       if (!questionsData || questionsData.length === 0) {
         return [];
@@ -57,7 +65,12 @@ const QuizComponent: React.FC<QuizComponentProps> = ({ quizId }) => {
         .select('*')
         .in('question_id', questionIds);
       
-      if (answersError) throw answersError;
+      if (answersError) {
+        console.error('Error fetching answers:', answersError);
+        throw answersError;
+      }
+      
+      console.log('Answers data:', answersData);
       
       // Combine questions with their answers
       return questionsData.map(question => ({
@@ -83,6 +96,10 @@ const QuizComponent: React.FC<QuizComponentProps> = ({ quizId }) => {
   };
 
   const handleSubmit = () => {
+    if (Object.keys(userAnswers).length < questions.length) {
+      toast.error("Please answer all questions before submitting");
+      return;
+    }
     setSubmitted(true);
   };
 
@@ -105,6 +122,7 @@ const QuizComponent: React.FC<QuizComponentProps> = ({ quizId }) => {
   }
 
   if (error) {
+    console.error('Quiz loading error:', error);
     return (
       <div className="p-6 bg-slate-800/30 rounded-lg">
         <p className="text-center text-red-400">Failed to load quiz questions. Please try again later.</p>
