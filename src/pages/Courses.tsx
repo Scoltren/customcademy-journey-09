@@ -1,11 +1,63 @@
+
 import React, { useState, useEffect } from 'react';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import CourseCard from '@/components/CourseCard';
 import { Search, Filter, ChevronDown, Check } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { courseApi, categoryApi } from '@/services/api';
 import { toast } from 'sonner';
+import { supabase } from '@/integrations/supabase/client';
+import { useQuery } from '@tanstack/react-query';
+
+// Define the course type based on what we're fetching from Supabase
+interface Course {
+  id: number;
+  title: string;
+  description: string | null;
+  thumbnail: string | null;
+  difficulty_level: string | null;
+  price: number | null;
+  overall_rating: number | null;
+  category_id: number | null;
+  categories: {
+    name: string;
+  } | null;
+}
+
+// Define the category type
+interface Category {
+  id: number;
+  name: string;
+}
+
+// Function to fetch courses from Supabase
+const fetchCourses = async (): Promise<Course[]> => {
+  const { data, error } = await supabase
+    .from('courses')
+    .select(`
+      *,
+      categories(name)
+    `);
+  
+  if (error) {
+    throw error;
+  }
+  
+  return data || [];
+};
+
+// Function to fetch categories from Supabase
+const fetchCategories = async (): Promise<Category[]> => {
+  const { data, error } = await supabase
+    .from('categories')
+    .select('*');
+  
+  if (error) {
+    throw error;
+  }
+  
+  return data || [];
+};
 
 const Courses = () => {
   const [searchTerm, setSearchTerm] = useState('');
@@ -15,38 +67,51 @@ const Courses = () => {
   const [selectedRating, setSelectedRating] = useState('All Ratings');
   const [showFilters, setShowFilters] = useState(false);
   
-  const [allCourses, setAllCourses] = useState<any[]>([]);
-  const [categories, setCategories] = useState<string[]>(['All Categories']);
-  const [loading, setLoading] = useState(true);
+  // Fetch courses using React Query
+  const { 
+    data: allCourses = [], 
+    isLoading: coursesLoading,
+    error: coursesError
+  } = useQuery({
+    queryKey: ['courses'],
+    queryFn: fetchCourses,
+    staleTime: 1000 * 60 * 5, // 5 minutes
+  });
   
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        setLoading(true);
-        
-        const coursesData = await courseApi.getCourses();
-        setAllCourses(coursesData);
-        
-        const categoriesData = await categoryApi.getCategories();
-        setCategories([
-          'All Categories', 
-          ...categoriesData.map(cat => cat.name)
-        ]);
-      } catch (error) {
-        console.error('Error fetching data:', error);
-        toast.error('Failed to load courses data');
-        setAllCourses([]);
-      } finally {
-        setLoading(false);
-      }
-    };
-    
-    fetchData();
-  }, []);
+  // Fetch categories using React Query
+  const { 
+    data: categoriesData = [], 
+    isLoading: categoriesLoading,
+  } = useQuery({
+    queryKey: ['categories'],
+    queryFn: fetchCategories,
+    staleTime: 1000 * 60 * 30, // 30 minutes
+  });
+  
+  // Derived categories array for the dropdown
+  const categories = React.useMemo(() => {
+    return ['All Categories', ...categoriesData.map(cat => cat.name)];
+  }, [categoriesData]);
+  
+  // Show error toast if course query fails
+  React.useEffect(() => {
+    if (coursesError) {
+      console.error('Error fetching courses:', coursesError);
+      toast.error('Failed to load courses data');
+    }
+  }, [coursesError]);
   
   const levels = ['All Levels', 'Beginner', 'Intermediate', 'Advanced'];
   const prices = ['All Prices', 'Free', 'Under $50', '$50-$100', 'Over $100'];
   const ratings = ['All Ratings', '4.5 & Up', '4.0 & Up', '3.5 & Up', '3.0 & Up'];
+  
+  // Helper function to validate difficulty level
+  const validateDifficultyLevel = (level: string | null): 'Beginner' | 'Intermediate' | 'Advanced' => {
+    if (level === 'Beginner' || level === 'Intermediate' || level === 'Advanced') {
+      return level;
+    }
+    return 'Beginner'; // Default fallback
+  };
   
   const filteredCourses = allCourses.filter(course => {
     if (searchTerm && 
@@ -55,7 +120,7 @@ const Courses = () => {
       return false;
     }
     
-    if (selectedCategory !== 'All Categories' && course.category_name !== selectedCategory) {
+    if (selectedCategory !== 'All Categories' && course.categories?.name !== selectedCategory) {
       return false;
     }
     
@@ -124,6 +189,9 @@ const Courses = () => {
       </div>
     );
   };
+  
+  // Combining loading states
+  const loading = coursesLoading || categoriesLoading;
   
   return (
     <div className="min-h-screen bg-midnight">
@@ -251,8 +319,8 @@ const Courses = () => {
                         description: course.description || "",
                         instructor: 'Instructor',
                         image: course.thumbnail || 'https://images.unsplash.com/photo-1498050108023-c5249f4df085',
-                        category: course.category_name || 'Development',
-                        level: course.difficulty_level || 'Beginner',
+                        category: course.categories?.name || 'Development',
+                        level: validateDifficultyLevel(course.difficulty_level),
                         duration: '30 hours',
                         students: 1000,
                         rating: course.overall_rating || 4.5,
