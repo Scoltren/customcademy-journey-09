@@ -12,7 +12,7 @@ const CourseContent: React.FC<CourseContentProps> = ({ chapters }) => {
     <section className="container mx-auto px-6 mb-12">
       <h2 className="heading-md mb-6">Course Content</h2>
       
-      {chapters.length > 0 ? (
+      {chapters && chapters.length > 0 ? (
         <div className="glass-card divide-y divide-slate-700/50">
           {chapters.map((chapter, index) => (
             <div key={chapter.id} className="p-6">

@@ -48,6 +48,7 @@ export const useCourseData = () => {
         .order('id', { ascending: true });
       
       if (error) throw error;
+      console.log('Chapters data:', data); // Add logging to debug
       return data as Chapter[];
     },
     enabled: !!id,
