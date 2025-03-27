@@ -1,8 +1,10 @@
 
-import React, { useEffect } from 'react';
-import { BookOpen, Play } from 'lucide-react';
+import React, { useState } from 'react';
+import { BookOpen, Play, FileCheck } from 'lucide-react';
 import { Chapter } from '@/types/course';
 import { Skeleton } from '@/components/ui/skeleton';
+import { Button } from '@/components/ui/button';
+import QuizComponent from './QuizComponent';
 
 interface CourseContentProps {
   chapters: Chapter[];
@@ -15,10 +17,12 @@ const CourseContent: React.FC<CourseContentProps> = ({
   courseId,
   isLoading = false 
 }) => {
-  // Log chapters data for debugging
-  useEffect(() => {
-    console.log('CourseContent chapters:', chapters);
-  }, [chapters]);
+  const [activeQuiz, setActiveQuiz] = useState<number | null>(null);
+
+  // Toggle quiz visibility
+  const handleToggleQuiz = (quizId: number | null) => {
+    setActiveQuiz(activeQuiz === quizId ? null : quizId);
+  };
 
   if (isLoading) {
     return (
@@ -54,18 +58,44 @@ const CourseContent: React.FC<CourseContentProps> = ({
                 <div className="w-8 h-8 rounded-full bg-blue flex items-center justify-center flex-shrink-0">
                   <span className="text-white font-bold">{index + 1}</span>
                 </div>
-                <div>
+                <div className="w-full">
                   <h3 className="text-xl font-bold mb-2">
-                    {chapter.title || `Chapter ${index + 1}`}
+                    {chapter.title || chapter.chapter_text}
                   </h3>
                   <p className="text-slate-400 mb-4">
                     {chapter.chapter_text}
                   </p>
                   
-                  {chapter.video_link && (
-                    <div className="flex items-center gap-2 text-blue-light">
-                      <Play size={16} />
-                      <span>Video Lecture</span>
+                  <div className="flex flex-wrap items-center justify-between gap-3 mt-4">
+                    <div className="flex flex-wrap items-center gap-3">
+                      {chapter.video_link && (
+                        <a 
+                          href={chapter.video_link} 
+                          target="_blank" 
+                          rel="noopener noreferrer"
+                          className="flex items-center gap-2 text-blue-light hover:text-blue transition-colors"
+                        >
+                          <Play size={16} />
+                          <span>Watch Video Lecture</span>
+                        </a>
+                      )}
+                    </div>
+                    
+                    {chapter.quiz_id && (
+                      <Button 
+                        variant="outline" 
+                        className="flex items-center gap-2 border-blue-light text-blue-light hover:bg-blue-light/10"
+                        onClick={() => handleToggleQuiz(chapter.quiz_id as number)}
+                      >
+                        <FileCheck size={16} />
+                        {activeQuiz === chapter.quiz_id ? 'Hide Quiz' : 'Take Quiz'}
+                      </Button>
+                    )}
+                  </div>
+                  
+                  {activeQuiz === chapter.quiz_id && (
+                    <div className="mt-6">
+                      <QuizComponent quizId={chapter.quiz_id as number} />
                     </div>
                   )}
                 </div>

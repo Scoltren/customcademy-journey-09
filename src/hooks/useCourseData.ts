@@ -6,31 +6,6 @@ import { Course, Chapter, Comment } from '@/types/course';
 import { useEffect } from 'react';
 import { toast } from 'sonner';
 
-// Sample chapters for debugging when no chapters exist
-const sampleChapters = [
-  {
-    id: 1001,
-    title: "Introduction to HTML",
-    chapter_text: "Learn the fundamentals of HTML structure, tags, and semantic elements. This chapter covers document structure, headings, paragraphs, links, and more.",
-    video_link: "https://example.com/intro-html",
-    course_id: 20
-  },
-  {
-    id: 1002,
-    title: "CSS Styling Basics",
-    chapter_text: "Master the basics of CSS including selectors, properties, the box model, and responsive design principles.",
-    video_link: "https://example.com/css-basics",
-    course_id: 20
-  },
-  {
-    id: 1003,
-    title: "JavaScript Fundamentals",
-    chapter_text: "Explore the core concepts of JavaScript including variables, functions, control flow, and DOM manipulation.",
-    video_link: null,
-    course_id: 20
-  }
-];
-
 export const useCourseData = () => {
   const { id } = useParams<{ id: string }>();
   
@@ -59,7 +34,7 @@ export const useCourseData = () => {
   
   // Fetch chapters data
   const { 
-    data: fetchedChapters = [], 
+    data: chapters = [], 
     isLoading: chaptersLoading, 
     error: chaptersError 
   } = useQuery({
@@ -81,26 +56,10 @@ export const useCourseData = () => {
       }
       
       console.log('Chapters data:', data);
-      
-      if (!data || data.length === 0) {
-        console.log('No chapters found for this course');
-        
-        // For course ID 20, return sample chapters when no real chapters exist
-        if (id === '20') {
-          console.log('Returning sample chapters for demo purposes');
-          return sampleChapters as Chapter[];
-        }
-      }
-      
       return data as Chapter[];
     },
     enabled: !!id,
   });
-  
-  // Use sample chapters only for course ID 20 when no chapters are returned
-  const chapters = id === '20' && fetchedChapters.length === 0 
-    ? sampleChapters 
-    : fetchedChapters;
   
   // Fetch comments/reviews data
   const { 

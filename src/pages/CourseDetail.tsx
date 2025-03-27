@@ -6,7 +6,6 @@ import Footer from '@/components/Footer';
 import { useCourseData } from '@/hooks/useCourseData';
 import CourseHeader from '@/components/course/CourseHeader';
 import CourseContent from '@/components/course/CourseContent';
-import CourseFeatures from '@/components/course/CourseFeatures';
 import ReviewsSection from '@/components/course/ReviewsSection';
 import LoadingState from '@/components/course/LoadingState';
 import NotFoundState from '@/components/course/NotFoundState';
@@ -45,9 +44,6 @@ const CourseDetail = () => {
           courseId={course.id}
           isLoading={isLoading}
         />
-        
-        {/* What You'll Learn */}
-        <CourseFeatures />
         
         {/* Reviews */}
         <ReviewsSection course={course} comments={comments} />
