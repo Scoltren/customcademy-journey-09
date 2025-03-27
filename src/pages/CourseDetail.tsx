@@ -1,9 +1,8 @@
-
 import React, { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
-import { Star, Users, Clock, BarChart, BookOpen, CheckCircle } from 'lucide-react';
+import { Star, Users, Clock, BarChart, BookOpen, CheckCircle, MessageSquare, StarHalf } from 'lucide-react';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { useQuery } from '@tanstack/react-query';
@@ -27,6 +26,16 @@ interface Course {
   category_id: number | null;
   creator_id: number | null;
   created_at: string | null;
+  course_time: number | null;
+}
+
+interface Comment {
+  id: number;
+  comment_text: string;
+  user_id: number | null;
+  created_at: string | null;
+  rating?: number;
+  username?: string;
 }
 
 const CourseDetail = () => {
@@ -76,6 +85,39 @@ const CourseDetail = () => {
     enabled: !!id,
   });
   
+  // Fetch comments/reviews data
+  const { 
+    data: comments = [], 
+    isLoading: commentsLoading, 
+    error: commentsError 
+  } = useQuery({
+    queryKey: ['comments', id],
+    queryFn: async () => {
+      if (!id) throw new Error('Course ID is required');
+      
+      // Fetch comments along with user data for display
+      const { data, error } = await supabase
+        .from('comments')
+        .select(`
+          *,
+          users:user_id (
+            username
+          )
+        `)
+        .eq('course_id', parseInt(id, 10))
+        .order('created_at', { ascending: false });
+      
+      if (error) throw error;
+      
+      // Transform the data to include the username
+      return data.map(comment => ({
+        ...comment,
+        username: comment.users?.username || 'Anonymous User'
+      })) as Comment[];
+    },
+    enabled: !!id,
+  });
+  
   // Show error messages
   useEffect(() => {
     if (courseError) {
@@ -87,7 +129,12 @@ const CourseDetail = () => {
       console.error('Error fetching chapters:', chaptersError);
       toast.error('Failed to load course chapters');
     }
-  }, [courseError, chaptersError]);
+    
+    if (commentsError) {
+      console.error('Error fetching comments:', commentsError);
+      toast.error('Failed to load course reviews');
+    }
+  }, [courseError, chaptersError, commentsError]);
 
   const handleEnroll = async () => {
     if (!id) return;
@@ -104,13 +151,13 @@ const CourseDetail = () => {
     }
   };
 
-  const isLoading = courseLoading || chaptersLoading;
+  const isLoading = courseLoading || chaptersLoading || commentsLoading;
 
   if (isLoading) {
     return (
       <div className="min-h-screen bg-midnight">
         <Navbar />
-        <div className="container mx-auto px-6 pt-28 pb-16">
+        <div className="container mx-auto px-6 py-28 pb-16">
           <div className="animate-pulse">
             <div className="h-10 bg-slate-800 rounded mb-4 w-3/4"></div>
             <div className="h-6 bg-slate-800 rounded mb-6 w-1/2"></div>
@@ -168,7 +215,7 @@ const CourseDetail = () => {
                 <div className="grid grid-cols-2 gap-4 mb-6">
                   <div className="flex items-center gap-2">
                     <Star className="text-yellow-500" size={18} />
-                    <span>{course.overall_rating || 4.5} Rating</span>
+                    <span>{course.overall_rating ? course.overall_rating.toFixed(1) : '0.0'} Rating</span>
                   </div>
                   <div className="flex items-center gap-2">
                     <Users className="text-blue-400" size={18} />
@@ -176,7 +223,7 @@ const CourseDetail = () => {
                   </div>
                   <div className="flex items-center gap-2">
                     <Clock className="text-green-400" size={18} />
-                    <span>30 Hours</span>
+                    <span>{course.course_time || 0} Hours</span>
                   </div>
                   <div className="flex items-center gap-2">
                     <BarChart className="text-purple-400" size={18} />
@@ -259,6 +306,59 @@ const CourseDetail = () => {
                 </div>
               ))}
             </div>
+          </div>
+        </section>
+        
+        {/* Reviews */}
+        <section className="container mx-auto px-6 mb-12">
+          <div className="flex items-center justify-between mb-6">
+            <h2 className="heading-md">Reviews</h2>
+            <div className="flex items-center gap-2">
+              <StarHalf className="text-yellow-500" size={20} />
+              <span className="text-lg font-bold">{course?.overall_rating ? course.overall_rating.toFixed(1) : '0.0'} Overall Rating</span>
+            </div>
+          </div>
+          
+          <div className="glass-card">
+            {comments.length > 0 ? (
+              <div className="divide-y divide-slate-700/50">
+                {comments.map((comment) => (
+                  <div key={comment.id} className="p-6">
+                    <div className="flex items-start gap-4">
+                      <div className="w-10 h-10 rounded-full bg-slate-700 overflow-hidden flex-shrink-0">
+                        <img 
+                          src={`https://ui-avatars.com/api/?name=${comment.username?.replace(' ', '+')}&background=random`}
+                          alt={comment.username} 
+                          className="w-full h-full object-cover"
+                        />
+                      </div>
+                      <div className="flex-1">
+                        <div className="flex items-center justify-between mb-2">
+                          <div>
+                            <h4 className="font-bold">{comment.username}</h4>
+                            <div className="text-xs text-slate-400">
+                              {comment.created_at ? new Date(comment.created_at).toLocaleDateString() : 'Unknown date'}
+                            </div>
+                          </div>
+                          {comment.rating && (
+                            <div className="flex items-center">
+                              <Star className="text-yellow-500" size={16} />
+                              <span className="ml-1">{comment.rating}</span>
+                            </div>
+                          )}
+                        </div>
+                        <p className="text-slate-300">{comment.comment_text}</p>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="p-8 text-center">
+                <MessageSquare className="mx-auto mb-4 text-slate-500" size={40} />
+                <p className="text-slate-400">No reviews available for this course yet.</p>
+              </div>
+            )}
           </div>
         </section>
       </main>
