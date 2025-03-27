@@ -44,12 +44,12 @@ const Signup = () => {
   };
 
   return (
-    <div className="flex items-center justify-center min-h-screen bg-gradient-to-b from-blue-500 to-blue-600 p-4">
+    <div className="flex items-center justify-center min-h-screen bg-gradient-to-b from-blue-900 to-blue-950 p-4">
       <div className="absolute top-4 left-4">
         <Button 
           variant="outline" 
           size="sm"
-          className="bg-white/80 hover:bg-white"
+          className="bg-navy/80 hover:bg-blue-800 text-white"
           onClick={() => navigate("/")}
         >
           <ArrowLeft className="mr-2 h-4 w-4" />
@@ -57,7 +57,7 @@ const Signup = () => {
         </Button>
       </div>
       <div className="w-full max-w-md">
-        <Card className="backdrop-blur-sm bg-midnight border-none shadow-xl transition-all duration-300">
+        <Card className="backdrop-blur-sm bg-slate-900 border-none shadow-xl transition-all duration-300">
           <CardHeader className="space-y-1 text-center">
             <CardTitle className="text-3xl font-bold tracking-tight text-white">Create an account</CardTitle>
             <CardDescription className="text-gray-300">

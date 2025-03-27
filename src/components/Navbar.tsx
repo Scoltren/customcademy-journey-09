@@ -52,7 +52,7 @@ const Navbar = () => {
           <div className="flex items-center">
             <Link
               to="/"
-              className="text-xl font-bold font-sans bg-clip-text text-transparent bg-gradient-to-r from-blue-400 to-sky-400"
+              className="text-xl font-bold font-sans text-blue-400"
             >
               CustomCademy
             </Link>
@@ -70,20 +70,22 @@ const Navbar = () => {
             </div>
           ) : (
             <div className="flex items-center space-x-4">
-              <NavigationMenu className="mx-auto">
-                <NavigationMenuList className="flex justify-center">
-                  <NavigationMenuItem>
-                    <Link to="/" className={navigationMenuTriggerStyle() + " text-white hover:text-white"}>
-                      Home
-                    </Link>
-                  </NavigationMenuItem>
-                  <NavigationMenuItem>
-                    <Link to="/courses" className={navigationMenuTriggerStyle() + " text-white hover:text-white"}>
-                      Courses
-                    </Link>
-                  </NavigationMenuItem>
-                </NavigationMenuList>
-              </NavigationMenu>
+              <div className="flex-1 flex justify-center">
+                <NavigationMenu>
+                  <NavigationMenuList className="flex justify-center">
+                    <NavigationMenuItem>
+                      <Link to="/" className={navigationMenuTriggerStyle() + " text-white hover:text-white hover:bg-blue-700"}>
+                        Home
+                      </Link>
+                    </NavigationMenuItem>
+                    <NavigationMenuItem>
+                      <Link to="/courses" className={navigationMenuTriggerStyle() + " text-white hover:text-white hover:bg-blue-700"}>
+                        Courses
+                      </Link>
+                    </NavigationMenuItem>
+                  </NavigationMenuList>
+                </NavigationMenu>
+              </div>
               
               {user ? (
                 <DropdownMenu>
@@ -109,13 +111,13 @@ const Navbar = () => {
                 <div className="flex space-x-2">
                   <Button
                     variant="outline"
-                    className="border-gray-200 text-white hover:bg-blue-600 hover:text-white transition-all duration-300"
+                    className="border-gray-200 text-white hover:bg-blue-700 hover:text-white transition-all duration-300"
                     onClick={() => navigate("/login")}
                   >
                     Sign In
                   </Button>
                   <Button
-                    className="bg-black text-white hover:bg-white hover:text-black transition-all duration-300"
+                    className="bg-black text-black hover:bg-white hover:text-black transition-all duration-300"
                     onClick={() => navigate("/signup")}
                   >
                     Sign Up
