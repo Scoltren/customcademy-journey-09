@@ -51,6 +51,14 @@ const FeaturedCourses = () => {
     }
   }, [error]);
 
+  // Helper function to validate difficulty level
+  const validateDifficultyLevel = (level: string | null): 'Beginner' | 'Intermediate' | 'Advanced' => {
+    if (level === 'Beginner' || level === 'Intermediate' || level === 'Advanced') {
+      return level;
+    }
+    return 'Beginner'; // Default fallback
+  };
+
   return (
     <section className="section-padding">
       <div className="container mx-auto px-6">
@@ -81,7 +89,7 @@ const FeaturedCourses = () => {
                   instructor: 'Instructor', 
                   image: course.thumbnail || 'https://images.unsplash.com/photo-1498050108023-c5249f4df085',
                   category: course.categories?.name || 'Development',
-                  level: course.difficulty_level || 'Beginner',
+                  level: validateDifficultyLevel(course.difficulty_level),
                   duration: '30 hours',
                   students: 1000,
                   rating: course.overall_rating || 4.5,
