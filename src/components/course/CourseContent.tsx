@@ -55,6 +55,7 @@ const CourseContent: React.FC<CourseContentProps> = ({
     }
     
     try {
+      // Make sure the id is converted to a number
       const numericCourseId = parseInt(id, 10);
       
       // First check if user is already subscribed to this course

@@ -72,10 +72,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     // If we successfully created the user, update the username in the users table
     if (data.user) {
+      // Convert string ID to number for Supabase
+      const userId = data.user.id;
+      
       const { error: profileError } = await supabase
         .from('users')
         .upsert({
-          id: data.user.id,
+          id: userId,
           username: username,
           email: email,
           created_at: new Date().toISOString(),
@@ -98,6 +101,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     if (!user) return false;
     
     try {
+      // Always convert courseId to a number for Supabase
       const parsedCourseId = typeof courseId === 'string' ? parseInt(courseId, 10) : courseId;
       
       const { data, error } = await supabase

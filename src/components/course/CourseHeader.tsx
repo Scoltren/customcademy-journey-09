@@ -38,10 +38,13 @@ const CourseHeader: React.FC<CourseHeaderProps> = ({ course }) => {
 
     setIsEnrolling(true);
     try {
+      // Make sure course.id is a number
+      const courseIdNumber = typeof course.id === 'string' ? parseInt(course.id, 10) : course.id;
+      
       const { error } = await supabase
         .from('subscribed_courses')
         .insert({
-          course_id: course.id,
+          course_id: courseIdNumber,
           user_id: user.id,
           progress: 0
         });
