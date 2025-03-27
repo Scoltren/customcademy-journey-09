@@ -292,38 +292,6 @@ export type Database = {
           },
         ]
       }
-      reports: {
-        Row: {
-          created_at: string | null
-          id: number
-          report_text: string
-          status: string | null
-          user_id: number | null
-        }
-        Insert: {
-          created_at?: string | null
-          id?: number
-          report_text: string
-          status?: string | null
-          user_id?: number | null
-        }
-        Update: {
-          created_at?: string | null
-          id?: number
-          report_text?: string
-          status?: string | null
-          user_id?: number | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "reports_user_id_fkey"
-            columns: ["user_id"]
-            isOneToOne: false
-            referencedRelation: "users"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
       subscribed_courses: {
         Row: {
           course_id: number
