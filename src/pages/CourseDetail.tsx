@@ -24,12 +24,18 @@ const CourseDetail = () => {
       if (user && id) {
         try {
           const numericCourseId = parseInt(id, 10);
+          const numericUserId = parseInt(user.id, 10);
+          
+          if (isNaN(numericCourseId) || isNaN(numericUserId)) {
+            console.error("Invalid ID format");
+            return;
+          }
           
           const { data, error } = await supabase
             .from('subscribed_courses')
             .select('progress')
             .eq('course_id', numericCourseId)
-            .eq('user_id', user.id)
+            .eq('user_id', numericUserId)
             .single();
           
           if (error) throw error;

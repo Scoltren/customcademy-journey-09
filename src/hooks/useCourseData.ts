@@ -32,10 +32,15 @@ export const useCourseData = () => {
     queryFn: async () => {
       if (!id) throw new Error('Course ID is required');
       
+      const numericId = parseInt(id, 10);
+      if (isNaN(numericId)) {
+        throw new Error('Invalid course ID format');
+      }
+      
       const { data, error } = await supabase
         .from('courses')
         .select('*')
-        .eq('id', parseInt(id, 10))
+        .eq('id', numericId)
         .single();
       
       if (error) throw error;
@@ -55,12 +60,17 @@ export const useCourseData = () => {
     queryFn: async () => {
       if (!id) throw new Error('Course ID is required');
       
+      const numericId = parseInt(id, 10);
+      if (isNaN(numericId)) {
+        throw new Error('Invalid course ID format');
+      }
+      
       console.log('Fetching chapters for course ID:', id);
       
       const { data, error } = await supabase
         .from('chapters')
         .select('*')
-        .eq('course_id', parseInt(id, 10))
+        .eq('course_id', numericId)
         .order('id', { ascending: true });
       
       if (error) {
@@ -84,6 +94,11 @@ export const useCourseData = () => {
     queryFn: async () => {
       if (!id) throw new Error('Course ID is required');
       
+      const numericId = parseInt(id, 10);
+      if (isNaN(numericId)) {
+        throw new Error('Invalid course ID format');
+      }
+      
       // Fetch comments along with user data for display
       const { data, error } = await supabase
         .from('comments')
@@ -93,7 +108,7 @@ export const useCourseData = () => {
             username
           )
         `)
-        .eq('course_id', parseInt(id, 10))
+        .eq('course_id', numericId)
         .order('created_at', { ascending: false });
       
       if (error) throw error;

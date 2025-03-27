@@ -72,13 +72,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     // If we successfully created the user, update the username in the users table
     if (data.user) {
-      // Convert string ID to number for Supabase
-      const userId = data.user.id;
+      // The id from auth.users is a string, but our users table expects a number
+      // We need to parse this id to a number or modify our db schema
+      const numericId = parseInt(data.user.id, 10);
+      
+      if (isNaN(numericId)) {
+        console.error("Error converting user ID to number");
+        throw new Error("Invalid user ID format");
+      }
       
       const { error: profileError } = await supabase
         .from('users')
         .upsert({
-          id: userId,
+          id: numericId,
           username: username,
           email: email,
           created_at: new Date().toISOString(),
@@ -104,11 +110,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       // Always convert courseId to a number for Supabase
       const parsedCourseId = typeof courseId === 'string' ? parseInt(courseId, 10) : courseId;
       
+      if (isNaN(parsedCourseId)) {
+        console.error("Invalid course ID format");
+        return false;
+      }
+      
       const { data, error } = await supabase
         .from('subscribed_courses')
         .select('*')
         .eq('course_id', parsedCourseId)
-        .eq('user_id', user.id)
+        .eq('user_id', parseInt(user.id, 10))
         .single();
       
       if (error && error.code !== 'PGRST116') { // PGRST116 means no rows returned
