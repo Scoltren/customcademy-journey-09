@@ -1,5 +1,6 @@
+
 import { useState, useEffect } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "../contexts/AuthContext";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -12,13 +13,23 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { useIsMobile } from "../hooks/use-mobile";
-import { Menu, X } from "lucide-react";
+import { Home, Menu, X } from "lucide-react";
+import {
+  NavigationMenu,
+  NavigationMenuContent,
+  NavigationMenuItem,
+  NavigationMenuLink,
+  NavigationMenuList,
+  NavigationMenuTrigger,
+  navigationMenuTriggerStyle,
+} from "@/components/ui/navigation-menu";
 
 const Navbar = () => {
   const [scrolled, setScrolled] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
   const { user, logout } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
   const isMobile = useIsMobile();
 
   useEffect(() => {
@@ -35,6 +46,11 @@ const Navbar = () => {
     };
   }, [scrolled]);
 
+  useEffect(() => {
+    // Close mobile menu when route changes
+    setMenuOpen(false);
+  }, [location.pathname]);
+
   const handleLogout = async () => {
     try {
       await logout();
@@ -42,10 +58,6 @@ const Navbar = () => {
     } catch (error) {
       console.error("Logout error:", error);
     }
-  };
-
-  const handleMenuToggle = () => {
-    setMenuOpen(!menuOpen);
   };
 
   const navbarClasses = `fixed w-full z-50 transition-all duration-300 ${
@@ -68,20 +80,30 @@ const Navbar = () => {
           {isMobile ? (
             <div className="flex items-center">
               <button
-                onClick={handleMenuToggle}
+                onClick={() => setMenuOpen(!menuOpen)}
                 className="text-gray-500 dark:text-gray-300 focus:outline-none"
+                aria-label={menuOpen ? "Close menu" : "Open menu"}
               >
                 {menuOpen ? <X size={24} /> : <Menu size={24} />}
               </button>
             </div>
           ) : (
             <div className="flex items-center space-x-4">
-              <Link
-                to="/courses"
-                className="text-gray-600 dark:text-gray-300 hover:text-black dark:hover:text-white transition-colors"
-              >
-                Courses
-              </Link>
+              <NavigationMenu>
+                <NavigationMenuList>
+                  <NavigationMenuItem>
+                    <Link to="/" className={navigationMenuTriggerStyle()}>
+                      Home
+                    </Link>
+                  </NavigationMenuItem>
+                  <NavigationMenuItem>
+                    <Link to="/courses" className={navigationMenuTriggerStyle()}>
+                      Courses
+                    </Link>
+                  </NavigationMenuItem>
+                </NavigationMenuList>
+              </NavigationMenu>
+              
               {user ? (
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
@@ -129,9 +151,14 @@ const Navbar = () => {
         <div className="md:hidden bg-white dark:bg-black shadow-lg">
           <div className="px-2 pt-2 pb-3 space-y-1 sm:px-3">
             <Link
+              to="/"
+              className="block px-3 py-2 text-base font-medium text-gray-600 dark:text-gray-300 hover:text-black dark:hover:text-white"
+            >
+              Home
+            </Link>
+            <Link
               to="/courses"
               className="block px-3 py-2 text-base font-medium text-gray-600 dark:text-gray-300 hover:text-black dark:hover:text-white"
-              onClick={() => setMenuOpen(false)}
             >
               Courses
             </Link>
@@ -140,15 +167,11 @@ const Navbar = () => {
                 <Link
                   to="/dashboard"
                   className="block px-3 py-2 text-base font-medium text-gray-600 dark:text-gray-300 hover:text-black dark:hover:text-white"
-                  onClick={() => setMenuOpen(false)}
                 >
                   Dashboard
                 </Link>
                 <button
-                  onClick={() => {
-                    handleLogout();
-                    setMenuOpen(false);
-                  }}
+                  onClick={handleLogout}
                   className="block w-full text-left px-3 py-2 text-base font-medium text-gray-600 dark:text-gray-300 hover:text-black dark:hover:text-white"
                 >
                   Logout
@@ -159,14 +182,12 @@ const Navbar = () => {
                 <Link
                   to="/login"
                   className="block px-3 py-2 text-base font-medium text-gray-600 dark:text-gray-300 hover:text-black dark:hover:text-white"
-                  onClick={() => setMenuOpen(false)}
                 >
                   Sign In
                 </Link>
                 <Link
                   to="/signup"
                   className="block px-3 py-2 text-base font-medium text-gray-600 dark:text-gray-300 hover:text-black dark:hover:text-white"
-                  onClick={() => setMenuOpen(false)}
                 >
                   Sign Up
                 </Link>

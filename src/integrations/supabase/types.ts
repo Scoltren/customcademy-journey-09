@@ -45,16 +45,27 @@ export type Database = {
         Row: {
           id: number
           name: string
+          quiz_id: number | null
         }
         Insert: {
           id?: number
           name: string
+          quiz_id?: number | null
         }
         Update: {
           id?: number
           name?: string
+          quiz_id?: number | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "categories_quiz_id_fkey"
+            columns: ["quiz_id"]
+            isOneToOne: false
+            referencedRelation: "quizzes"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       chapters: {
         Row: {

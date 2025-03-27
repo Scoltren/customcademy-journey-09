@@ -11,6 +11,8 @@ import Courses from "./pages/Courses";
 import CourseDetail from "./pages/CourseDetail";
 import NotFound from "./pages/NotFound";
 import Dashboard from "./pages/Dashboard";
+import SelectInterests from "./pages/SelectInterests";
+import CategoryQuiz from "./pages/CategoryQuiz";
 
 import "./App.css";
 
@@ -25,6 +27,8 @@ const App = () => {
             <Route path="/" element={<Index />} />
             <Route path="/login" element={<Login />} />
             <Route path="/signup" element={<Signup />} />
+            <Route path="/select-interests" element={<SelectInterests />} />
+            <Route path="/category-quiz" element={<CategoryQuiz />} />
             <Route path="/courses" element={<Courses />} />
             <Route path="/courses/:courseId" element={<CourseDetail />} />
             <Route path="/dashboard" element={<Dashboard />} />

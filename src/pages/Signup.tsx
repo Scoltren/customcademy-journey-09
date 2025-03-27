@@ -1,12 +1,13 @@
 
 import React, { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { toast } from "sonner";
+import { ArrowLeft } from "lucide-react";
 
 const Signup = () => {
   const [email, setEmail] = useState("");
@@ -29,7 +30,7 @@ const Signup = () => {
       setIsLoading(true);
       await signup(email, password, username);
       toast.success("Account created successfully!");
-      navigate("/");
+      navigate("/select-interests");
     } catch (error) {
       console.error("Signup error:", error);
       if (error instanceof Error) {
@@ -43,7 +44,18 @@ const Signup = () => {
   };
 
   return (
-    <div className="flex items-center justify-center min-h-screen bg-gradient-to-b from-background to-muted/30 p-4">
+    <div className="flex items-center justify-center min-h-screen bg-gradient-to-b from-blue-500 to-blue-600 p-4">
+      <div className="absolute top-4 left-4">
+        <Button 
+          variant="outline" 
+          size="sm"
+          className="bg-white/80 hover:bg-white"
+          onClick={() => navigate("/")}
+        >
+          <ArrowLeft className="mr-2 h-4 w-4" />
+          Back to Homepage
+        </Button>
+      </div>
       <div className="w-full max-w-md">
         <Card className="backdrop-blur-sm bg-white/90 dark:bg-black/80 border-none shadow-xl transition-all duration-300">
           <CardHeader className="space-y-1 text-center">
