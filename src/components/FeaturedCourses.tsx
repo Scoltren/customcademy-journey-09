@@ -1,8 +1,8 @@
 
 import React, { useState, useEffect } from 'react';
 import CourseCard from './CourseCard';
-import { courseApi } from '@/services/api';
 import { toast } from 'sonner';
+import { supabase } from '@/integrations/supabase/client';
 
 const FeaturedCourses = () => {
   const [courses, setCourses] = useState<any[]>([]);
@@ -12,13 +12,28 @@ const FeaturedCourses = () => {
     const fetchCourses = async () => {
       try {
         setLoading(true);
-        const data = await courseApi.getCourses();
-        // Only display up to 6 courses on the homepage
-        setCourses(data.slice(0, 6));
+        
+        // Fetch courses directly from Supabase
+        const { data, error } = await supabase
+          .from('courses')
+          .select(`
+            *,
+            categories(name)
+          `)
+          .limit(6);
+        
+        if (error) {
+          throw error;
+        }
+        
+        if (data) {
+          setCourses(data);
+        } else {
+          setCourses([]);
+        }
       } catch (error) {
         console.error('Error fetching courses:', error);
         toast.error('Failed to load courses');
-        // Use sample data if API fails during development
         setCourses([]);
       } finally {
         setLoading(false);
@@ -54,13 +69,13 @@ const FeaturedCourses = () => {
                 course={{
                   id: course.id.toString(),
                   title: course.title,
-                  description: course.description,
-                  instructor: 'Instructor', // You may need to update this based on your API
+                  description: course.description || 'No description available',
+                  instructor: 'Instructor', 
                   image: course.thumbnail || 'https://images.unsplash.com/photo-1498050108023-c5249f4df085',
-                  category: course.category_name || 'Development',
+                  category: course.categories?.name || 'Development',
                   level: course.difficulty_level || 'Beginner',
-                  duration: '30 hours', // You may need to update this based on your API
-                  students: 1000, // You may need to update this based on your API
+                  duration: '30 hours',
+                  students: 1000,
                   rating: course.overall_rating || 4.5,
                   price: course.price || 0
                 }}
