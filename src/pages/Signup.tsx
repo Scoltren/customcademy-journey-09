@@ -57,17 +57,17 @@ const Signup = () => {
         </Button>
       </div>
       <div className="w-full max-w-md">
-        <Card className="backdrop-blur-sm bg-white/90 dark:bg-black/80 border-none shadow-xl transition-all duration-300">
+        <Card className="backdrop-blur-sm bg-midnight border-none shadow-xl transition-all duration-300">
           <CardHeader className="space-y-1 text-center">
-            <CardTitle className="text-3xl font-bold tracking-tight">Create an account</CardTitle>
-            <CardDescription className="text-muted-foreground">
+            <CardTitle className="text-3xl font-bold tracking-tight text-white">Create an account</CardTitle>
+            <CardDescription className="text-gray-300">
               Enter your information to get started
             </CardDescription>
           </CardHeader>
           <CardContent>
             <form onSubmit={handleSubmit} className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="email" className="text-sm font-medium">
+                <Label htmlFor="email" className="text-sm font-medium text-gray-200">
                   Email
                 </Label>
                 <Input
@@ -77,11 +77,11 @@ const Signup = () => {
                   onChange={(e) => setEmail(e.target.value)}
                   placeholder="name@example.com"
                   required
-                  className="h-11 bg-background/50"
+                  className="h-11 bg-navy/80 text-white placeholder:text-gray-400"
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="username" className="text-sm font-medium">
+                <Label htmlFor="username" className="text-sm font-medium text-gray-200">
                   Username
                 </Label>
                 <Input
@@ -91,11 +91,11 @@ const Signup = () => {
                   onChange={(e) => setUsername(e.target.value)}
                   placeholder="Your display name"
                   required
-                  className="h-11 bg-background/50"
+                  className="h-11 bg-navy/80 text-white placeholder:text-gray-400"
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="password" className="text-sm font-medium">
+                <Label htmlFor="password" className="text-sm font-medium text-gray-200">
                   Password
                 </Label>
                 <Input
@@ -105,11 +105,11 @@ const Signup = () => {
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder="Create a password"
                   required
-                  className="h-11 bg-background/50"
+                  className="h-11 bg-navy/80 text-white placeholder:text-gray-400"
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="confirmPassword" className="text-sm font-medium">
+                <Label htmlFor="confirmPassword" className="text-sm font-medium text-gray-200">
                   Confirm Password
                 </Label>
                 <Input
@@ -119,24 +119,24 @@ const Signup = () => {
                   onChange={(e) => setConfirmPassword(e.target.value)}
                   placeholder="Confirm your password"
                   required
-                  className="h-11 bg-background/50"
+                  className="h-11 bg-navy/80 text-white placeholder:text-gray-400"
                 />
               </div>
               <Button
                 type="submit"
-                className="w-full h-11 bg-black text-white dark:bg-white dark:text-black hover:bg-black/90 dark:hover:bg-white/90 transition-all duration-300"
+                className="w-full h-11 bg-blue-500 text-white hover:bg-blue-600 transition-all duration-300"
                 disabled={isLoading}
               >
                 {isLoading ? "Creating Account..." : "Sign Up"}
               </Button>
             </form>
           </CardContent>
-          <CardFooter className="flex justify-center text-sm border-t p-6">
-            <div className="flex items-center gap-1">
+          <CardFooter className="flex justify-center text-sm border-t border-gray-700 p-6">
+            <div className="flex items-center gap-1 text-gray-300">
               Already have an account?
               <Button
                 variant="link"
-                className="p-0 h-auto font-semibold text-black dark:text-white"
+                className="p-0 h-auto font-semibold text-blue-400 hover:text-blue-300"
                 onClick={() => navigate("/login")}
               >
                 Sign in
