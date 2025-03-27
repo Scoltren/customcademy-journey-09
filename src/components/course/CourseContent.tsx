@@ -2,16 +2,45 @@
 import React, { useEffect } from 'react';
 import { BookOpen, Play } from 'lucide-react';
 import { Chapter } from '@/types/course';
+import { Skeleton } from '@/components/ui/skeleton';
 
 interface CourseContentProps {
   chapters: Chapter[];
+  courseId?: number;
+  isLoading?: boolean;
 }
 
-const CourseContent: React.FC<CourseContentProps> = ({ chapters }) => {
+const CourseContent: React.FC<CourseContentProps> = ({ 
+  chapters, 
+  courseId,
+  isLoading = false 
+}) => {
   // Log chapters data for debugging
   useEffect(() => {
     console.log('CourseContent chapters:', chapters);
   }, [chapters]);
+
+  if (isLoading) {
+    return (
+      <section className="container mx-auto px-6 mb-12">
+        <h2 className="heading-md mb-6">Course Content</h2>
+        <div className="glass-card">
+          {[1, 2, 3].map((i) => (
+            <div key={i} className="p-6 border-b border-slate-700/50 last:border-b-0">
+              <div className="flex items-start gap-4">
+                <Skeleton className="w-8 h-8 rounded-full bg-slate-700/50" />
+                <div className="w-full">
+                  <Skeleton className="h-6 w-2/3 mb-2 bg-slate-700/50" />
+                  <Skeleton className="h-4 w-full mb-2 bg-slate-700/50" />
+                  <Skeleton className="h-4 w-1/2 bg-slate-700/50" />
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      </section>
+    );
+  }
 
   return (
     <section className="container mx-auto px-6 mb-12">
@@ -45,8 +74,12 @@ const CourseContent: React.FC<CourseContentProps> = ({ chapters }) => {
           ))}
         </div>
       ) : (
-        <div className="glass-card p-8 text-center">
-          <p className="text-slate-400">No content available for this course yet.</p>
+        <div className="glass-card p-8">
+          <div className="text-center">
+            <BookOpen className="mx-auto h-12 w-12 text-slate-400 mb-4" />
+            <h3 className="text-xl font-medium mb-2">No chapters available yet</h3>
+            <p className="text-slate-400 mb-6">This course doesn't have any content available yet.</p>
+          </div>
         </div>
       )}
     </section>

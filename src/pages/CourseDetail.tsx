@@ -40,7 +40,11 @@ const CourseDetail = () => {
         </div>
         
         {/* Course Content */}
-        <CourseContent chapters={chapters || []} />
+        <CourseContent 
+          chapters={chapters || []} 
+          courseId={course.id}
+          isLoading={isLoading}
+        />
         
         {/* What You'll Learn */}
         <CourseFeatures />
