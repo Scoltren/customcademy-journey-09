@@ -39,8 +39,9 @@ const fetchFeaturedCourses = async (): Promise<Course[]> => {
   return data || [];
 };
 
-// Function to fetch user interests - accepts a string type for user.id
+// Function to fetch user interests that correctly handles the string user ID
 const fetchUserInterests = async (userId: string): Promise<number[]> => {
+  // Convert userId string to number or use string comparison based on your DB schema
   const { data, error } = await supabase
     .from('user_interest_categories')
     .select('category_id')
