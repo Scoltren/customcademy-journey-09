@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import CourseCard from './CourseCard';
@@ -9,7 +8,6 @@ import { Skeleton } from './ui/skeleton';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from './ui/button';
 
-// Define the course type based on what we're fetching from Supabase
 interface Course {
   id: number;
   title: string;
@@ -39,7 +37,6 @@ const fetchFeaturedCourses = async (): Promise<Course[]> => {
   return data || [];
 };
 
-// Update the function to properly handle string user ID
 const fetchUserInterests = async (userId: string): Promise<number[]> => {
   const { data, error } = await supabase
     .from('user_interest_categories')
@@ -50,7 +47,7 @@ const fetchUserInterests = async (userId: string): Promise<number[]> => {
     throw error;
   }
   
-  return data?.map(item => item.category_id) || [];
+  return data?.map(item => Number(item.category_id)) || [];
 };
 
 const FeaturedCourses = () => {
@@ -63,7 +60,6 @@ const FeaturedCourses = () => {
     staleTime: 1000 * 60 * 5, // 5 minutes
   });
 
-  // Fetch user interests when component mounts
   useEffect(() => {
     const checkUserInterests = async () => {
       if (user) {
@@ -82,7 +78,6 @@ const FeaturedCourses = () => {
     checkUserInterests();
   }, [user]);
 
-  // Show error toast if query fails
   React.useEffect(() => {
     if (error) {
       console.error('Error fetching courses:', error);
@@ -90,7 +85,6 @@ const FeaturedCourses = () => {
     }
   }, [error]);
 
-  // Helper function to validate difficulty level
   const validateDifficultyLevel = (level: string | null): 'Beginner' | 'Intermediate' | 'Advanced' => {
     if (level === 'Beginner' || level === 'Intermediate' || level === 'Advanced') {
       return level;
