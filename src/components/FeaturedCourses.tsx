@@ -39,6 +39,7 @@ const fetchFeaturedCourses = async (): Promise<Course[]> => {
   return data || [];
 };
 
+// Modified to accept string type for userId to match Auth user.id
 const fetchUserInterests = async (userId: string): Promise<number[]> => {
   const { data, error } = await supabase
     .from('user_interest_categories')
