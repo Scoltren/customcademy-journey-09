@@ -9,6 +9,7 @@ type AuthContextType = {
   login: (email: string, password: string) => Promise<void>;
   signup: (email: string, password: string, username: string) => Promise<void>;
   logout: () => Promise<void>;
+  isEnrolled: (courseId: string | number) => Promise<boolean>;
 };
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -86,8 +87,40 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
+  const isEnrolled = async (courseId: string | number) => {
+    if (!user) return false;
+    
+    try {
+      // Convert both IDs to numbers for consistency
+      const numericCourseId = typeof courseId === 'string' ? parseInt(courseId, 10) : courseId;
+      const numericUserId = parseInt(user.id, 10);
+      
+      if (isNaN(numericCourseId) || isNaN(numericUserId)) {
+        console.error("Invalid ID format in isEnrolled check");
+        return false;
+      }
+      
+      const { data, error } = await supabase
+        .from('subscribed_courses')
+        .select('*')
+        .eq('course_id', numericCourseId)
+        .eq('user_id', numericUserId)
+        .single();
+        
+      if (error && error.code !== 'PGRST116') {
+        console.error('Error checking enrollment status:', error);
+        return false;
+      }
+      
+      return !!data;
+    } catch (err) {
+      console.error('Error in isEnrolled:', err);
+      return false;
+    }
+  };
+
   return (
-    <AuthContext.Provider value={{ user, session, login, signup, logout }}>
+    <AuthContext.Provider value={{ user, session, login, signup, logout, isEnrolled }}>
       {!loading && children}
     </AuthContext.Provider>
   );
