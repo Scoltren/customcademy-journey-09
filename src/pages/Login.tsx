@@ -43,12 +43,12 @@ const Login = () => {
   };
 
   return (
-    <div className="flex items-center justify-center min-h-screen bg-gradient-to-b from-blue-900 to-blue-950 p-4">
+    <div className="flex items-center justify-center min-h-screen bg-gradient-to-b from-blue-950 to-slate-950 p-4">
       <div className="absolute top-4 left-4">
         <Button 
           variant="outline" 
           size="sm"
-          className="bg-navy/80 hover:bg-blue-800 text-white"
+          className="bg-slate-800 hover:bg-slate-700 text-white border-slate-700"
           onClick={() => navigate("/")}
         >
           <ArrowLeft className="mr-2 h-4 w-4" />
@@ -56,7 +56,7 @@ const Login = () => {
         </Button>
       </div>
       <div className="w-full max-w-md">
-        <Card className="backdrop-blur-sm bg-slate-900 border-none shadow-xl transition-all duration-300">
+        <Card className="backdrop-blur-sm bg-slate-950 border-slate-800 shadow-xl transition-all duration-300">
           <CardHeader className="space-y-1 text-center">
             <CardTitle className="text-3xl font-bold tracking-tight text-white">Welcome back</CardTitle>
             <CardDescription className="text-gray-300">
@@ -76,7 +76,7 @@ const Login = () => {
                   onChange={(e) => setEmail(e.target.value)}
                   placeholder="name@example.com"
                   required
-                  className="h-11 bg-navy/80 text-white placeholder:text-gray-400"
+                  className="h-11 bg-slate-800 text-white placeholder:text-gray-400 border-slate-700"
                 />
               </div>
               <div className="space-y-2">
@@ -92,19 +92,19 @@ const Login = () => {
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder="Enter your password"
                   required
-                  className="h-11 bg-navy/80 text-white placeholder:text-gray-400"
+                  className="h-11 bg-slate-800 text-white placeholder:text-gray-400 border-slate-700"
                 />
               </div>
               <Button
                 type="submit"
-                className="w-full h-11 bg-blue-500 text-white hover:bg-blue-600 transition-all duration-300"
+                className="w-full h-11 bg-blue-600 text-white hover:bg-blue-700 transition-all duration-300"
                 disabled={isLoading}
               >
                 {isLoading ? "Signing in..." : "Sign In"}
               </Button>
             </form>
           </CardContent>
-          <CardFooter className="flex justify-center text-sm border-t border-gray-700 p-6">
+          <CardFooter className="flex justify-center text-sm border-t border-slate-800 p-6">
             <div className="flex items-center gap-1 text-gray-300">
               Don't have an account?
               <Button
