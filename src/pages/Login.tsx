@@ -13,6 +13,11 @@ const Login = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  
+  // Form validation states
+  const [emailError, setEmailError] = useState("");
+  const [passwordError, setPasswordError] = useState("");
+  
   const { login, user } = useAuth();
   const navigate = useNavigate();
 
@@ -22,8 +27,40 @@ const Login = () => {
     }
   }, [user, navigate]);
 
+  // Email validation
+  const validateEmail = (email: string) => {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!email) {
+      setEmailError("Email is required");
+      return false;
+    } else if (!emailRegex.test(email)) {
+      setEmailError("Please enter a valid email address");
+      return false;
+    }
+    setEmailError("");
+    return true;
+  };
+
+  // Password validation - just checking it's not empty for login
+  const validatePassword = (password: string) => {
+    if (!password) {
+      setPasswordError("Password is required");
+      return false;
+    }
+    setPasswordError("");
+    return true;
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    // Validate fields
+    const isEmailValid = validateEmail(email);
+    const isPasswordValid = validatePassword(password);
+    
+    if (!isEmailValid || !isPasswordValid) {
+      return;
+    }
     
     try {
       setIsLoading(true);
@@ -66,22 +103,31 @@ const Login = () => {
           <CardContent>
             <form onSubmit={handleSubmit} className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="email" className="text-sm font-medium text-gray-200">
+                <Label htmlFor="email" className="text-sm font-medium text-gray-200 text-left w-full block">
                   Email
                 </Label>
                 <Input
                   id="email"
                   type="email"
                   value={email}
-                  onChange={(e) => setEmail(e.target.value)}
+                  onChange={(e) => {
+                    setEmail(e.target.value);
+                    if (emailError) validateEmail(e.target.value);
+                  }}
+                  onBlur={(e) => validateEmail(e.target.value)}
                   placeholder="name@example.com"
                   required
-                  className="h-11 bg-slate-800 text-white placeholder:text-gray-400 border-slate-700"
+                  className={`h-11 bg-slate-800 text-white placeholder:text-gray-400 border-slate-700 ${
+                    emailError ? "border-red-500" : ""
+                  }`}
                 />
+                {emailError && (
+                  <p className="text-red-500 text-xs mt-1">{emailError}</p>
+                )}
               </div>
               <div className="space-y-2">
                 <div className="flex items-center justify-between">
-                  <Label htmlFor="password" className="text-sm font-medium text-gray-200">
+                  <Label htmlFor="password" className="text-sm font-medium text-gray-200 text-left w-full block">
                     Password
                   </Label>
                 </div>
@@ -89,11 +135,20 @@ const Login = () => {
                   id="password"
                   type="password"
                   value={password}
-                  onChange={(e) => setPassword(e.target.value)}
+                  onChange={(e) => {
+                    setPassword(e.target.value);
+                    if (passwordError) validatePassword(e.target.value);
+                  }}
+                  onBlur={(e) => validatePassword(e.target.value)}
                   placeholder="Enter your password"
                   required
-                  className="h-11 bg-slate-800 text-white placeholder:text-gray-400 border-slate-700"
+                  className={`h-11 bg-slate-800 text-white placeholder:text-gray-400 border-slate-700 ${
+                    passwordError ? "border-red-500" : ""
+                  }`}
                 />
+                {passwordError && (
+                  <p className="text-red-500 text-xs mt-1">{passwordError}</p>
+                )}
               </div>
               <Button
                 type="submit"

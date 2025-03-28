@@ -1,5 +1,5 @@
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext";
 import { Button } from "@/components/ui/button";
@@ -15,14 +15,86 @@ const Signup = () => {
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
-  const { signup } = useAuth();
+  
+  // Form validation states
+  const [emailError, setEmailError] = useState("");
+  const [passwordError, setPasswordError] = useState("");
+  const [confirmPasswordError, setConfirmPasswordError] = useState("");
+  const [usernameError, setUsernameError] = useState("");
+  
+  const { signup, user } = useAuth();
   const navigate = useNavigate();
+
+  useEffect(() => {
+    if (user) {
+      navigate("/");
+    }
+  }, [user, navigate]);
+
+  // Email validation
+  const validateEmail = (email: string) => {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!email) {
+      setEmailError("Email is required");
+      return false;
+    } else if (!emailRegex.test(email)) {
+      setEmailError("Please enter a valid email address");
+      return false;
+    }
+    setEmailError("");
+    return true;
+  };
+
+  // Username validation
+  const validateUsername = (username: string) => {
+    if (!username) {
+      setUsernameError("Username is required");
+      return false;
+    } else if (username.length < 3) {
+      setUsernameError("Username must be at least 3 characters");
+      return false;
+    }
+    setUsernameError("");
+    return true;
+  };
+
+  // Password validation
+  const validatePassword = (password: string) => {
+    const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
+    if (!password) {
+      setPasswordError("Password is required");
+      return false;
+    } else if (!passwordRegex.test(password)) {
+      setPasswordError("Password must be at least 8 characters with at least one uppercase letter, one lowercase letter, one number, and one special character");
+      return false;
+    }
+    setPasswordError("");
+    return true;
+  };
+
+  // Confirm password validation
+  const validateConfirmPassword = (confirmPass: string) => {
+    if (!confirmPass) {
+      setConfirmPasswordError("Please confirm your password");
+      return false;
+    } else if (confirmPass !== password) {
+      setConfirmPasswordError("Passwords don't match");
+      return false;
+    }
+    setConfirmPasswordError("");
+    return true;
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (password !== confirmPassword) {
-      toast.error("Passwords don't match");
+    // Validate all fields
+    const isEmailValid = validateEmail(email);
+    const isUsernameValid = validateUsername(username);
+    const isPasswordValid = validatePassword(password);
+    const isConfirmPasswordValid = validateConfirmPassword(confirmPassword);
+    
+    if (!isEmailValid || !isUsernameValid || !isPasswordValid || !isConfirmPasswordValid) {
       return;
     }
     
@@ -67,60 +139,96 @@ const Signup = () => {
           <CardContent>
             <form onSubmit={handleSubmit} className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="email" className="text-sm font-medium text-gray-200">
+                <Label htmlFor="email" className="text-sm font-medium text-gray-200 text-left w-full block">
                   Email
                 </Label>
                 <Input
                   id="email"
                   type="email"
                   value={email}
-                  onChange={(e) => setEmail(e.target.value)}
+                  onChange={(e) => {
+                    setEmail(e.target.value);
+                    if (emailError) validateEmail(e.target.value);
+                  }}
+                  onBlur={(e) => validateEmail(e.target.value)}
                   placeholder="name@example.com"
                   required
-                  className="h-11 bg-slate-800 text-white placeholder:text-gray-400 border-slate-700"
+                  className={`h-11 bg-slate-800 text-white placeholder:text-gray-400 border-slate-700 ${
+                    emailError ? "border-red-500" : ""
+                  }`}
                 />
+                {emailError && (
+                  <p className="text-red-500 text-xs mt-1">{emailError}</p>
+                )}
               </div>
               <div className="space-y-2">
-                <Label htmlFor="username" className="text-sm font-medium text-gray-200">
+                <Label htmlFor="username" className="text-sm font-medium text-gray-200 text-left w-full block">
                   Username
                 </Label>
                 <Input
                   id="username"
                   type="text"
                   value={username}
-                  onChange={(e) => setUsername(e.target.value)}
+                  onChange={(e) => {
+                    setUsername(e.target.value);
+                    if (usernameError) validateUsername(e.target.value);
+                  }}
+                  onBlur={(e) => validateUsername(e.target.value)}
                   placeholder="Your display name"
                   required
-                  className="h-11 bg-slate-800 text-white placeholder:text-gray-400 border-slate-700"
+                  className={`h-11 bg-slate-800 text-white placeholder:text-gray-400 border-slate-700 ${
+                    usernameError ? "border-red-500" : ""
+                  }`}
                 />
+                {usernameError && (
+                  <p className="text-red-500 text-xs mt-1">{usernameError}</p>
+                )}
               </div>
               <div className="space-y-2">
-                <Label htmlFor="password" className="text-sm font-medium text-gray-200">
+                <Label htmlFor="password" className="text-sm font-medium text-gray-200 text-left w-full block">
                   Password
                 </Label>
                 <Input
                   id="password"
                   type="password"
                   value={password}
-                  onChange={(e) => setPassword(e.target.value)}
+                  onChange={(e) => {
+                    setPassword(e.target.value);
+                    if (passwordError) validatePassword(e.target.value);
+                  }}
+                  onBlur={(e) => validatePassword(e.target.value)}
                   placeholder="Create a password"
                   required
-                  className="h-11 bg-slate-800 text-white placeholder:text-gray-400 border-slate-700"
+                  className={`h-11 bg-slate-800 text-white placeholder:text-gray-400 border-slate-700 ${
+                    passwordError ? "border-red-500" : ""
+                  }`}
                 />
+                {passwordError && (
+                  <p className="text-red-500 text-xs mt-1">{passwordError}</p>
+                )}
               </div>
               <div className="space-y-2">
-                <Label htmlFor="confirmPassword" className="text-sm font-medium text-gray-200">
+                <Label htmlFor="confirmPassword" className="text-sm font-medium text-gray-200 text-left w-full block">
                   Confirm Password
                 </Label>
                 <Input
                   id="confirmPassword"
                   type="password"
                   value={confirmPassword}
-                  onChange={(e) => setConfirmPassword(e.target.value)}
+                  onChange={(e) => {
+                    setConfirmPassword(e.target.value);
+                    if (confirmPasswordError) validateConfirmPassword(e.target.value);
+                  }}
+                  onBlur={(e) => validateConfirmPassword(e.target.value)}
                   placeholder="Confirm your password"
                   required
-                  className="h-11 bg-slate-800 text-white placeholder:text-gray-400 border-slate-700"
+                  className={`h-11 bg-slate-800 text-white placeholder:text-gray-400 border-slate-700 ${
+                    confirmPasswordError ? "border-red-500" : ""
+                  }`}
                 />
+                {confirmPasswordError && (
+                  <p className="text-red-500 text-xs mt-1">{confirmPasswordError}</p>
+                )}
               </div>
               <Button
                 type="submit"
