@@ -77,12 +77,10 @@ const SelectInterests = () => {
     try {
       setIsLoading(true);
       
-      const userId = parseInt(user.id);
-      
       // Save user interests to user_interest_categories table
       const { error } = await supabase.from("user_interest_categories").insert(
         selectedCategories.map(categoryId => ({
-          user_id: userId,
+          user_id: user.id,
           category_id: categoryId
         }))
       );
@@ -126,19 +124,19 @@ const SelectInterests = () => {
 
   if (isFetching) {
     return (
-      <div className="flex items-center justify-center min-h-screen bg-gradient-to-b from-blue-500 to-blue-600 p-4">
+      <div className="flex items-center justify-center min-h-screen bg-gradient-to-b from-blue-950 to-slate-950 p-4">
         <div className="text-white text-xl">Loading categories...</div>
       </div>
     );
   }
 
   return (
-    <div className="flex items-center justify-center min-h-screen bg-gradient-to-b from-blue-500 to-blue-600 p-4">
+    <div className="flex items-center justify-center min-h-screen bg-gradient-to-b from-blue-950 to-slate-950 p-4">
       <div className="absolute top-4 left-4">
         <Button 
           variant="outline" 
           size="sm"
-          className="bg-white/80 hover:bg-white"
+          className="bg-slate-800 hover:bg-slate-700 text-white border-slate-700"
           onClick={() => navigate("/")}
         >
           <ArrowLeft className="mr-2 h-4 w-4" />
@@ -146,10 +144,10 @@ const SelectInterests = () => {
         </Button>
       </div>
       <div className="w-full max-w-lg">
-        <Card className="backdrop-blur-sm bg-white/90 dark:bg-black/80 border-none shadow-xl transition-all duration-300">
+        <Card className="backdrop-blur-sm bg-slate-950 border-slate-800 shadow-xl transition-all duration-300">
           <CardHeader className="space-y-1 text-center">
-            <CardTitle className="text-3xl font-bold tracking-tight">Select Your Interests</CardTitle>
-            <CardDescription className="text-muted-foreground">
+            <CardTitle className="text-3xl font-bold tracking-tight text-white">Select Your Interests</CardTitle>
+            <CardDescription className="text-gray-300">
               Choose up to 3 categories that interest you the most
             </CardDescription>
           </CardHeader>
@@ -160,8 +158,8 @@ const SelectInterests = () => {
                   key={category.id} 
                   className={`p-4 flex items-center gap-3 border rounded-md cursor-pointer transition-all ${
                     selectedCategories.includes(category.id) 
-                      ? "border-blue-500 bg-blue-50 dark:bg-blue-900/20" 
-                      : "border-gray-200 hover:border-gray-300"
+                      ? "border-blue-500 bg-blue-900/20" 
+                      : "border-gray-700 hover:border-gray-600"
                   }`}
                   onClick={() => handleCategoryToggle(category.id)}
                 >
@@ -172,7 +170,7 @@ const SelectInterests = () => {
                   />
                   <label 
                     htmlFor={`category-${category.id}`}
-                    className="flex-1 cursor-pointer font-medium"
+                    className="flex-1 cursor-pointer font-medium text-white"
                   >
                     {category.name}
                   </label>
@@ -180,13 +178,13 @@ const SelectInterests = () => {
               ))}
             </div>
             
-            <div className="mt-6 text-center text-sm">
+            <div className="mt-6 text-center text-sm text-gray-300">
               {selectedCategories.length}/3 categories selected
             </div>
           </CardContent>
           <CardFooter className="flex flex-col space-y-2">
             <Button
-              className="w-full bg-black text-white dark:bg-white dark:text-black hover:bg-black/90 dark:hover:bg-white/90"
+              className="w-full bg-blue-600 text-white hover:bg-blue-700"
               onClick={saveUserInterests}
               disabled={isLoading || selectedCategories.length === 0}
             >
@@ -194,7 +192,7 @@ const SelectInterests = () => {
             </Button>
             <Button
               variant="outline"
-              className="w-full"
+              className="w-full border-slate-700 text-slate-300 hover:text-white hover:bg-slate-800"
               onClick={skipSelection}
             >
               Skip Selection
