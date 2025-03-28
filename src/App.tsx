@@ -30,7 +30,9 @@ const App = () => {
             <Route path="/select-interests" element={<SelectInterests />} />
             <Route path="/category-quiz" element={<CategoryQuiz />} />
             <Route path="/courses" element={<Courses />} />
-            <Route path="/courses/:courseId" element={<CourseDetail />} />
+            <Route path="/courses/:id" element={<CourseDetail />} />
+            {/* Add redirect from singular to plural form */}
+            <Route path="/course/:id" element={<CourseDetail />} />
             <Route path="/dashboard" element={<Dashboard />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
