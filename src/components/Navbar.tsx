@@ -69,17 +69,18 @@ const Navbar = () => {
               </button>
             </div>
           ) : (
-            <div className="flex items-center space-x-4">
-              <div className="flex-1 flex justify-center">
+            <div className="flex items-center">
+              {/* Center the navigation items */}
+              <div className="flex-1 flex justify-center absolute left-0 right-0 mx-auto">
                 <NavigationMenu>
                   <NavigationMenuList className="flex justify-center">
                     <NavigationMenuItem>
-                      <Link to="/" className={navigationMenuTriggerStyle() + " text-white hover:text-white hover:bg-blue-700"}>
+                      <Link to="/" className="text-white hover:text-blue-300 px-4 py-2 transition-colors">
                         Home
                       </Link>
                     </NavigationMenuItem>
                     <NavigationMenuItem>
-                      <Link to="/courses" className={navigationMenuTriggerStyle() + " text-white hover:text-white hover:bg-blue-700"}>
+                      <Link to="/courses" className="text-white hover:text-blue-300 px-4 py-2 transition-colors">
                         Courses
                       </Link>
                     </NavigationMenuItem>
@@ -88,27 +89,29 @@ const Navbar = () => {
               </div>
               
               {user ? (
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Avatar className="h-8 w-8 cursor-pointer">
-                      <AvatarFallback className="bg-primary/10 text-primary">
-                        {user.email?.charAt(0).toUpperCase()}
-                      </AvatarFallback>
-                    </Avatar>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end" className="w-56">
-                    <DropdownMenuLabel>My Account</DropdownMenuLabel>
-                    <DropdownMenuSeparator />
-                    <DropdownMenuItem onClick={() => navigate("/dashboard")}>
-                      Dashboard
-                    </DropdownMenuItem>
-                    <DropdownMenuItem onClick={handleLogout}>
-                      Logout
-                    </DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
+                <div className="relative z-10">
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Avatar className="h-8 w-8 cursor-pointer">
+                        <AvatarFallback className="bg-primary/10 text-primary">
+                          {user.email?.charAt(0).toUpperCase()}
+                        </AvatarFallback>
+                      </Avatar>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end" className="w-56">
+                      <DropdownMenuLabel>My Account</DropdownMenuLabel>
+                      <DropdownMenuSeparator />
+                      <DropdownMenuItem onClick={() => navigate("/dashboard")}>
+                        Dashboard
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onClick={handleLogout}>
+                        Logout
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                </div>
               ) : (
-                <div className="flex space-x-2">
+                <div className="relative z-10 flex space-x-2">
                   <Button
                     variant="outline"
                     className="border-gray-200 text-white hover:bg-blue-700 hover:text-white transition-all duration-300"
@@ -117,7 +120,7 @@ const Navbar = () => {
                     Sign In
                   </Button>
                   <Button
-                    className="bg-black text-black hover:bg-white hover:text-black transition-all duration-300"
+                    className="bg-black text-white hover:bg-white hover:text-black transition-all duration-300"
                     onClick={() => navigate("/signup")}
                   >
                     Sign Up
