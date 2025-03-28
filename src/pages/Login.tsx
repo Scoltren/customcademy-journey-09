@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from "react";
-import { useNavigate, Link } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -69,7 +69,15 @@ const Login = () => {
       navigate("/");
     } catch (error) {
       console.error("Login error:", error);
-      if (error instanceof Error) {
+      
+      // Check if it's an email confirmation error
+      if (error instanceof Error && 
+          (error.message.includes("Email not confirmed") || 
+           error.message.includes("not confirmed"))) {
+        toast.error("Your email is not confirmed yet");
+        // Navigate to confirm-email page with the email as state
+        navigate("/confirm-email", { state: { email, password } });
+      } else if (error instanceof Error) {
         toast.error(error.message || "Failed to sign in");
       } else {
         toast.error("Failed to sign in");

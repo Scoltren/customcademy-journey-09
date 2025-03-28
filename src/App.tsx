@@ -7,6 +7,7 @@ import { Toaster } from "sonner";
 import Index from "./pages/Index";
 import Login from "./pages/Login";
 import Signup from "./pages/Signup";
+import ConfirmEmail from "./pages/ConfirmEmail";
 import Courses from "./pages/Courses";
 import CourseDetail from "./pages/CourseDetail";
 import NotFound from "./pages/NotFound";
@@ -27,6 +28,7 @@ const App = () => {
             <Route path="/" element={<Index />} />
             <Route path="/login" element={<Login />} />
             <Route path="/signup" element={<Signup />} />
+            <Route path="/confirm-email" element={<ConfirmEmail />} />
             <Route path="/select-interests" element={<SelectInterests />} />
             <Route path="/category-quiz" element={<CategoryQuiz />} />
             <Route path="/courses" element={<Courses />} />

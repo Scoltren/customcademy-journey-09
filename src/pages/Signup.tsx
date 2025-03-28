@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from "react";
-import { useNavigate, Link } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -101,8 +101,9 @@ const Signup = () => {
     try {
       setIsLoading(true);
       await signup(email, password, username);
-      toast.success("Account created successfully!");
-      navigate("/select-interests");
+      toast.success("Account created! Please check your email for confirmation.");
+      // Navigate to confirm-email page with the email as state
+      navigate("/confirm-email", { state: { email, password } });
     } catch (error) {
       console.error("Signup error:", error);
       if (error instanceof Error) {
