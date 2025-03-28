@@ -119,6 +119,11 @@ const SelectInterests = () => {
     }
   };
 
+  const skipSelection = () => {
+    toast.info("You can always select your interests later");
+    navigate("/");
+  };
+
   if (isFetching) {
     return (
       <div className="flex items-center justify-center min-h-screen bg-gradient-to-b from-blue-500 to-blue-600 p-4">
@@ -186,6 +191,13 @@ const SelectInterests = () => {
               disabled={isLoading || selectedCategories.length === 0}
             >
               {isLoading ? "Saving..." : "Continue"}
+            </Button>
+            <Button
+              variant="outline"
+              className="w-full"
+              onClick={skipSelection}
+            >
+              Skip Selection
             </Button>
           </CardFooter>
         </Card>

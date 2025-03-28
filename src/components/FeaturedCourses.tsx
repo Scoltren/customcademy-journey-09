@@ -1,10 +1,13 @@
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
 import CourseCard from './CourseCard';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { useQuery } from '@tanstack/react-query';
 import { Skeleton } from './ui/skeleton';
+import { useAuth } from '@/contexts/AuthContext';
+import { Button } from './ui/button';
 
 // Define the course type based on what we're fetching from Supabase
 interface Course {
@@ -36,12 +39,47 @@ const fetchFeaturedCourses = async (): Promise<Course[]> => {
   return data || [];
 };
 
+const fetchUserInterests = async (userId: string): Promise<number[]> => {
+  const { data, error } = await supabase
+    .from('user_interest_categories')
+    .select('category_id')
+    .eq('user_id', userId);
+  
+  if (error) {
+    throw error;
+  }
+  
+  return data?.map(item => item.category_id) || [];
+};
+
 const FeaturedCourses = () => {
+  const { user } = useAuth();
+  const [hasInterests, setHasInterests] = useState<boolean | null>(null);
+  
   const { data: courses, isLoading, error } = useQuery({
     queryKey: ['featuredCourses'],
     queryFn: fetchFeaturedCourses,
     staleTime: 1000 * 60 * 5, // 5 minutes
   });
+
+  // Fetch user interests when component mounts
+  useEffect(() => {
+    const checkUserInterests = async () => {
+      if (user) {
+        try {
+          const interests = await fetchUserInterests(user.id);
+          setHasInterests(interests.length > 0);
+        } catch (err) {
+          console.error('Error checking user interests:', err);
+          setHasInterests(false);
+        }
+      } else {
+        setHasInterests(null); // Not logged in
+      }
+    };
+    
+    checkUserInterests();
+  }, [user]);
 
   // Show error toast if query fails
   React.useEffect(() => {
@@ -58,6 +96,16 @@ const FeaturedCourses = () => {
     }
     return 'Beginner'; // Default fallback
   };
+
+  const renderNoInterestsMessage = () => (
+    <div className="bg-slate-800/50 p-8 rounded-xl text-center space-y-4">
+      <h3 className="text-xl text-white font-medium">No recommended courses</h3>
+      <p className="text-slate-300">Please choose categories you're interested in to see personalized recommendations</p>
+      <Button asChild className="mt-4 bg-blue-600 hover:bg-blue-700">
+        <Link to="/select-interests">Select Interests</Link>
+      </Button>
+    </div>
+  );
 
   return (
     <section className="section-padding">
@@ -77,6 +125,8 @@ const FeaturedCourses = () => {
               </div>
             ))}
           </div>
+        ) : user && hasInterests === false ? (
+          renderNoInterestsMessage()
         ) : courses && courses.length > 0 ? (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
             {courses.map((course) => (

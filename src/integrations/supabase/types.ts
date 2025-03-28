@@ -345,14 +345,17 @@ export type Database = {
       user_interest_categories: {
         Row: {
           category_id: number
+          difficulty_level: string | null
           user_id: number
         }
         Insert: {
           category_id: number
+          difficulty_level?: string | null
           user_id: number
         }
         Update: {
           category_id?: number
+          difficulty_level?: string | null
           user_id?: number
         }
         Relationships: [
