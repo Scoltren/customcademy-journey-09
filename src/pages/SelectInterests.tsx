@@ -53,7 +53,7 @@ const SelectInterests = () => {
     
     try {
       const { data, error } = await supabase
-        .from('user_categories')
+        .from('user_interest_categories')
         .select('category_id')
         .eq('user_id', user.id);
 
@@ -83,7 +83,7 @@ const SelectInterests = () => {
       
       // First, delete all existing user interests
       const { error: deleteError } = await supabase
-        .from('user_categories')
+        .from('user_interest_categories')
         .delete()
         .eq('user_id', user.id);
       
@@ -97,7 +97,7 @@ const SelectInterests = () => {
         }));
         
         const { error: insertError } = await supabase
-          .from('user_categories')
+          .from('user_interest_categories')
           .insert(interestsToInsert);
         
         if (insertError) throw insertError;

@@ -11,31 +11,8 @@ import { Badge } from '@/components/ui/badge';
 import { Loader2 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
-
-interface UserInterest {
-  id: number;
-  category_id: number;
-  user_id: string;
-  created_at: string;
-  category: {
-    id: number;
-    name: string;
-  }
-}
-
-interface Course {
-  id: number;
-  title: string;
-  description: string;
-  thumbnail: string;
-  price: number;
-  overall_rating: number;
-  difficulty_level: string;
-  category_id: number;
-  category_name: string;
-  creator_id: string;
-  created_at: string;
-}
+import { UserInterest } from '@/types/interest';
+import { Course } from '@/types/course';
 
 const Index = () => {
   const { user, isLoading } = useAuth();
@@ -61,7 +38,7 @@ const Index = () => {
     try {
       setLoadingInterests(true);
       const { data, error } = await supabase
-        .from('user_categories')
+        .from('user_interest_categories')
         .select('*, category:categories(*)')
         .eq('user_id', user?.id);
 
@@ -87,7 +64,7 @@ const Index = () => {
 
       const { data, error } = await supabase
         .from('courses')
-        .select('*, categories!inner(*)')
+        .select('*, categories(name)')
         .in('category_id', categoryIds)
         .limit(8);
 
@@ -104,8 +81,10 @@ const Index = () => {
         difficulty_level: course.difficulty_level,
         category_id: course.category_id,
         category_name: course.categories?.name || 'Uncategorized',
-        creator_id: course.creator_id,
-        created_at: course.created_at
+        creator_id: course.creator_id ? String(course.creator_id) : null, // Convert to string
+        created_at: course.created_at,
+        media: course.media,
+        course_time: course.course_time
       }));
       
       setRecommendedCourses(formattedCourses);
@@ -156,7 +135,7 @@ const Index = () => {
             ) : userInterests.length > 0 ? (
               <div className="flex flex-wrap gap-2">
                 {userInterests.map((interest) => (
-                  <Badge key={interest.id} className="text-sm py-1 px-3">
+                  <Badge key={interest.category_id} className="text-sm py-1 px-3">
                     {interest.category?.name}
                   </Badge>
                 ))}
@@ -202,16 +181,16 @@ const Index = () => {
                           <Badge variant="outline" className="text-xs">
                             {course.category_name}
                           </Badge>
-                          {course.overall_rating > 0 && (
+                          {course.overall_rating ? (
                             <div className="ml-auto flex items-center text-amber-500">
                               <span className="text-sm font-medium">{course.overall_rating.toFixed(1)}</span>
                               <span className="ml-1">★</span>
                             </div>
-                          )}
+                          ) : null}
                         </div>
                         <h3 className="font-semibold text-lg mb-1 line-clamp-2">{course.title}</h3>
                         <p className="text-gray-500 dark:text-gray-400 text-sm line-clamp-2 mb-2">
-                          {course.description}
+                          {course.description || 'No description available'}
                         </p>
                         <div className="mt-2 flex justify-between items-center">
                           <span className="font-bold">

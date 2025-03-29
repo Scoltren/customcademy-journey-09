@@ -19,9 +19,10 @@ export interface Course {
   price: number | null;
   media: string | null;
   category_id: number | null;
-  creator_id: number | null;
+  creator_id: string | null;
   created_at: string | null;
   course_time: number | null;
+  category_name?: string;
 }
 
 export interface Comment {

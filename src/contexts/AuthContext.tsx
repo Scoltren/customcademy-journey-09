@@ -6,6 +6,7 @@ import { User, Session } from '@supabase/supabase-js';
 type AuthContextType = {
   user: User | null;
   session: Session | null;
+  isLoading: boolean;
   login: (email: string, password: string) => Promise<void>;
   signup: (email: string, password: string, username: string) => Promise<void>;
   logout: () => Promise<void>;
@@ -115,7 +116,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   return (
-    <AuthContext.Provider value={{ user, session, login, signup, logout, isEnrolled }}>
+    <AuthContext.Provider value={{ user, session, isLoading: loading, login, signup, logout, isEnrolled }}>
       {!loading && children}
     </AuthContext.Provider>
   );
