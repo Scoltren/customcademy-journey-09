@@ -3,6 +3,7 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import { Clock, Users, Star, BookOpen } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { Badge } from '@/components/ui/badge';
 
 export interface CourseProps {
   id: string;
@@ -66,20 +67,22 @@ const CourseCard: React.FC<{ course: CourseProps; className?: string }> = ({
           />
         </div>
         <div className="absolute top-4 left-4 flex flex-col gap-2">
-          <span className="py-1.5 px-4 rounded-full bg-blue/30 text-blue-light border border-blue/40 text-xs font-semibold shadow-sm">
+          <Badge className="bg-blue-600/80 hover:bg-blue-600 text-white border-0 font-medium">
             {category}
-          </span>
-          <span className={cn(
-            "py-1.5 px-4 rounded-full text-xs shadow-sm border",
-            levelColor[level]
+          </Badge>
+          <Badge className={cn(
+            "border",
+            level === 'Beginner' ? 'bg-green-600/80 hover:bg-green-600 text-white border-0' :
+            level === 'Intermediate' ? 'bg-orange-500/80 hover:bg-orange-500 text-white border-0' :
+            'bg-red-600/80 hover:bg-red-600 text-white border-0'
           )}>
             {level}
-          </span>
+          </Badge>
         </div>
       </div>
       
       <div className={cn(
-        "p-6 flex flex-col flex-grow",
+        "p-6 flex flex-col flex-grow bg-navy/80",
         featured ? "md:w-1/2" : ""
       )}>
         <h3 className="text-xl font-bold mb-2 line-clamp-2 text-white group-hover:text-blue-light transition-colors duration-300">

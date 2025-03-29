@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
@@ -13,6 +14,7 @@ interface Question {
   id: number;
   question_text: string;
   answers: Answer[];
+  multiple_correct?: boolean;
 }
 
 interface Answer {
@@ -26,6 +28,7 @@ interface QuizResult {
   score: number;
   maxScore: number;
   passed: boolean;
+  skillLevel: 'Beginner' | 'Intermediate' | 'Advanced';
 }
 
 const QuizComponent: React.FC<QuizComponentProps> = ({ quizId }) => {
@@ -66,9 +69,14 @@ const QuizComponent: React.FC<QuizComponentProps> = ({ quizId }) => {
             
             if (answersError) throw answersError;
             
+            // Check if this question has multiple correct answers
+            const correctAnswers = answersData?.filter(answer => answer.points > 0) || [];
+            const multiple_correct = correctAnswers.length > 1;
+            
             return {
               ...question,
-              answers: answersData || []
+              answers: answersData || [],
+              multiple_correct
             };
           })
         );
@@ -91,8 +99,17 @@ const QuizComponent: React.FC<QuizComponentProps> = ({ quizId }) => {
   const handleAnswerSelect = (questionId: number, answerId: number) => {
     setSelectedAnswers(prev => {
       const currentAnswers = prev[questionId] || [];
+      const question = questions.find(q => q.id === questionId);
       
-      // If the answer is already selected, remove it
+      // If this is a single-answer question, replace previous selection
+      if (!question?.multiple_correct) {
+        return {
+          ...prev,
+          [questionId]: [answerId]
+        };
+      }
+      
+      // For multiple-answer questions, toggle the selection
       if (currentAnswers.includes(answerId)) {
         return {
           ...prev,
@@ -100,7 +117,7 @@ const QuizComponent: React.FC<QuizComponentProps> = ({ quizId }) => {
         };
       }
       
-      // Otherwise add it to the selection
+      // Add to the selection
       return {
         ...prev,
         [questionId]: [...currentAnswers, answerId]
@@ -113,37 +130,93 @@ const QuizComponent: React.FC<QuizComponentProps> = ({ quizId }) => {
     let maxScore = 0;
     
     questions.forEach(question => {
+      // Calculate max possible score (sum of all positive point values)
       const correctAnswers = question.answers.filter(answer => answer.points > 0);
-      const selectedAnswerIds = selectedAnswers[question.id] || [];
-      
-      // Calculate max possible score
       correctAnswers.forEach(answer => {
         maxScore += answer.points;
       });
       
       // Calculate user's score
+      const selectedAnswerIds = selectedAnswers[question.id] || [];
       question.answers.forEach(answer => {
         if (selectedAnswerIds.includes(answer.id)) {
-          score += answer.points > 0 ? answer.points : 0;
+          score += Math.max(0, answer.points); // Only add positive points
         }
       });
     });
     
+    // Determine skill level based on percentage score
+    const percentage = maxScore > 0 ? (score / maxScore) * 100 : 0;
+    let skillLevel: 'Beginner' | 'Intermediate' | 'Advanced' = 'Beginner';
+    
+    if (percentage >= 80) {
+      skillLevel = 'Advanced';
+    } else if (percentage >= 50) {
+      skillLevel = 'Intermediate';
+    }
+    
     return {
       score,
       maxScore,
-      passed: score === maxScore
+      passed: score > 0, // Consider passed if any points scored
+      skillLevel
     };
   };
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     const result = calculateScore();
     setQuizResult(result);
     setSubmittedAnswers({...selectedAnswers});
     setShowResults(true);
     
-    if (result.passed) {
-      toast.success('Congratulations! You passed the quiz!');
+    try {
+      // Get the category associated with this quiz
+      const { data: quizData, error: quizError } = await supabase
+        .from('quizzes')
+        .select('category_id')
+        .eq('id', quizId)
+        .single();
+      
+      if (quizError) throw quizError;
+      
+      // Get the current user
+      const { data: { user } } = await supabase.auth.getUser();
+      
+      if (user && quizData?.category_id) {
+        // Store the user's skill level for this category
+        const { error: interestError } = await supabase
+          .from('user_interest_categories')
+          .upsert({
+            user_id: user.id,
+            category_id: quizData.category_id,
+            difficulty_level: result.skillLevel
+          }, {
+            onConflict: 'user_id,category_id'
+          });
+          
+        if (interestError) {
+          console.error('Error saving user skill level:', interestError);
+        }
+        
+        // Store the quiz result
+        const { error: resultError } = await supabase
+          .from('user_quiz_results')
+          .insert({
+            user_id: user.id,
+            quiz_id: quizId,
+            score: result.score
+          });
+          
+        if (resultError) {
+          console.error('Error saving quiz result:', resultError);
+        }
+      }
+    } catch (error) {
+      console.error('Error processing quiz submission:', error);
+    }
+    
+    if (result.score > 0) {
+      toast.success(`You scored ${result.score}/${result.maxScore}. Skill level: ${result.skillLevel}`);
     } else {
       toast.error(`You scored ${result.score}/${result.maxScore}. Try again!`);
     }
@@ -198,6 +271,11 @@ const QuizComponent: React.FC<QuizComponentProps> = ({ quizId }) => {
         <div key={question.id} className="mb-8">
           <h4 className="text-lg font-medium mb-3">
             {qIndex + 1}. {question.question_text}
+            {question.multiple_correct && (
+              <span className="text-sm font-normal text-blue-400 ml-2">
+                (Select all that apply)
+              </span>
+            )}
           </h4>
           
           <div className="space-y-3">
@@ -230,7 +308,7 @@ const QuizComponent: React.FC<QuizComponentProps> = ({ quizId }) => {
                     <div className="flex-shrink-0 mt-0.5">
                       <div 
                         className={`
-                          w-5 h-5 rounded border flex items-center justify-center
+                          w-5 h-5 rounded ${question.multiple_correct ? 'rounded-md' : 'rounded-full'} border flex items-center justify-center
                           ${showResults 
                             ? wasSubmitted 
                               ? correct 
@@ -248,7 +326,7 @@ const QuizComponent: React.FC<QuizComponentProps> = ({ quizId }) => {
                             correct ? <CheckCircle size={14} /> : <XCircle size={14} />
                           ) : null
                         ) : (
-                          isSelected && <div className="w-3 h-3 bg-white rounded-sm"></div>
+                          isSelected && <div className={`${question.multiple_correct ? 'w-2 h-2' : 'w-3 h-3'} bg-white ${question.multiple_correct ? 'rounded-sm' : 'rounded-full'}`}></div>
                         )}
                       </div>
                     </div>
@@ -282,11 +360,19 @@ const QuizComponent: React.FC<QuizComponentProps> = ({ quizId }) => {
             `}>
               <p className="font-bold text-lg">
                 {quizResult?.passed 
-                  ? 'Congratulations! You passed the quiz.' 
+                  ? 'Quiz completed!' 
                   : 'You did not pass the quiz.'}
               </p>
               <p className="text-slate-300 mt-1">
                 Your score: {quizResult?.score}/{quizResult?.maxScore}
+              </p>
+              <p className="text-slate-300 mt-1">
+                Skill level: <span className={
+                  quizResult?.skillLevel === 'Beginner' ? 'text-green-400' :
+                  quizResult?.skillLevel === 'Intermediate' ? 'text-yellow-400' : 'text-red-400'
+                }>
+                  {quizResult?.skillLevel}
+                </span>
               </p>
             </div>
             
