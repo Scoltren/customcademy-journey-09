@@ -60,6 +60,11 @@ const UserInterestsSection: React.FC<UserInterestsSectionProps> = ({ userId }) =
           {userInterests.map((interest) => (
             <Badge key={interest.category_id} className="text-sm py-1 px-3">
               {interest.category?.name}
+              {interest.difficulty_level ? (
+                <span className="ml-1 opacity-70">• {interest.difficulty_level}</span>
+              ) : (
+                <span className="ml-1 opacity-70">• No level assigned</span>
+              )}
             </Badge>
           ))}
         </div>

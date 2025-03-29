@@ -88,11 +88,17 @@ const RecommendedCoursesSection: React.FC<RecommendedCoursesSectionProps> = ({
             const aCategoryId = a.category_id;
             const bCategoryId = b.category_id;
             
-            const aSkillMatch = a.difficulty_level === userSkillLevels[aCategoryId];
-            const bSkillMatch = b.difficulty_level === userSkillLevels[bCategoryId];
+            // Exact match: Same category AND same difficulty level
+            const aExactMatch = a.difficulty_level === userSkillLevels[aCategoryId];
+            const bExactMatch = b.difficulty_level === userSkillLevels[bCategoryId];
             
-            if (aSkillMatch && !bSkillMatch) return -1;
-            if (!aSkillMatch && bSkillMatch) return 1;
+            if (aExactMatch && !bExactMatch) return -1;
+            if (!aExactMatch && bExactMatch) return 1;
+            
+            // Partial match: Same category only
+            if (aCategoryId && !bCategoryId) return -1;
+            if (!aCategoryId && bCategoryId) return 1;
+            
             return 0;
           });
         }

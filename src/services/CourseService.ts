@@ -59,17 +59,27 @@ export const fetchRecommendedCourses = async (userId: string): Promise<CourseWit
       return fetchFeaturedCourses();
     }
     
-    // Sort courses based on matching skill level
+    // Sort courses based on matching skill level - prioritize exact matches
     const sortedCourses = [...courses].sort((a, b) => {
       const aCategoryId = a.category_id;
       const bCategoryId = b.category_id;
       
-      // If course difficulty matches user's skill level, prioritize it
-      const aSkillMatch = a.difficulty_level === skillLevels[aCategoryId];
-      const bSkillMatch = b.difficulty_level === skillLevels[bCategoryId];
+      // If both courses match category, prioritize difficulty level match
+      if (aCategoryId && bCategoryId) {
+        const aSkillLevel = skillLevels[aCategoryId];
+        const bSkillLevel = skillLevels[bCategoryId];
+        
+        const aIsExactMatch = a.difficulty_level === aSkillLevel;
+        const bIsExactMatch = b.difficulty_level === bSkillLevel;
+        
+        if (aIsExactMatch && !bIsExactMatch) return -1;
+        if (!aIsExactMatch && bIsExactMatch) return 1;
+      }
       
-      if (aSkillMatch && !bSkillMatch) return -1;
-      if (!aSkillMatch && bSkillMatch) return 1;
+      // If only one matches category, prioritize that one
+      if (aCategoryId && !bCategoryId) return -1;
+      if (!aCategoryId && bCategoryId) return 1;
+      
       return 0;
     });
     

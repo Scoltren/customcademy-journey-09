@@ -73,7 +73,16 @@ const ProfileTab = ({ userInterests, handleEditInterests }: ProfileTabProps) => 
                 key={interest.category_id} 
                 className="py-1 px-3 rounded-full bg-blue/10 text-blue-light border border-blue/20 text-sm"
               >
-                {interest.category?.name || 'Unknown'}
+                <span>{interest.category?.name || 'Unknown'}</span>
+                {interest.difficulty_level ? (
+                  <span className="ml-1 text-xs opacity-70">
+                    • {interest.difficulty_level}
+                  </span>
+                ) : (
+                  <span className="ml-1 text-xs opacity-70">
+                    • No level assigned
+                  </span>
+                )}
               </div>
             ))}
           </div>
