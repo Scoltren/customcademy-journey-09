@@ -4,6 +4,7 @@ import { useQuizFetcher } from "./useQuizFetcher";
 import { useAnswerSelection } from "./useAnswerSelection";
 import { useQuizScoring } from "./useQuizScoring";
 import { useQuizNavigation } from "./useQuizNavigation";
+import { fetchNextQuizData } from "./useNextQuizFetcher";
 import { Category } from "@/types/quiz";
 
 /**
