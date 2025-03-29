@@ -90,20 +90,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     if (!user) return false;
     
     try {
-      // Convert both IDs to numbers for consistency
-      const numericCourseId = typeof courseId === 'string' ? parseInt(courseId, 10) : courseId;
-      const numericUserId = parseInt(user.id, 10);
-      
-      if (isNaN(numericCourseId) || isNaN(numericUserId)) {
-        console.error("Invalid ID format in isEnrolled check");
-        return false;
-      }
+      // Make sure we're working with a consistent value type for the query
+      const courseIdToUse = typeof courseId === 'string' ? courseId : courseId.toString();
       
       const { data, error } = await supabase
         .from('subscribed_courses')
         .select('*')
         .eq('user_id', user.id)
-        .eq('course_id', courseId)
+        .eq('course_id', courseIdToUse)
         .single();
         
       if (error && error.code !== 'PGRST116') {
