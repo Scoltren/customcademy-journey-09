@@ -13,6 +13,8 @@ import {
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
+import UserInterests from './UserInterests';
+import LearningStats from './LearningStats';
 
 interface SidebarProps {
   activeTab: string;
@@ -95,85 +97,12 @@ const DashboardSidebar = ({
       <div className="hidden lg:block glass-card p-6">
         <h3 className="font-bold text-white mb-4">Your Interests</h3>
         
-        {userInterests.length > 0 ? (
-          <div className="mb-4">
-            <div className="flex flex-wrap gap-2">
-              {userInterests.map((interest) => (
-                <div 
-                  key={interest.category_id} 
-                  className="py-1 px-3 rounded-full bg-blue/10 text-blue-light border border-blue/20 text-sm"
-                >
-                  {interest.category?.name || 'Unknown'}
-                </div>
-              ))}
-            </div>
-            <button 
-              onClick={handleEditInterests}
-              className="mt-4 flex items-center gap-2 text-blue-light hover:text-blue-400 text-sm transition-colors"
-            >
-              <Edit size={14} />
-              Edit your interests
-            </button>
-          </div>
-        ) : (
-          <div className="text-slate-400 text-sm mb-4">
-            <p>You haven't selected any interests yet.</p>
-            <button 
-              onClick={handleEditInterests}
-              className="mt-2 px-3 py-1 bg-blue text-white rounded-md text-sm hover:bg-blue-600 transition-colors"
-            >
-              Select Interests
-            </button>
-          </div>
-        )}
+        <UserInterests 
+          userInterests={userInterests} 
+          handleEditInterests={handleEditInterests} 
+        />
         
-        <h3 className="font-bold text-white mb-4 mt-6">Learning Stats</h3>
-        
-        <div className="space-y-4">
-          <div>
-            <div className="flex items-center justify-between mb-2">
-              <span className="text-slate-400">Total Courses</span>
-              <span className="text-white font-medium">{enrolledCourses.length}</span>
-            </div>
-            <div className="progress-bar">
-              <div className="progress-bar-fill" style={{ width: '100%' }}></div>
-            </div>
-          </div>
-          
-          <div>
-            <div className="flex items-center justify-between mb-2">
-              <span className="text-slate-400">In Progress</span>
-              <span className="text-white font-medium">
-                {enrolledCourses.filter(c => c.progress > 0 && c.progress < 100).length}
-              </span>
-            </div>
-            <div className="progress-bar">
-              <div 
-                className="progress-bar-fill" 
-                style={{ 
-                  width: `${(enrolledCourses.filter(c => c.progress > 0 && c.progress < 100).length / Math.max(1, enrolledCourses.length)) * 100}%` 
-                }}
-              ></div>
-            </div>
-          </div>
-          
-          <div>
-            <div className="flex items-center justify-between mb-2">
-              <span className="text-slate-400">Completed</span>
-              <span className="text-white font-medium">
-                {enrolledCourses.filter(c => c.progress === 100).length}
-              </span>
-            </div>
-            <div className="progress-bar">
-              <div 
-                className="progress-bar-fill" 
-                style={{ 
-                  width: `${(enrolledCourses.filter(c => c.progress === 100).length / Math.max(1, enrolledCourses.length)) * 100}%` 
-                }}
-              ></div>
-            </div>
-          </div>
-        </div>
+        <LearningStats enrolledCourses={enrolledCourses} />
       </div>
     </aside>
   );
