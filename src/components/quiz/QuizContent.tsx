@@ -1,5 +1,5 @@
 
-import React, { useState } from "react";
+import React from "react";
 import { CardContent } from "@/components/ui/card";
 import { AnswerOption } from "@/components/quiz/AnswerOption";
 import { Answer, Question } from "@/types/quiz";
@@ -10,6 +10,7 @@ interface QuizContentProps {
   currentQuestion?: Question;
   onSelectAnswer: (answerId: number) => void;
   isReviewMode?: boolean;
+  showFeedback?: boolean;
 }
 
 export const QuizContent: React.FC<QuizContentProps> = ({
@@ -18,10 +19,8 @@ export const QuizContent: React.FC<QuizContentProps> = ({
   currentQuestion,
   onSelectAnswer,
   isReviewMode = false,
+  showFeedback = false,
 }) => {
-  // Track whether feedback is being shown
-  const [showFeedback, setShowFeedback] = useState(false);
-
   // Function to get the correct answers
   const getCorrectAnswerIds = () => {
     return currentAnswers
@@ -29,13 +28,10 @@ export const QuizContent: React.FC<QuizContentProps> = ({
       .map(answer => answer.id);
   };
 
-  // Modified answer selection handler to show feedback
+  // Modified answer selection handler to not show feedback immediately
   const handleAnswerSelect = (answerId: number) => {
     // If already in review mode, don't allow new selections
     if (isReviewMode) return;
-    
-    // Show feedback when an answer is selected
-    setShowFeedback(true);
     
     // Call the original selection handler
     onSelectAnswer(answerId);
@@ -66,7 +62,7 @@ export const QuizContent: React.FC<QuizContentProps> = ({
         ))}
       </div>
       
-      {isReviewMode && (
+      {(isReviewMode || showFeedback) && (
         <div className="mt-6 p-4 rounded-md bg-slate-800">
           <h4 className="font-medium text-lg mb-2">Correct Answers:</h4>
           <ul className="list-disc list-inside">

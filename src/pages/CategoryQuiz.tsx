@@ -1,5 +1,5 @@
 
-import React from "react";
+import React, { useState } from "react";
 import { useLocation } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext";
 import { Card } from "@/components/ui/card";
@@ -13,6 +13,7 @@ const CategoryQuiz = () => {
   const location = useLocation();
   const { user } = useAuth();
   const { quizIds = [], categories = [] } = location.state || {};
+  const [showFeedback, setShowFeedback] = useState(false);
 
   const {
     quizState,
@@ -24,6 +25,15 @@ const CategoryQuiz = () => {
     handleSelectAnswer,
     handleNextQuestion
   } = useQuiz(user, quizIds, categories);
+
+  const handleSubmitAnswer = () => {
+    setShowFeedback(true);
+  };
+
+  const handleNextQuestionClick = () => {
+    setShowFeedback(false);
+    handleNextQuestion();
+  };
 
   if (isLoading) {
     return (
@@ -51,6 +61,7 @@ const CategoryQuiz = () => {
             selectedAnswerIds={selectedAnswerIds}
             currentQuestion={currentQuestion}
             onSelectAnswer={handleSelectAnswer}
+            showFeedback={showFeedback}
           />
           
           <QuizFooter
@@ -58,7 +69,9 @@ const CategoryQuiz = () => {
             hasSelectedAnswers={selectedAnswerIds.length > 0}
             isLastQuestion={quizState.currentQuestionIndex === quizState.questions.length - 1}
             isLastQuiz={quizState.currentQuizIndex === quizIds.length - 1}
-            onNext={handleNextQuestion}
+            onNext={handleNextQuestionClick}
+            onSubmit={handleSubmitAnswer}
+            showFeedback={showFeedback}
           />
         </Card>
       </div>
