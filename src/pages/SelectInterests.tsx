@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -22,16 +22,34 @@ const SelectInterests = () => {
   const [isFetching, setIsFetching] = useState(true);
   const { user } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
+  const isEditMode = location.state?.editMode || false;
 
   useEffect(() => {
     const fetchCategories = async () => {
       try {
+        // Get categories
         const { data, error } = await supabase
           .from("categories")
           .select("id, name, quiz_id");
 
         if (error) throw error;
         setCategories(data || []);
+        
+        // If we're in edit mode, get the user's current interests
+        if (user) {
+          const { data: userInterests, error: userInterestsError } = await supabase
+            .from("user_interest_categories")
+            .select("category_id")
+            .eq("user_id", user.id);
+            
+          if (userInterestsError) throw userInterestsError;
+          
+          if (userInterests && userInterests.length > 0) {
+            const currentInterests = userInterests.map(interest => interest.category_id);
+            setSelectedCategories(currentInterests);
+          }
+        }
       } catch (error) {
         console.error("Error fetching categories:", error);
         toast.error("Failed to load categories");
@@ -41,7 +59,7 @@ const SelectInterests = () => {
     };
 
     fetchCategories();
-  }, []);
+  }, [user]);
 
   useEffect(() => {
     if (!user) {
@@ -77,7 +95,15 @@ const SelectInterests = () => {
     try {
       setIsLoading(true);
       
-      // Save user interests to user_interest_categories table
+      // First delete all existing user interests
+      const { error: deleteError } = await supabase
+        .from("user_interest_categories")
+        .delete()
+        .eq("user_id", user.id);
+      
+      if (deleteError) throw deleteError;
+      
+      // Then insert the newly selected interests
       const { error } = await supabase.from("user_interest_categories").insert(
         selectedCategories.map(categoryId => ({
           user_id: user.id,
@@ -87,23 +113,29 @@ const SelectInterests = () => {
 
       if (error) throw error;
       
-      // Check if any selected categories have a quiz
-      const categoriesWithQuizzes = categories
-        .filter(cat => selectedCategories.includes(cat.id) && cat.quiz_id !== null)
-        .map(cat => cat.quiz_id);
+      toast.success("Interests updated successfully!");
       
-      if (categoriesWithQuizzes.length > 0) {
-        // If there are quizzes, redirect to the quiz page
-        navigate("/category-quiz", { 
-          state: { 
-            quizIds: categoriesWithQuizzes,
-            categories: categories.filter(cat => selectedCategories.includes(cat.id))
-          } 
-        });
-      } else {
-        // If no quizzes, go to the dashboard
-        toast.success("Preferences saved successfully!");
+      // Check if in edit mode to determine where to navigate
+      if (isEditMode) {
         navigate("/dashboard");
+      } else {
+        // Check if any selected categories have a quiz
+        const categoriesWithQuizzes = categories
+          .filter(cat => selectedCategories.includes(cat.id) && cat.quiz_id !== null)
+          .map(cat => cat.quiz_id);
+        
+        if (categoriesWithQuizzes.length > 0) {
+          // If there are quizzes, redirect to the quiz page
+          navigate("/category-quiz", { 
+            state: { 
+              quizIds: categoriesWithQuizzes,
+              categories: categories.filter(cat => selectedCategories.includes(cat.id))
+            } 
+          });
+        } else {
+          // If no quizzes, go to the dashboard
+          navigate("/dashboard");
+        }
       }
     } catch (error) {
       console.error("Error saving interests:", error);
@@ -117,9 +149,13 @@ const SelectInterests = () => {
     }
   };
 
-  const skipSelection = () => {
-    toast.info("You can always select your interests later");
-    navigate("/");
+  const handleBackOrSkip = () => {
+    if (isEditMode) {
+      navigate("/dashboard");
+    } else {
+      toast.info("You can always select your interests later");
+      navigate("/");
+    }
   };
 
   if (isFetching) {
@@ -137,16 +173,18 @@ const SelectInterests = () => {
           variant="outline" 
           size="sm"
           className="bg-slate-800 hover:bg-slate-700 text-white border-slate-700"
-          onClick={() => navigate("/")}
+          onClick={handleBackOrSkip}
         >
           <ArrowLeft className="mr-2 h-4 w-4" />
-          Back to Homepage
+          {isEditMode ? "Back to Dashboard" : "Back to Homepage"}
         </Button>
       </div>
       <div className="w-full max-w-lg">
         <Card className="backdrop-blur-sm bg-slate-950 border-slate-800 shadow-xl transition-all duration-300">
           <CardHeader className="space-y-1 text-center">
-            <CardTitle className="text-3xl font-bold tracking-tight text-white">Select Your Interests</CardTitle>
+            <CardTitle className="text-3xl font-bold tracking-tight text-white">
+              {isEditMode ? "Edit Your Interests" : "Select Your Interests"}
+            </CardTitle>
             <CardDescription className="text-gray-300">
               Choose up to 3 categories that interest you the most
             </CardDescription>
@@ -188,14 +226,14 @@ const SelectInterests = () => {
               onClick={saveUserInterests}
               disabled={isLoading || selectedCategories.length === 0}
             >
-              {isLoading ? "Saving..." : "Continue"}
+              {isLoading ? "Saving..." : isEditMode ? "Update Interests" : "Continue"}
             </Button>
             <Button
               variant="outline"
               className="w-full border-slate-700 text-slate-300 hover:text-white hover:bg-slate-800"
-              onClick={skipSelection}
+              onClick={handleBackOrSkip}
             >
-              Skip Selection
+              {isEditMode ? "Cancel" : "Skip Selection"}
             </Button>
           </CardFooter>
         </Card>
