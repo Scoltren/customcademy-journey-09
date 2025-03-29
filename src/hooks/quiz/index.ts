@@ -55,6 +55,8 @@ export const useQuiz = (user: any, quizIds: number[], categories: Category[]) =>
     currentAnswers,
     selectedAnswerIds,
     handleSelectAnswer,
-    handleNextQuestion
+    handleNextQuestion,
+    calculateScore,
+    saveQuizResults
   };
 };

@@ -37,7 +37,7 @@ export const useQuizScoring = (
     return { score, maxScore };
   };
 
-  const saveQuizResults = async () => {
+  const saveQuizResults = async (): Promise<void> => {
     if (!user) {
       console.error("Cannot save quiz results: No user logged in");
       return;
@@ -131,7 +131,7 @@ export const useQuizScoring = (
         }
       }));
       
-      return { score, maxScore, skillLevel, percentage };
+      // Return type is Promise<void>, so we don't return anything
     } catch (error) {
       console.error("Error saving quiz results:", error);
       throw error;

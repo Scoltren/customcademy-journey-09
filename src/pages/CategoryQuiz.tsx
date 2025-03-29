@@ -9,7 +9,6 @@ import { QuizFooter } from "@/components/quiz/QuizFooter";
 import { useQuiz } from "@/hooks/useQuiz";
 import { Category } from "@/types/quiz";
 import { toast } from "sonner";
-import { supabase } from "@/integrations/supabase/client";
 
 const CategoryQuiz = () => {
   const location = useLocation();
@@ -28,7 +27,6 @@ const CategoryQuiz = () => {
     selectedAnswerIds,
     handleSelectAnswer,
     handleNextQuestion,
-    calculateScore,
     saveQuizResults
   } = useQuiz(user, quizIds, categories);
 
@@ -41,20 +39,7 @@ const CategoryQuiz = () => {
           await saveQuizResults();
           setQuizCompleted(false);
           
-          const currentQuizId = quizIds[quizState.currentQuizIndex];
-          const { score, maxScore } = calculateScore();
-          const percentage = maxScore > 0 ? (score / maxScore) * 100 : 0;
-          
-          let message = `Quiz completed! Score: ${score}/${maxScore}`;
-          if (percentage >= 80) {
-            message += " - Advanced level";
-          } else if (percentage >= 50) {
-            message += " - Intermediate level";
-          } else {
-            message += " - Beginner level";
-          }
-          
-          toast.success(message);
+          toast.success("Quiz completed! Your results have been saved.");
         } catch (error) {
           console.error("Error saving quiz results:", error);
           toast.error("Failed to save your quiz results");
@@ -63,7 +48,7 @@ const CategoryQuiz = () => {
     };
     
     saveResultsIfCompleted();
-  }, [quizCompleted, quizState.currentQuizIndex]);
+  }, [quizCompleted, saveQuizResults]);
 
   const handleSubmitAnswer = () => {
     setShowFeedback(true);
