@@ -63,15 +63,15 @@ const CourseCard: React.FC<{ course: CourseProps; className?: string }> = ({
       </div>
       
       <div className={cn(
-        "p-4 flex flex-col flex-grow bg-midnight",
+        "p-5 flex flex-col flex-grow bg-midnight",
         featured ? "md:w-1/2" : ""
       )}>
-        <div className="mb-2 flex flex-wrap gap-2">
-          <Badge className="bg-blue-900 hover:bg-blue-800 text-white border-0 font-medium text-xs">
+        <div className="mb-3 flex flex-wrap gap-2">
+          <Badge className="bg-blue-900 hover:bg-blue-800 text-white border-0 font-medium text-sm">
             {category}
           </Badge>
           <Badge className={cn(
-            "border text-xs",
+            "border text-sm",
             level === 'Beginner' ? 'bg-green-600/80 hover:bg-green-600 text-white border-0' :
             level === 'Intermediate' ? 'bg-orange-500/80 hover:bg-orange-500 text-white border-0' :
             'bg-red-600/80 hover:bg-red-600 text-white border-0'
@@ -80,25 +80,25 @@ const CourseCard: React.FC<{ course: CourseProps; className?: string }> = ({
           </Badge>
         </div>
         
-        <h3 className="text-sm font-bold mb-1 line-clamp-1 text-white group-hover:text-blue-light transition-colors duration-300">
+        <h3 className="text-base md:text-lg font-bold mb-2 line-clamp-1 text-white group-hover:text-blue-light transition-colors duration-300">
           {title}
         </h3>
         
-        <p className="text-slate-400 text-xs mb-2 line-clamp-2">
+        <p className="text-slate-400 text-sm mb-3 line-clamp-2">
           {description}
         </p>
         
         <div className="mt-auto pt-2 flex items-center justify-between">
-          <div className="flex items-center gap-2 text-xs">
-            <Clock size={14} className="text-slate-400" />
+          <div className="flex items-center gap-2 text-sm">
+            <Clock size={16} className="text-slate-400" />
             <span className="text-slate-300">{duration}</span>
           </div>
-          <div className="flex items-center gap-1 text-xs">
-            <BookOpen size={14} className="text-slate-400" />
+          <div className="flex items-center gap-1 text-sm">
+            <BookOpen size={16} className="text-slate-400" />
             <span className="text-slate-300">{chapterCount} {chapterCount === 1 ? 'chapter' : 'chapters'}</span>
           </div>
-          <div className="flex items-center gap-1 text-xs">
-            <Star size={14} className="text-yellow-500" />
+          <div className="flex items-center gap-1 text-sm">
+            <Star size={16} className="text-yellow-500" />
             <span className="text-slate-300">{rating ? rating.toFixed(1) : 'N/A'}</span>
           </div>
         </div>
