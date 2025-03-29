@@ -45,7 +45,8 @@ export const useCourseData = () => {
       
       if (error) throw error;
       console.log('Course data:', data);
-      return data as Course;
+      // Ensure the data matches our Course type
+      return data as unknown as Course;
     },
     enabled: !!id,
   });

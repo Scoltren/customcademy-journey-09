@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Navbar from '@/components/Navbar';
@@ -87,13 +86,15 @@ const Dashboard = () => {
             
             if (chaptersError) throw chaptersError;
             
-            // Make sure we maintain all the Course properties while adding our custom ones
-            return {
-              ...sub.course,
+            // Create a properly typed course object by explicitly casting
+            const courseWithProgress: Course & {progress: number, completedChapters: number, totalChapters: number} = {
+              ...sub.course as unknown as Course,
               progress: sub.progress || 0,
               completedChapters: Math.floor((chapters?.length || 0) * ((sub.progress || 0) / 100)),
               totalChapters: chapters?.length || 0
             };
+            
+            return courseWithProgress;
           })
         );
         
