@@ -1,3 +1,4 @@
+
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { supabase } from '../integrations/supabase/client';
 import { User, Session } from '@supabase/supabase-js';
@@ -90,14 +91,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     if (!user) return false;
     
     try {
-      // Make sure we're working with a consistent value type for the query
-      const courseIdToUse = typeof courseId === 'string' ? courseId : courseId.toString();
+      // For course_id, convert to number since that's what the database expects
+      const numericCourseId = typeof courseId === 'string' ? parseInt(courseId, 10) : courseId;
       
+      // For user_id, we'll use the auth_user_id which is a string (UUID)
       const { data, error } = await supabase
         .from('subscribed_courses')
         .select('*')
-        .eq('user_id', user.id)
-        .eq('course_id', courseIdToUse)
+        .eq('user_id', user.id) // user.id is the auth_user_id (UUID as string)
+        .eq('course_id', numericCourseId)
         .single();
         
       if (error && error.code !== 'PGRST116') {

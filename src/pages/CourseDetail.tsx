@@ -34,7 +34,7 @@ const CourseDetail = () => {
             .from('subscribed_courses')
             .select('progress')
             .eq('course_id', numericCourseId)
-            .eq('user_id', user.id)
+            .eq('user_id', user.id) // user.id is already the auth_user_id (UUID as string)
             .single();
           
           if (error) throw error;

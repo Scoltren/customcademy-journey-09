@@ -27,7 +27,7 @@ export interface Course {
 export interface Comment {
   id: number;
   comment_text: string;
-  user_id: string | null; // Changed from number to string to match database
+  user_id: string | null; // Changed to string to match UUID in auth.users
   created_at: string | null;
   rating?: number;
   username?: string;

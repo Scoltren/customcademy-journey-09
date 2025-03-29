@@ -49,7 +49,7 @@ const CourseHeader: React.FC<CourseHeaderProps> = ({ course }) => {
         .from('subscribed_courses')
         .insert({
           course_id: courseIdNumber,
-          user_id: user.id,
+          user_id: user.id, // This is already a string (UUID)
           progress: 0
         });
 
