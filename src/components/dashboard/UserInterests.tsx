@@ -10,6 +10,8 @@ interface UserInterestsProps {
 const UserInterests = ({ userInterests, handleEditInterests }: UserInterestsProps) => {
   return (
     <div className="mb-4">
+      <h3 className="font-bold text-white mb-4">Your Interests</h3>
+      
       {userInterests.length > 0 ? (
         <div>
           <div className="flex flex-wrap gap-2">

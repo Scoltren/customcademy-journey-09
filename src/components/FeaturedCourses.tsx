@@ -21,6 +21,67 @@ interface Course {
   } | null;
 }
 
+const fetchRecommendedCourses = async (userId: string): Promise<Course[]> => {
+  const { data: interests, error: interestsError } = await supabase
+    .from('user_interest_categories')
+    .select('category_id')
+    .eq('user_id', userId);
+  
+  if (interestsError) {
+    throw interestsError;
+  }
+  
+  if (!interests || interests.length === 0) {
+    return [];
+  }
+  
+  const categoryIds = interests.map(interest => interest.category_id);
+  
+  const { data: courses, error: coursesError } = await supabase
+    .from('courses')
+    .select(`
+      *,
+      categories(name)
+    `)
+    .in('category_id', categoryIds)
+    .limit(6);
+  
+  if (coursesError) {
+    throw coursesError;
+  }
+  
+  if (!courses || courses.length === 0) {
+    const { data: featuredCourses, error: featuredError } = await supabase
+      .from('courses')
+      .select(`
+        *,
+        categories(name)
+      `)
+      .limit(6);
+    
+    if (featuredError) {
+      throw featuredError;
+    }
+    
+    return featuredCourses || [];
+  }
+  
+  return courses;
+};
+
+const fetchUserInterests = async (userId: string): Promise<number[]> => {
+  const { data, error } = await supabase
+    .from('user_interest_categories')
+    .select('category_id')
+    .eq('user_id', userId);
+  
+  if (error) {
+    throw error;
+  }
+  
+  return data?.map(item => Number(item.category_id)) || [];
+};
+
 const fetchFeaturedCourses = async (): Promise<Course[]> => {
   const { data, error } = await supabase
     .from('courses')
@@ -37,27 +98,15 @@ const fetchFeaturedCourses = async (): Promise<Course[]> => {
   return data || [];
 };
 
-const fetchUserInterests = async (userId: string): Promise<number[]> => {
-  const { data, error } = await supabase
-    .from('user_interest_categories')
-    .select('category_id')
-    .eq('user_id', userId);
-  
-  if (error) {
-    throw error;
-  }
-  
-  return data?.map(item => Number(item.category_id)) || [];
-};
-
 const FeaturedCourses = () => {
   const { user } = useAuth();
   const [hasInterests, setHasInterests] = useState<boolean | null>(null);
   
   const { data: courses, isLoading, error } = useQuery({
-    queryKey: ['featuredCourses'],
-    queryFn: fetchFeaturedCourses,
+    queryKey: ['recommendedCourses', user?.id],
+    queryFn: () => user ? fetchRecommendedCourses(user.id) : fetchFeaturedCourses(),
     staleTime: 1000 * 60 * 5, // 5 minutes
+    enabled: !!user || !user
   });
 
   useEffect(() => {
@@ -102,13 +151,18 @@ const FeaturedCourses = () => {
     </div>
   );
 
+  const sectionTitle = user ? "Recommended Courses" : "Featured Courses";
+  const sectionDescription = user 
+    ? "Courses tailored to your interests and learning goals"
+    : "Discover our most popular courses designed to help you master new skills";
+
   return (
     <section className="section-padding">
       <div className="container mx-auto px-6">
         <div className="text-center mb-12">
-          <h2 className="heading-lg mb-4">Featured Courses</h2>
+          <h2 className="heading-lg mb-4">{sectionTitle}</h2>
           <p className="text-slate-400 max-w-2xl mx-auto">
-            Discover our most popular courses designed to help you master new skills
+            {sectionDescription}
           </p>
         </div>
         

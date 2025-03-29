@@ -95,8 +95,6 @@ const DashboardSidebar = ({
       </div>
       
       <div className="hidden lg:block glass-card p-6">
-        <h3 className="font-bold text-white mb-4">Your Interests</h3>
-        
         <UserInterests 
           userInterests={userInterests} 
           handleEditInterests={handleEditInterests} 
