@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Navbar from '@/components/Navbar';
@@ -34,6 +35,8 @@ interface QuizResult {
       name: string;
     }
   }
+  origin?: 'category' | 'course';
+  origin_name?: string;
 }
 
 const Dashboard = () => {
@@ -103,14 +106,44 @@ const Dashboard = () => {
         setEnrolledCourses([]);
       }
       
-      // Fetch quiz results
+      // Fetch quiz results with more detailed information
       const { data: quizzes, error: quizzesError } = await supabase
         .from('user_quiz_results')
         .select('*, quiz:quiz_id(title, category_id, category:category_id(name))')
         .eq('user_id', user?.id || '');
       
       if (quizzesError) throw quizzesError;
-      setQuizResults(quizzes || []);
+      
+      // Process quiz results to determine their origin (category or course)
+      if (quizzes && quizzes.length > 0) {
+        const processedResults = await Promise.all(quizzes.map(async (quiz) => {
+          // Check if the quiz is part of a course chapter
+          const { data: courseChapter } = await supabase
+            .from('chapters')
+            .select('*, course:course_id(title)')
+            .eq('quiz_id', quiz.quiz_id)
+            .maybeSingle();
+          
+          if (courseChapter) {
+            return {
+              ...quiz,
+              origin: 'course' as const,
+              origin_name: courseChapter.course?.title ? `Course: ${courseChapter.course.title}` : 'Course'
+            };
+          } else {
+            // The quiz is part of a category (not a course)
+            return {
+              ...quiz,
+              origin: 'category' as const,
+              origin_name: quiz.quiz?.category?.name ? `Category: ${quiz.quiz.category.name}` : 'Category'
+            };
+          }
+        }));
+        
+        setQuizResults(processedResults);
+      } else {
+        setQuizResults([]);
+      }
       
     } catch (error) {
       console.error('Error fetching user data:', error);

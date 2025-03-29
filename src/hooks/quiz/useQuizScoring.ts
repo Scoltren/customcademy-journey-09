@@ -111,54 +111,34 @@ export const useQuizScoring = (
         console.warn(`No category found for quiz ${currentQuizId}`);
       }
       
-      // Check if a result already exists for this quiz and user
-      const { data: existingResult, error: resultError } = await supabase
+      // FIXED: Always delete existing quiz result before inserting a new one
+      // This prevents duplicate entries and ensures we only have one result per quiz per user
+      const { error: deleteError } = await supabase
         .from('user_quiz_results')
-        .select('*')
+        .delete()
         .eq('user_id', user.id)
-        .eq('quiz_id', currentQuizId)
-        .maybeSingle();
+        .eq('quiz_id', currentQuizId);
       
-      if (resultError) {
-        console.error('Error checking quiz result:', resultError);
-        throw resultError;
+      if (deleteError) {
+        console.error('Error deleting previous quiz result:', deleteError);
+        throw deleteError;
       }
-        
-      // Handle the quiz result saving
-      if (existingResult) {
-        // Update existing result if score is higher
-        if (score > (existingResult.score || 0)) {
-          const { error } = await supabase
-            .from('user_quiz_results')
-            .update({ score: score })
-            .eq('id', existingResult.id);
-          
-          if (error) {
-            console.error("Error updating quiz result:", error);
-            throw error;
-          }
-          
-          toast.success(`Quiz score improved! New score: ${score}/${maxScore}`);
-        } else {
-          toast.info(`Previous best score maintained: ${existingResult.score}`);
-        }
-      } else {
-        // Insert new result
-        const { error } = await supabase
-          .from('user_quiz_results')
-          .insert({
-            user_id: user.id,
-            quiz_id: currentQuizId,
-            score: score
-          });
-        
-        if (error) {
-          console.error("Error inserting quiz result:", error);
-          throw error;
-        }
-        
-        toast.success(`Quiz completed! Score: ${score}/${maxScore}`);
+      
+      // Insert new result
+      const { error: insertError } = await supabase
+        .from('user_quiz_results')
+        .insert({
+          user_id: user.id,
+          quiz_id: currentQuizId,
+          score: score
+        });
+      
+      if (insertError) {
+        console.error("Error inserting quiz result:", insertError);
+        throw insertError;
       }
+      
+      toast.success(`Quiz completed! Score: ${score}/${maxScore}`);
       
       // Update the local state with the new score
       setQuizState(prev => ({

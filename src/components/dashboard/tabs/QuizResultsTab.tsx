@@ -1,6 +1,15 @@
 
 import React from 'react';
-import { Loader2 } from 'lucide-react';
+import { Loader2, BookOpen, Book } from 'lucide-react';
+import { 
+  Table,
+  TableBody,
+  TableCaption,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 
 interface QuizResult {
   id: number;
@@ -14,6 +23,9 @@ interface QuizResult {
       name: string;
     }
   }
+  // Additional fields for the join
+  origin?: 'category' | 'course';
+  origin_name?: string;
 }
 
 interface QuizResultsTabProps {
@@ -64,15 +76,16 @@ const QuizResultsTab: React.FC<QuizResultsTabProps> = ({ quizResults, isLoading 
             </div>
             
             <div className="p-4">
-              <table className="w-full">
-                <thead>
-                  <tr className="text-left border-b border-slate-700">
-                    <th className="pb-2 font-medium">Quiz</th>
-                    <th className="pb-2 font-medium">Score</th>
-                    <th className="pb-2 font-medium">Level</th>
-                  </tr>
-                </thead>
-                <tbody>
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Quiz</TableHead>
+                    <TableHead>Origin</TableHead>
+                    <TableHead>Score</TableHead>
+                    <TableHead>Level</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
                   {results.map(result => {
                     // Calculate skill level based on score
                     let skillLevel = 'Beginner';
@@ -82,23 +95,37 @@ const QuizResultsTab: React.FC<QuizResultsTabProps> = ({ quizResults, isLoading 
                       skillLevel = 'Intermediate';
                     }
                     
+                    // Determine if quiz is from a course or category
+                    const originIcon = result.origin === 'course' ? 
+                      <BookOpen className="h-4 w-4 mr-1" /> : 
+                      <Book className="h-4 w-4 mr-1" />;
+                    
+                    const originText = result.origin_name || 
+                      (result.quiz?.category?.name ? `Category: ${result.quiz.category.name}` : 'Unknown');
+                    
                     return (
-                      <tr key={result.id} className="border-b border-slate-700/50">
-                        <td className="py-3">{result.quiz?.title || `Quiz #${result.quiz_id}`}</td>
-                        <td className="py-3">{result.score}</td>
-                        <td className="py-3">
+                      <TableRow key={result.id}>
+                        <TableCell>{result.quiz?.title || `Quiz #${result.quiz_id}`}</TableCell>
+                        <TableCell>
+                          <div className="flex items-center">
+                            {originIcon}
+                            <span>{originText}</span>
+                          </div>
+                        </TableCell>
+                        <TableCell>{result.score}</TableCell>
+                        <TableCell>
                           <span className={
                             skillLevel === 'Beginner' ? 'text-green-400' :
                             skillLevel === 'Intermediate' ? 'text-yellow-400' : 'text-red-400'
                           }>
                             {skillLevel}
                           </span>
-                        </td>
-                      </tr>
+                        </TableCell>
+                      </TableRow>
                     );
                   })}
-                </tbody>
-              </table>
+                </TableBody>
+              </Table>
             </div>
           </div>
         ))}
