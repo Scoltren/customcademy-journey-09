@@ -43,25 +43,36 @@ const CourseGrid: React.FC<CourseGridProps> = ({ courses, isUserLoggedIn, hasUse
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-8 w-full">
-      {courses.map((course) => (
-        <CourseCard
-          key={course.id}
-          course={{
-            id: course.id.toString(),
-            title: course.title,
-            description: course.description || 'No description available',
-            instructor: 'Instructor', 
-            image: course.thumbnail || 'https://images.unsplash.com/photo-1498050108023-c5249f4df085',
-            category: course.categories?.name || 'Development',
-            level: validateDifficultyLevel(course.difficulty_level),
-            duration: '30 hours',
-            students: 1000,
-            rating: course.overall_rating || 4.5,
-            price: course.price || 0
-          }}
-          className="h-full"
-        />
-      ))}
+      {courses.map((course) => {
+        // Calculate duration based on course_time if available
+        const durationText = course.course_time 
+          ? `${course.course_time} hours` 
+          : '30 hours'; // Fallback
+        
+        // Get chapter count if available
+        const chapterCount = course.chapters_count || 0;
+        
+        return (
+          <CourseCard
+            key={course.id}
+            course={{
+              id: course.id.toString(),
+              title: course.title,
+              description: course.description || 'No description available',
+              instructor: course.instructor || 'Instructor', 
+              image: course.thumbnail || 'https://images.unsplash.com/photo-1498050108023-c5249f4df085',
+              category: course.categories?.name || 'Development',
+              level: validateDifficultyLevel(course.difficulty_level),
+              duration: durationText,
+              students: 0, // Not showing this anymore as requested
+              rating: course.overall_rating || 0,
+              price: course.price || 0,
+              chapterCount: chapterCount
+            }}
+            className="h-full"
+          />
+        );
+      })}
     </div>
   );
 };

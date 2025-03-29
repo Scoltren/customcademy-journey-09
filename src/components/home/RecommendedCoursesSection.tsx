@@ -20,6 +20,7 @@ const RecommendedCoursesSection: React.FC<RecommendedCoursesSectionProps> = ({
   const navigate = useNavigate();
   const [recommendedCourses, setRecommendedCourses] = useState<Course[]>([]);
   const [loadingCourses, setLoadingCourses] = useState(false);
+  const [chapterCounts, setChapterCounts] = useState<{[key: string]: number}>({});
 
   useEffect(() => {
     if (userInterests.length > 0) {
@@ -63,11 +64,39 @@ const RecommendedCoursesSection: React.FC<RecommendedCoursesSectionProps> = ({
       }));
       
       setRecommendedCourses(formattedCourses as Course[]);
+      
+      // Fetch chapter counts
+      if (formattedCourses.length > 0) {
+        fetchChapterCounts(formattedCourses.map(course => course.id));
+      }
     } catch (error: any) {
       console.error('Error fetching recommended courses:', error.message);
       toast.error('Failed to load recommended courses');
     } finally {
       setLoadingCourses(false);
+    }
+  };
+
+  const fetchChapterCounts = async (courseIds: number[]) => {
+    try {
+      const { data, error } = await supabase
+        .from('chapters')
+        .select('course_id, count(*)')
+        .in('course_id', courseIds)
+        .group('course_id');
+      
+      if (error) throw error;
+      
+      if (data) {
+        const counts = data.reduce((acc: {[key: string]: number}, item) => {
+          acc[item.course_id] = parseInt(item.count);
+          return acc;
+        }, {});
+        
+        setChapterCounts(counts);
+      }
+    } catch (error) {
+      console.error('Error fetching chapter counts:', error);
     }
   };
 
@@ -99,10 +128,11 @@ const RecommendedCoursesSection: React.FC<RecommendedCoursesSectionProps> = ({
                 image: course.thumbnail || 'https://images.unsplash.com/photo-1498050108023-c5249f4df085',
                 category: course.category_name || 'Development',
                 level: validateDifficultyLevel(course.difficulty_level),
-                duration: '30 hours',
-                students: 1000,
-                rating: course.overall_rating || 4.5,
-                price: course.price || 0
+                duration: `${course.course_time || 0} hours`,
+                students: 0, // Not displaying as requested
+                rating: course.overall_rating || 0,
+                price: course.price || 0,
+                chapterCount: chapterCounts[course.id] || 0
               }}
             />
           ))}

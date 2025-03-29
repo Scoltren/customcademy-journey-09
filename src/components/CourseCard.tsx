@@ -1,7 +1,7 @@
 
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Clock, Users, Star, BookOpen, Bookmark, BookmarkCheck } from 'lucide-react';
+import { Clock, Star, BookOpen, Bookmark, BookmarkCheck } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Badge } from '@/components/ui/badge';
 import { toast } from 'sonner';
@@ -19,6 +19,7 @@ export interface CourseProps {
   rating: number;
   price: number;
   featured?: boolean;
+  chapterCount?: number;
 }
 
 const CourseCard: React.FC<{ course: CourseProps; className?: string }> = ({ 
@@ -36,18 +37,11 @@ const CourseCard: React.FC<{ course: CourseProps; className?: string }> = ({
     category,
     level,
     duration,
-    students,
     rating,
     price,
-    featured
+    featured,
+    chapterCount = 0
   } = course;
-
-  // Enhanced level colors with higher contrast
-  const levelColor = {
-    Beginner: 'bg-green-500/30 text-green-400 border-green-500/40 font-semibold',
-    Intermediate: 'bg-yellow-500/30 text-yellow-400 border-yellow-500/40 font-semibold',
-    Advanced: 'bg-red-500/30 text-red-400 border-red-500/40 font-semibold'
-  };
 
   const handleWishlist = (e: React.MouseEvent) => {
     e.preventDefault(); // Prevent navigation to course page
@@ -75,20 +69,6 @@ const CourseCard: React.FC<{ course: CourseProps; className?: string }> = ({
             className="w-full h-full object-cover object-center transform group-hover:scale-105 transition-transform duration-500"
           />
         </div>
-        <div className="absolute top-4 left-4 flex flex-col gap-2">
-          <Badge className="bg-blue-600/80 hover:bg-blue-600 text-white border-0 font-medium">
-            {category}
-          </Badge>
-          <Badge className={cn(
-            "border",
-            level === 'Beginner' ? 'bg-green-600/80 hover:bg-green-600 text-white border-0' :
-            level === 'Intermediate' ? 'bg-orange-500/80 hover:bg-orange-500 text-white border-0' :
-            'bg-red-600/80 hover:bg-red-600 text-white border-0'
-          )}>
-            {level}
-          </Badge>
-        </div>
-        
         {/* Wishlist button in top right */}
         <button 
           onClick={handleWishlist} 
@@ -107,9 +87,24 @@ const CourseCard: React.FC<{ course: CourseProps; className?: string }> = ({
         "p-6 flex flex-col flex-grow bg-navy/80",
         featured ? "md:w-1/2" : ""
       )}>
+        <div className="mb-4 flex flex-wrap gap-2">
+          <Badge className="bg-blue-600/80 hover:bg-blue-600 text-white border-0 font-medium">
+            {category}
+          </Badge>
+          <Badge className={cn(
+            "border",
+            level === 'Beginner' ? 'bg-green-600/80 hover:bg-green-600 text-white border-0' :
+            level === 'Intermediate' ? 'bg-orange-500/80 hover:bg-orange-500 text-white border-0' :
+            'bg-red-600/80 hover:bg-red-600 text-white border-0'
+          )}>
+            {level}
+          </Badge>
+        </div>
+        
         <h3 className="text-xl font-bold mb-2 line-clamp-2 text-white group-hover:text-blue-light transition-colors duration-300">
           {title}
         </h3>
+        
         <p className="text-slate-400 mb-4 text-sm line-clamp-2">
           {description}
         </p>
@@ -125,22 +120,18 @@ const CourseCard: React.FC<{ course: CourseProps; className?: string }> = ({
           <span className="text-slate-300 text-sm">{instructor}</span>
         </div>
         
-        <div className="grid grid-cols-2 gap-3 mb-5">
+        <div className="grid grid-cols-3 gap-3 mb-5">
           <div className="flex items-center gap-2">
             <Clock size={16} className="text-slate-400" />
             <span className="text-slate-300 text-sm">{duration}</span>
           </div>
           <div className="flex items-center gap-2">
-            <Users size={16} className="text-slate-400" />
-            <span className="text-slate-300 text-sm">{students.toLocaleString()} students</span>
-          </div>
-          <div className="flex items-center gap-2">
             <Star size={16} className="text-yellow-500" />
-            <span className="text-slate-300 text-sm">{rating.toFixed(1)}</span>
+            <span className="text-slate-300 text-sm">{rating ? rating.toFixed(1) : 'N/A'}</span>
           </div>
           <div className="flex items-center gap-2">
             <BookOpen size={16} className="text-slate-400" />
-            <span className="text-slate-300 text-sm">10 modules</span>
+            <span className="text-slate-300 text-sm">{chapterCount} {chapterCount === 1 ? 'chapter' : 'chapters'}</span>
           </div>
         </div>
         

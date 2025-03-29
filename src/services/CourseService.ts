@@ -6,6 +6,7 @@ interface CourseWithCategory extends Course {
   categories?: {
     name: string;
   } | null;
+  chapters_count?: number;
 }
 
 /**
@@ -27,6 +28,7 @@ export const fetchRecommendedCourses = async (userId: string): Promise<CourseWit
   
   const categoryIds = interests.map(interest => interest.category_id);
   
+  // First, get courses that match user interests
   const { data: courses, error: coursesError } = await supabase
     .from('courses')
     .select(`
@@ -40,23 +42,33 @@ export const fetchRecommendedCourses = async (userId: string): Promise<CourseWit
     throw coursesError;
   }
   
+  // Fall back to featured courses if no matches
   if (!courses || courses.length === 0) {
-    const { data: featuredCourses, error: featuredError } = await supabase
-      .from('courses')
-      .select(`
-        *,
-        categories(name)
-      `)
-      .limit(6);
-    
-    if (featuredError) {
-      throw featuredError;
-    }
-    
-    return featuredCourses || [];
+    return fetchFeaturedCourses();
   }
   
-  return courses;
+  // Get chapter counts for each course
+  const courseIds = courses.map(course => course.id);
+  const { data: chapterCounts, error: chaptersError } = await supabase
+    .from('chapters')
+    .select('course_id, count')
+    .in('course_id', courseIds)
+    .group('course_id');
+  
+  if (chaptersError) {
+    console.error("Error fetching chapter counts:", chaptersError);
+  }
+  
+  // Merge chapter counts with courses
+  const coursesWithCounts = courses.map(course => {
+    const chapterData = chapterCounts?.find(c => c.course_id === course.id);
+    return {
+      ...course,
+      chapters_count: chapterData ? parseInt(chapterData.count) : 0
+    };
+  });
+  
+  return coursesWithCounts;
 };
 
 /**
@@ -79,7 +91,8 @@ export const fetchUserInterests = async (userId: string): Promise<number[]> => {
  * Fetches a curated list of featured courses
  */
 export const fetchFeaturedCourses = async (): Promise<CourseWithCategory[]> => {
-  const { data, error } = await supabase
+  // Get courses
+  const { data: courses, error } = await supabase
     .from('courses')
     .select(`
       *,
@@ -91,5 +104,30 @@ export const fetchFeaturedCourses = async (): Promise<CourseWithCategory[]> => {
     throw error;
   }
   
-  return data || [];
+  if (!courses || courses.length === 0) {
+    return [];
+  }
+  
+  // Get chapter counts for each course
+  const courseIds = courses.map(course => course.id);
+  const { data: chapterCounts, error: chaptersError } = await supabase
+    .from('chapters')
+    .select('course_id, count(*)')
+    .in('course_id', courseIds)
+    .group('course_id');
+  
+  if (chaptersError) {
+    console.error("Error fetching chapter counts:", chaptersError);
+  }
+  
+  // Merge chapter counts with courses
+  const coursesWithCounts = courses.map(course => {
+    const chapterData = chapterCounts?.find(c => c.course_id === course.id);
+    return {
+      ...course,
+      chapters_count: chapterData ? parseInt(chapterData.count) : 0
+    };
+  });
+  
+  return coursesWithCounts;
 };
