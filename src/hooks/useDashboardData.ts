@@ -48,14 +48,26 @@ export const useDashboardData = (userId: string | undefined) => {
     setIsLoading(true);
     
     try {
-      // Fetch user interests with category names
+      // Fetch user interests with category names and IDs
       const { data: interests, error: interestsError } = await supabase
         .from('user_interest_categories')
-        .select('*, category:categories(name)')
+        .select('*, category:categories(id, name)')
         .eq('user_id', userId || '');
       
       if (interestsError) throw interestsError;
-      setUserInterests(interests || []);
+      
+      // Transform the data to match UserInterest type
+      const transformedInterests: UserInterest[] = interests?.map(interest => ({
+        user_id: interest.user_id,
+        category_id: interest.category_id,
+        difficulty_level: interest.difficulty_level,
+        category: {
+          id: interest.category?.id,
+          name: interest.category?.name || 'Unknown'
+        }
+      })) || [];
+      
+      setUserInterests(transformedInterests);
       
       // Fetch enrolled courses with progress
       const { data: subscriptions, error: subscriptionsError } = await supabase
