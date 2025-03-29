@@ -1,5 +1,5 @@
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { Course } from '@/types/course';
@@ -35,16 +35,11 @@ export const useDashboardData = (userId: string | undefined) => {
   const [isLoading, setIsLoading] = useState(true);
   const navigate = useNavigate();
   
-  useEffect(() => {
+  const fetchUserData = useCallback(async () => {
     if (!userId) {
-      navigate('/login');
       return;
     }
     
-    fetchUserData();
-  }, [userId]);
-  
-  const fetchUserData = async () => {
     setIsLoading(true);
     
     try {
@@ -52,7 +47,7 @@ export const useDashboardData = (userId: string | undefined) => {
       const { data: interests, error: interestsError } = await supabase
         .from('user_interest_categories')
         .select('*, category:categories(id, name)')
-        .eq('user_id', userId || '');
+        .eq('user_id', userId);
       
       if (interestsError) throw interestsError;
       
@@ -73,7 +68,7 @@ export const useDashboardData = (userId: string | undefined) => {
       const { data: subscriptions, error: subscriptionsError } = await supabase
         .from('subscribed_courses')
         .select('*, course:course_id(id, title, description, thumbnail, difficulty_level, media, course_time, creator_id, overall_rating, price, category_id, created_at)')
-        .eq('user_id', userId || '');
+        .eq('user_id', userId);
       
       if (subscriptionsError) throw subscriptionsError;
       
@@ -108,7 +103,7 @@ export const useDashboardData = (userId: string | undefined) => {
       const { data: quizzes, error: quizzesError } = await supabase
         .from('user_quiz_results')
         .select('*, quiz:quiz_id(title, category_id, category:category_id(name))')
-        .eq('user_id', userId || '');
+        .eq('user_id', userId);
       
       if (quizzesError) throw quizzesError;
       
@@ -149,7 +144,16 @@ export const useDashboardData = (userId: string | undefined) => {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [userId]);
+  
+  useEffect(() => {
+    if (!userId) {
+      navigate('/login');
+      return;
+    }
+    
+    fetchUserData();
+  }, [userId, navigate, fetchUserData]);
   
   const handleEditInterests = () => {
     navigate('/select-interests');
