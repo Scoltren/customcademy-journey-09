@@ -1,242 +1,193 @@
 
-import React, { useState, useEffect } from "react";
-import { useNavigate, useLocation } from "react-router-dom";
-import { useAuth } from "../contexts/AuthContext";
-import { supabase } from "@/integrations/supabase/client";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { Checkbox } from "@/components/ui/checkbox";
-import { toast } from "sonner";
-import { ArrowLeft } from "lucide-react";
+import React, { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { Button } from '@/components/ui/button';
+import { Checkbox } from '@/components/ui/checkbox';
+import { useAuth } from '@/contexts/AuthContext';
+import { supabase } from '@/integrations/supabase/client';
+import { Loader2 } from 'lucide-react';
+import { toast } from 'sonner';
 
 interface Category {
   id: number;
   name: string;
-  quiz_id: number | null;
+  description?: string;
 }
 
 const SelectInterests = () => {
+  const { user, isLoading } = useAuth();
+  const navigate = useNavigate();
   const [categories, setCategories] = useState<Category[]>([]);
   const [selectedCategories, setSelectedCategories] = useState<number[]>([]);
-  const [isLoading, setIsLoading] = useState(false);
-  const [isFetching, setIsFetching] = useState(true);
-  const { user } = useAuth();
-  const navigate = useNavigate();
-  const location = useLocation();
-  const isEditMode = location.state?.editMode || false;
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
 
   useEffect(() => {
-    const fetchCategories = async () => {
-      try {
-        // Get categories
-        const { data, error } = await supabase
-          .from("categories")
-          .select("id, name, quiz_id");
-
-        if (error) throw error;
-        setCategories(data || []);
-        
-        // If we're in edit mode, get the user's current interests
-        if (user) {
-          const { data: userInterests, error: userInterestsError } = await supabase
-            .from("user_interest_categories")
-            .select("category_id")
-            .eq("user_id", user.id);
-            
-          if (userInterestsError) throw userInterestsError;
-          
-          if (userInterests && userInterests.length > 0) {
-            const currentInterests = userInterests.map(interest => interest.category_id);
-            setSelectedCategories(currentInterests);
-          }
-        }
-      } catch (error) {
-        console.error("Error fetching categories:", error);
-        toast.error("Failed to load categories");
-      } finally {
-        setIsFetching(false);
-      }
-    };
-
-    fetchCategories();
-  }, [user]);
-
-  useEffect(() => {
-    if (!user) {
-      navigate("/login");
+    if (!user && !isLoading) {
+      navigate('/login');
+    } else if (user) {
+      fetchCategories();
+      fetchUserInterests();
     }
-  }, [user, navigate]);
+  }, [user, isLoading, navigate]);
 
-  const handleCategoryToggle = (categoryId: number) => {
-    setSelectedCategories((prev) => {
-      if (prev.includes(categoryId)) {
-        return prev.filter((id) => id !== categoryId);
-      } else {
-        if (prev.length >= 3) {
-          toast.error("You can select a maximum of 3 categories");
-          return prev;
-        }
-        return [...prev, categoryId];
-      }
-    });
+  const fetchCategories = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('categories')
+        .select('*')
+        .order('name');
+
+      if (error) throw error;
+      setCategories(data || []);
+    } catch (error: any) {
+      console.error('Error fetching categories:', error.message);
+      toast.error('Failed to load categories');
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const saveUserInterests = async () => {
-    if (!user) {
-      toast.error("You must be logged in");
-      return;
-    }
-
-    if (selectedCategories.length === 0) {
-      toast.error("Please select at least one category");
-      return;
-    }
-
+  const fetchUserInterests = async () => {
+    if (!user) return;
+    
     try {
-      setIsLoading(true);
-      
-      // First delete all existing user interests
-      const { error: deleteError } = await supabase
-        .from("user_interest_categories")
-        .delete()
-        .eq("user_id", user.id);
-      
-      if (deleteError) throw deleteError;
-      
-      // Then insert the newly selected interests
-      const { error } = await supabase.from("user_interest_categories").insert(
-        selectedCategories.map(categoryId => ({
-          user_id: user.id,
-          category_id: categoryId
-        }))
-      );
+      const { data, error } = await supabase
+        .from('user_categories')
+        .select('category_id')
+        .eq('user_id', user.id);
 
       if (error) throw error;
       
-      toast.success("Interests updated successfully!");
+      const categoryIds = data?.map(item => item.category_id) || [];
+      setSelectedCategories(categoryIds);
+    } catch (error: any) {
+      console.error('Error fetching user interests:', error.message);
+      toast.error('Failed to load your current interests');
+    }
+  };
+
+  const handleCategoryToggle = (categoryId: number) => {
+    setSelectedCategories(prev => 
+      prev.includes(categoryId)
+        ? prev.filter(id => id !== categoryId)
+        : [...prev, categoryId]
+    );
+  };
+
+  const saveInterests = async () => {
+    if (!user) return;
+    
+    try {
+      setSaving(true);
       
-      // Check if in edit mode to determine where to navigate
-      if (isEditMode) {
-        navigate("/dashboard");
-      } else {
-        // Check if any selected categories have a quiz
-        const categoriesWithQuizzes = categories
-          .filter(cat => selectedCategories.includes(cat.id) && cat.quiz_id !== null)
-          .map(cat => cat.quiz_id);
+      // First, delete all existing user interests
+      const { error: deleteError } = await supabase
+        .from('user_categories')
+        .delete()
+        .eq('user_id', user.id);
+      
+      if (deleteError) throw deleteError;
+      
+      // Then, insert new interests if any are selected
+      if (selectedCategories.length > 0) {
+        const interestsToInsert = selectedCategories.map(categoryId => ({
+          user_id: user.id,
+          category_id: categoryId
+        }));
         
-        if (categoriesWithQuizzes.length > 0) {
-          // If there are quizzes, redirect to the quiz page
-          navigate("/category-quiz", { 
-            state: { 
-              quizIds: categoriesWithQuizzes,
-              categories: categories.filter(cat => selectedCategories.includes(cat.id))
-            } 
-          });
-        } else {
-          // If no quizzes, go to the dashboard
-          navigate("/dashboard");
-        }
+        const { error: insertError } = await supabase
+          .from('user_categories')
+          .insert(interestsToInsert);
+        
+        if (insertError) throw insertError;
       }
-    } catch (error) {
-      console.error("Error saving interests:", error);
-      if (error instanceof Error) {
-        toast.error(error.message || "Failed to save your interests");
-      } else {
-        toast.error("Failed to save your interests");
-      }
+      
+      toast.success('Your interests have been updated');
+      navigate('/');
+    } catch (error: any) {
+      console.error('Error saving interests:', error.message);
+      toast.error('Failed to save your interests');
     } finally {
-      setIsLoading(false);
+      setSaving(false);
     }
   };
 
-  const handleBackOrSkip = () => {
-    if (isEditMode) {
-      navigate("/dashboard");
-    } else {
-      toast.info("You can always select your interests later");
-      navigate("/");
-    }
-  };
-
-  if (isFetching) {
+  if (isLoading || (loading && !categories.length)) {
     return (
-      <div className="flex items-center justify-center min-h-screen bg-gradient-to-b from-blue-950 to-slate-950 p-4">
-        <div className="text-white text-xl">Loading categories...</div>
+      <div className="flex items-center justify-center min-h-screen">
+        <Loader2 className="w-8 h-8 animate-spin" />
       </div>
     );
   }
 
   return (
-    <div className="flex items-center justify-center min-h-screen bg-gradient-to-b from-blue-950 to-slate-950 p-4">
-      <div className="absolute top-4 left-4">
-        <Button 
-          variant="outline" 
-          size="sm"
-          className="bg-slate-800 hover:bg-slate-700 text-white border-slate-700"
-          onClick={handleBackOrSkip}
-        >
-          <ArrowLeft className="mr-2 h-4 w-4" />
-          {isEditMode ? "Back to Dashboard" : "Back to Homepage"}
-        </Button>
-      </div>
-      <div className="w-full max-w-lg">
-        <Card className="backdrop-blur-sm bg-slate-950 border-slate-800 shadow-xl transition-all duration-300">
-          <CardHeader className="space-y-1 text-center">
-            <CardTitle className="text-3xl font-bold tracking-tight text-white">
-              {isEditMode ? "Edit Your Interests" : "Select Your Interests"}
-            </CardTitle>
-            <CardDescription className="text-gray-300">
-              Choose up to 3 categories that interest you the most
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-4">
+    <div className="container mx-auto px-4 py-12 max-w-4xl">
+      <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6">
+        <h1 className="text-3xl font-bold mb-6">Select Your Interests</h1>
+        <p className="text-gray-600 dark:text-gray-300 mb-8">
+          Choose categories that interest you to get personalized course recommendations.
+        </p>
+        
+        {loading ? (
+          <div className="flex items-center justify-center h-48">
+            <Loader2 className="w-6 h-6 animate-spin" />
+          </div>
+        ) : (
+          <>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-8">
               {categories.map((category) => (
                 <div 
                   key={category.id} 
-                  className={`p-4 flex items-center gap-3 border rounded-md cursor-pointer transition-all ${
-                    selectedCategories.includes(category.id) 
-                      ? "border-blue-500 bg-blue-900/20" 
-                      : "border-gray-700 hover:border-gray-600"
-                  }`}
+                  className="flex items-start space-x-2 p-3 border rounded-md hover:bg-gray-50 dark:hover:bg-gray-700 cursor-pointer"
                   onClick={() => handleCategoryToggle(category.id)}
                 >
                   <Checkbox 
+                    id={`category-${category.id}`}
                     checked={selectedCategories.includes(category.id)}
                     onCheckedChange={() => handleCategoryToggle(category.id)}
-                    id={`category-${category.id}`}
                   />
-                  <label 
-                    htmlFor={`category-${category.id}`}
-                    className="flex-1 cursor-pointer font-medium text-white"
-                  >
-                    {category.name}
-                  </label>
+                  <div>
+                    <label 
+                      htmlFor={`category-${category.id}`}
+                      className="font-medium cursor-pointer"
+                    >
+                      {category.name}
+                    </label>
+                    {category.description && (
+                      <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
+                        {category.description}
+                      </p>
+                    )}
+                  </div>
                 </div>
               ))}
             </div>
             
-            <div className="mt-6 text-center text-sm text-gray-300">
-              {selectedCategories.length}/3 categories selected
+            <div className="flex justify-between">
+              <Button 
+                variant="outline" 
+                onClick={() => navigate('/')}
+                disabled={saving}
+              >
+                Cancel
+              </Button>
+              <Button 
+                onClick={saveInterests}
+                disabled={saving}
+              >
+                {saving ? (
+                  <>
+                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                    Saving...
+                  </>
+                ) : (
+                  'Save Interests'
+                )}
+              </Button>
             </div>
-          </CardContent>
-          <CardFooter className="flex flex-col space-y-2">
-            <Button
-              className="w-full bg-blue-600 text-white hover:bg-blue-700"
-              onClick={saveUserInterests}
-              disabled={isLoading || selectedCategories.length === 0}
-            >
-              {isLoading ? "Saving..." : isEditMode ? "Update Interests" : "Continue"}
-            </Button>
-            <Button
-              variant="outline"
-              className="w-full border-slate-700 text-slate-300 hover:text-white hover:bg-slate-800"
-              onClick={handleBackOrSkip}
-            >
-              {isEditMode ? "Cancel" : "Skip Selection"}
-            </Button>
-          </CardFooter>
-        </Card>
+          </>
+        )}
       </div>
     </div>
   );
