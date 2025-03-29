@@ -66,37 +66,54 @@ export const useQuizScoring = (
       
       if (currentCategory) {
         console.log(`Updating user skill level for category ${currentCategory.id} to ${skillLevel}`);
-        const { error: interestError } = await supabase
+        
+        // Check if the user interest category record exists
+        const { data: existingInterest } = await supabase
           .from('user_interest_categories')
-          .upsert({
-            user_id: user.id,
-            category_id: currentCategory.id,
-            difficulty_level: skillLevel
-          }, {
-            onConflict: 'user_id,category_id'
-          });
-          
-        if (interestError) {
-          console.error('Error saving user skill level:', interestError);
-          throw interestError;
+          .select('*')
+          .eq('user_id', user.id)
+          .eq('category_id', currentCategory.id)
+          .single();
+        
+        // If record exists, update it; otherwise, insert a new one
+        if (existingInterest) {
+          const { error: updateError } = await supabase
+            .from('user_interest_categories')
+            .update({ difficulty_level: skillLevel })
+            .eq('user_id', user.id)
+            .eq('category_id', currentCategory.id);
+            
+          if (updateError) {
+            console.error('Error updating user skill level:', updateError);
+            throw updateError;
+          }
+        } else {
+          const { error: insertError } = await supabase
+            .from('user_interest_categories')
+            .insert({
+              user_id: user.id,
+              category_id: currentCategory.id,
+              difficulty_level: skillLevel
+            });
+            
+          if (insertError) {
+            console.error('Error inserting user skill level:', insertError);
+            throw insertError;
+          }
         }
       } else {
         console.warn(`No category found for quiz ${currentQuizId}`);
       }
       
-      // Save quiz result in user_quiz_results table
-      const { data: existingResult, error: checkError } = await supabase
+      // Check if a result already exists for this quiz and user
+      const { data: existingResult } = await supabase
         .from('user_quiz_results')
         .select('*')
         .eq('user_id', user.id)
         .eq('quiz_id', currentQuizId)
         .maybeSingle();
         
-      if (checkError) {
-        console.error("Error checking for existing quiz result:", checkError);
-      }
-      
-      let saveError;
+      // Handle the quiz result saving
       if (existingResult) {
         // Update existing result if score is higher
         if (score > (existingResult.score || 0)) {
@@ -104,7 +121,11 @@ export const useQuizScoring = (
             .from('user_quiz_results')
             .update({ score: score })
             .eq('id', existingResult.id);
-          saveError = error;
+          
+          if (error) {
+            console.error("Error updating quiz result:", error);
+            throw error;
+          }
         }
       } else {
         // Insert new result
@@ -115,14 +136,14 @@ export const useQuizScoring = (
             quiz_id: currentQuizId,
             score: score
           });
-        saveError = error;
-      }
         
-      if (saveError) {
-        console.error("Error saving quiz result:", saveError);
-        throw saveError;
+        if (error) {
+          console.error("Error inserting quiz result:", error);
+          throw error;
+        }
       }
       
+      // Update the local state with the new score
       setQuizState(prev => ({
         ...prev,
         quizScores: {
