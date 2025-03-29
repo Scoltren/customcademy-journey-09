@@ -1,7 +1,7 @@
 
 import React from "react";
 import { Answer, Question } from "@/types/quiz";
-import { CheckCircle, XCircle } from "lucide-react";
+import { Check, X, CheckCircle, XCircle } from "lucide-react";
 
 interface AnswerOptionProps {
   answer: Answer;
@@ -10,6 +10,7 @@ interface AnswerOptionProps {
   onSelect: (answerId: number) => void;
   isCorrect?: boolean;
   isIncorrect?: boolean;
+  showExplanation?: boolean;
 }
 
 export const AnswerOption: React.FC<AnswerOptionProps> = ({
@@ -19,6 +20,7 @@ export const AnswerOption: React.FC<AnswerOptionProps> = ({
   onSelect,
   isCorrect,
   isIncorrect,
+  showExplanation = false,
 }) => {
   // Determine if this is a multiple choice question
   const isMultipleChoice = currentQuestion?.multiple_correct;
@@ -39,36 +41,46 @@ export const AnswerOption: React.FC<AnswerOptionProps> = ({
   };
 
   return (
-    <div
-      className={`p-4 rounded-lg border ${getBorderStyle()} ${getBackgroundStyle()} transition-colors cursor-pointer`}
-      onClick={() => onSelect(answer.id)}
-    >
-      <div className="flex items-center gap-3">
-        <div
-          className={`w-5 h-5 flex-shrink-0 ${
-            isMultipleChoice ? "rounded-sm" : "rounded-full"
-          } border ${isSelected ? "border-blue-500" : "border-gray-600"} flex items-center justify-center`}
-        >
-          {isSelected && (
-            <div
-              className={`${
-                isMultipleChoice ? "w-3 h-3 rounded-sm" : "w-3 h-3 rounded-full"
-              } ${isCorrect ? "bg-green-500" : isIncorrect ? "bg-red-500" : "bg-blue-500"}`}
-            ></div>
-          )}
-          {isCorrect && !isSelected && <CheckCircle className="w-4 h-4 text-green-500" />}
+    <div className="space-y-2">
+      <div
+        className={`p-4 rounded-lg border ${getBorderStyle()} ${getBackgroundStyle()} transition-colors cursor-pointer`}
+        onClick={() => onSelect(answer.id)}
+      >
+        <div className="flex items-center gap-3">
+          <div
+            className={`w-5 h-5 flex-shrink-0 ${
+              isMultipleChoice ? "rounded-sm" : "rounded-full"
+            } border ${isSelected ? "border-blue-500" : "border-gray-600"} flex items-center justify-center`}
+          >
+            {isSelected && (
+              <div
+                className={`${
+                  isMultipleChoice ? "w-3 h-3 rounded-sm" : "w-3 h-3 rounded-full"
+                } ${isCorrect ? "bg-green-500" : isIncorrect ? "bg-red-500" : "bg-blue-500"}`}
+              ></div>
+            )}
+            {isCorrect && !isSelected && <CheckCircle className="w-4 h-4 text-green-500" />}
+          </div>
+          <div className="flex-1">
+            <p className={`${isCorrect ? "font-medium text-green-400" : isIncorrect ? "text-red-400" : ""}`}>
+              {answer.answer_text}
+            </p>
+          </div>
+          {isCorrect && <CheckCircle className="w-5 h-5 text-green-500" />}
+          {isIncorrect && <XCircle className="w-5 h-5 text-red-500" />}
         </div>
-        <div className="flex-1">
-          <p className={`${isCorrect ? "font-medium text-green-400" : isIncorrect ? "text-red-400" : ""}`}>
-            {answer.answer_text}
-          </p>
-          {(isCorrect || isIncorrect) && answer.explanation && (
-            <p className="mt-2 text-sm text-slate-400">{answer.explanation}</p>
-          )}
-        </div>
-        {isCorrect && <CheckCircle className="w-5 h-5 text-green-500" />}
-        {isIncorrect && <XCircle className="w-5 h-5 text-red-500" />}
       </div>
+
+      {/* Show explanation when applicable */}
+      {showExplanation && answer.explanation && (isSelected || isCorrect) && (
+        <div className={`ml-8 p-3 rounded-md ${isCorrect ? "bg-green-500/5 border border-green-500/20" : 
+          isIncorrect ? "bg-red-500/5 border border-red-500/20" : "bg-slate-800"}`}>
+          <p className="text-sm">
+            <span className="font-medium">{isCorrect ? "Correct: " : "Explanation: "}</span>
+            {answer.explanation}
+          </p>
+        </div>
+      )}
     </div>
   );
 };

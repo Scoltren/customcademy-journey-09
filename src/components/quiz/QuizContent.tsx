@@ -1,5 +1,5 @@
 
-import React from "react";
+import React, { useState } from "react";
 import { CardContent } from "@/components/ui/card";
 import { AnswerOption } from "@/components/quiz/AnswerOption";
 import { Answer, Question } from "@/types/quiz";
@@ -19,11 +19,26 @@ export const QuizContent: React.FC<QuizContentProps> = ({
   onSelectAnswer,
   isReviewMode = false,
 }) => {
+  // Track whether feedback is being shown
+  const [showFeedback, setShowFeedback] = useState(false);
+
   // Function to get the correct answers
   const getCorrectAnswerIds = () => {
     return currentAnswers
       .filter(answer => answer.points && answer.points > 0)
       .map(answer => answer.id);
+  };
+
+  // Modified answer selection handler to show feedback
+  const handleAnswerSelect = (answerId: number) => {
+    // If already in review mode, don't allow new selections
+    if (isReviewMode) return;
+    
+    // Show feedback when an answer is selected
+    setShowFeedback(true);
+    
+    // Call the original selection handler
+    onSelectAnswer(answerId);
   };
 
   return (
@@ -35,13 +50,18 @@ export const QuizContent: React.FC<QuizContentProps> = ({
             answer={answer}
             isSelected={selectedAnswerIds.includes(answer.id)}
             currentQuestion={currentQuestion}
-            onSelect={onSelectAnswer}
-            isCorrect={isReviewMode ? answer.points && answer.points > 0 : undefined}
+            onSelect={handleAnswerSelect}
+            isCorrect={
+              (isReviewMode || showFeedback) && answer.points && answer.points > 0 
+                ? true 
+                : undefined
+            }
             isIncorrect={
-              isReviewMode
+              (isReviewMode || showFeedback)
                 ? selectedAnswerIds.includes(answer.id) && (!answer.points || answer.points <= 0)
                 : undefined
             }
+            showExplanation={isReviewMode || showFeedback}
           />
         ))}
       </div>
