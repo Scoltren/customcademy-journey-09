@@ -1,8 +1,9 @@
 
 export interface UserInterest {
-  id?: number;
-  category_id: number;
   user_id: string;
+  category_id: number;
+  difficulty_level?: string | null;
+  created_at?: string | null;
   category?: {
     id: number;
     name: string;
