@@ -12,6 +12,7 @@ interface Category {
   id: number;
   name: string;
   description?: string;
+  quiz_id?: number | null;
 }
 
 const SelectInterests = () => {
@@ -104,7 +105,29 @@ const SelectInterests = () => {
       }
       
       toast.success('Your interests have been updated');
-      navigate('/');
+      
+      // Check if any selected categories have quizzes attached
+      const categoriesWithQuizzes = categories.filter(
+        category => selectedCategories.includes(category.id) && category.quiz_id
+      );
+      
+      if (categoriesWithQuizzes.length > 0) {
+        // Prepare data for quiz page
+        const quizIds = categoriesWithQuizzes
+          .map(category => category.quiz_id)
+          .filter(id => id !== null) as number[];
+          
+        // Navigate to the quiz page with the quiz IDs
+        navigate('/category-quiz', { 
+          state: { 
+            quizIds,
+            categories: categoriesWithQuizzes
+          }
+        });
+      } else {
+        // If no categories with quizzes, go to the home page
+        navigate('/');
+      }
     } catch (error: any) {
       console.error('Error saving interests:', error.message);
       toast.error('Failed to save your interests');

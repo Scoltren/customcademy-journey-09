@@ -33,7 +33,7 @@ const Index = () => {
           </>
         ) : (
           // Content for logged in users
-          <UserDashboard userId={user.id} />
+          <UserDashboard userId={user.id} key={Date.now()} />
         )}
       </div>
       <Footer />
