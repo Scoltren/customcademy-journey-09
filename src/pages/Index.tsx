@@ -3,7 +3,6 @@ import React from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import Hero from '@/components/Hero';
 import FeaturedCourses from '@/components/FeaturedCourses';
-import CategorySection from '@/components/CategorySection';
 import Footer from '@/components/Footer';
 import UserDashboard from '@/components/home/UserDashboard';
 import Navbar from '@/components/Navbar';
@@ -29,7 +28,6 @@ const Index = () => {
           <>
             <Hero />
             <FeaturedCourses />
-            <CategorySection />
           </>
         ) : (
           // Content for logged in users
