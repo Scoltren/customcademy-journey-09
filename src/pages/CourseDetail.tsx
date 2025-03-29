@@ -24,9 +24,8 @@ const CourseDetail = () => {
       if (user && id) {
         try {
           const numericCourseId = parseInt(id, 10);
-          const numericUserId = parseInt(user.id, 10);
           
-          if (isNaN(numericCourseId) || isNaN(numericUserId)) {
+          if (isNaN(numericCourseId)) {
             console.error("Invalid ID format");
             return;
           }
@@ -35,7 +34,7 @@ const CourseDetail = () => {
             .from('subscribed_courses')
             .select('progress')
             .eq('course_id', numericCourseId)
-            .eq('user_id', numericUserId)
+            .eq('user_id', user.id)
             .single();
           
           if (error) throw error;

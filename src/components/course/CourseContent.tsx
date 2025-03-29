@@ -58,9 +58,8 @@ const CourseContent: React.FC<CourseContentProps> = ({
     try {
       // Make sure the id is converted to a number
       const numericCourseId = parseInt(id, 10);
-      const numericUserId = parseInt(user.id, 10);
       
-      if (isNaN(numericCourseId) || isNaN(numericUserId)) {
+      if (isNaN(numericCourseId)) {
         throw new Error("Invalid ID format");
       }
       
@@ -69,7 +68,7 @@ const CourseContent: React.FC<CourseContentProps> = ({
         .from('subscribed_courses')
         .select('*')
         .eq('course_id', numericCourseId)
-        .eq('user_id', numericUserId)
+        .eq('user_id', user.id)
         .single();
       
       if (checkError && checkError.code !== 'PGRST116') {
@@ -84,7 +83,7 @@ const CourseContent: React.FC<CourseContentProps> = ({
             progress: (existingSubscription.progress || 0) + progressValue 
           })
           .eq('course_id', numericCourseId)
-          .eq('user_id', numericUserId);
+          .eq('user_id', user.id);
         
         if (updateError) throw updateError;
       } else {
@@ -93,7 +92,7 @@ const CourseContent: React.FC<CourseContentProps> = ({
           .from('subscribed_courses')
           .insert({
             course_id: numericCourseId,
-            user_id: numericUserId,
+            user_id: user.id,
             progress: progressValue
           });
         

@@ -86,7 +86,7 @@ export const useCourseData = () => {
   
   // Fetch comments/reviews data
   const { 
-    data: comments = [], 
+    data: commentsData = [], 
     isLoading: commentsLoading, 
     error: commentsError 
   } = useQuery({
@@ -117,10 +117,20 @@ export const useCourseData = () => {
       return data.map(comment => ({
         ...comment,
         username: comment.users?.username || 'Anonymous User'
-      })) as Comment[];
+      }));
     },
     enabled: !!id,
   });
+  
+  // Convert the commentsData to match our Comment type
+  const comments: Comment[] = commentsData.map(comment => ({
+    id: comment.id,
+    comment_text: comment.comment_text,
+    user_id: comment.user_id,
+    created_at: comment.created_at,
+    username: comment.username,
+    users: comment.users
+  }));
   
   // Show error messages
   useEffect(() => {

@@ -1,4 +1,3 @@
-
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { supabase } from '../integrations/supabase/client';
 import { User, Session } from '@supabase/supabase-js';
@@ -103,8 +102,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       const { data, error } = await supabase
         .from('subscribed_courses')
         .select('*')
-        .eq('course_id', numericCourseId)
-        .eq('user_id', numericUserId)
+        .eq('user_id', user.id)
+        .eq('course_id', courseId)
         .single();
         
       if (error && error.code !== 'PGRST116') {

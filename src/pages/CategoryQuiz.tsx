@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext";
@@ -70,7 +69,6 @@ const CategoryQuiz = () => {
         setIsLoading(true);
         const currentQuizId = quizIds[0];
         
-        // Fetch questions for the current quiz
         const { data: questionsData, error: questionsError } = await supabase
           .from("questions")
           .select("*")
@@ -84,7 +82,6 @@ const CategoryQuiz = () => {
           return;
         }
         
-        // Fetch answers for all questions in the current quiz
         const answersPromises = questionsData.map(question => 
           supabase
             .from("answers")
@@ -155,18 +152,16 @@ const CategoryQuiz = () => {
       const currentQuizId = quizIds[quizState.currentQuizIndex];
       const score = calculateScore();
       
-      // Save quiz results
       const { error } = await supabase
-        .from("user_quiz_results")
+        .from('user_quiz_results')
         .insert({
-          user_id: parseInt(user.id),
+          user_id: user.id,
           quiz_id: currentQuizId,
           score: score
         });
         
       if (error) throw error;
       
-      // Update quiz scores
       setQuizState(prev => ({
         ...prev,
         quizScores: {
@@ -191,24 +186,20 @@ const CategoryQuiz = () => {
     }
     
     if (quizState.currentQuestionIndex < quizState.questions.length - 1) {
-      // Move to next question
       setQuizState(prev => ({
         ...prev,
         currentQuestionIndex: prev.currentQuestionIndex + 1
       }));
     } else {
-      // Last question of current quiz
       await saveQuizResults();
       
       if (quizState.currentQuizIndex < quizIds.length - 1) {
-        // Move to next quiz
         const nextQuizIndex = quizState.currentQuizIndex + 1;
         const nextQuizId = quizIds[nextQuizIndex];
         
         try {
           setIsLoading(true);
           
-          // Fetch questions for the next quiz
           const { data: questionsData, error: questionsError } = await supabase
             .from("questions")
             .select("*")
@@ -222,7 +213,6 @@ const CategoryQuiz = () => {
             return;
           }
           
-          // Fetch answers for all questions in the next quiz
           const answersPromises = questionsData.map(question => 
             supabase
               .from("answers")
@@ -249,7 +239,6 @@ const CategoryQuiz = () => {
           setIsLoading(false);
         }
       } else {
-        // All quizzes completed
         toast.success("All quizzes completed!");
         navigate("/dashboard");
       }
