@@ -117,7 +117,7 @@ export type Database = {
           id: number
           parent_comment_id: number | null
           type: string | null
-          user_id: number | null
+          user_id: string | null
         }
         Insert: {
           comment_text: string
@@ -126,7 +126,7 @@ export type Database = {
           id?: number
           parent_comment_id?: number | null
           type?: string | null
-          user_id?: number | null
+          user_id?: string | null
         }
         Update: {
           comment_text?: string
@@ -135,7 +135,7 @@ export type Database = {
           id?: number
           parent_comment_id?: number | null
           type?: string | null
-          user_id?: number | null
+          user_id?: string | null
         }
         Relationships: [
           {
@@ -157,7 +157,7 @@ export type Database = {
             columns: ["user_id"]
             isOneToOne: false
             referencedRelation: "users"
-            referencedColumns: ["id"]
+            referencedColumns: ["auth_user_id"]
           },
         ]
       }
@@ -210,13 +210,6 @@ export type Database = {
             columns: ["category_id"]
             isOneToOne: false
             referencedRelation: "categories"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "courses_creator_id_fkey"
-            columns: ["creator_id"]
-            isOneToOne: false
-            referencedRelation: "users"
             referencedColumns: ["id"]
           },
         ]
@@ -277,17 +270,17 @@ export type Database = {
         Row: {
           course_id: number
           recommendation_reason: string | null
-          user_id: number
+          user_id: string
         }
         Insert: {
           course_id: number
           recommendation_reason?: string | null
-          user_id: number
+          user_id: string
         }
         Update: {
           course_id?: number
           recommendation_reason?: string | null
-          user_id?: number
+          user_id?: string
         }
         Relationships: [
           {
@@ -302,7 +295,7 @@ export type Database = {
             columns: ["user_id"]
             isOneToOne: false
             referencedRelation: "users"
-            referencedColumns: ["id"]
+            referencedColumns: ["auth_user_id"]
           },
         ]
       }
@@ -311,33 +304,33 @@ export type Database = {
           course_id: number
           progress: number | null
           rating: number | null
-          user_id: number
+          user_id: string
         }
         Insert: {
           course_id: number
           progress?: number | null
           rating?: number | null
-          user_id: number
+          user_id: string
         }
         Update: {
           course_id?: number
           progress?: number | null
           rating?: number | null
-          user_id?: number
+          user_id?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "subscribed_courses_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["auth_user_id"]
+          },
           {
             foreignKeyName: "user_courses_course_id_fkey"
             columns: ["course_id"]
             isOneToOne: false
             referencedRelation: "courses"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "user_courses_user_id_fkey"
-            columns: ["user_id"]
-            isOneToOne: false
-            referencedRelation: "users"
             referencedColumns: ["id"]
           },
         ]
@@ -346,17 +339,17 @@ export type Database = {
         Row: {
           category_id: number
           difficulty_level: string | null
-          user_id: number
+          user_id: string
         }
         Insert: {
           category_id: number
           difficulty_level?: string | null
-          user_id: number
+          user_id: string
         }
         Update: {
           category_id?: number
           difficulty_level?: string | null
-          user_id?: number
+          user_id?: string
         }
         Relationships: [
           {
@@ -371,7 +364,7 @@ export type Database = {
             columns: ["user_id"]
             isOneToOne: false
             referencedRelation: "users"
-            referencedColumns: ["id"]
+            referencedColumns: ["auth_user_id"]
           },
         ]
       }
@@ -380,19 +373,19 @@ export type Database = {
           id: number
           quiz_id: number | null
           score: number | null
-          user_id: number | null
+          user_id: string | null
         }
         Insert: {
           id?: never
           quiz_id?: number | null
           score?: number | null
-          user_id?: number | null
+          user_id?: string | null
         }
         Update: {
           id?: never
           quiz_id?: number | null
           score?: number | null
-          user_id?: number | null
+          user_id?: string | null
         }
         Relationships: [
           {
@@ -407,35 +400,32 @@ export type Database = {
             columns: ["user_id"]
             isOneToOne: false
             referencedRelation: "users"
-            referencedColumns: ["id"]
+            referencedColumns: ["auth_user_id"]
           },
         ]
       }
       users: {
         Row: {
-          admin: boolean
+          auth_user_id: string
+          bio: string | null
           created_at: string | null
-          email: string
           id: number
-          password: string
           profile_picture: string | null
           username: string
         }
         Insert: {
-          admin?: boolean
+          auth_user_id: string
+          bio?: string | null
           created_at?: string | null
-          email: string
-          id?: number
-          password: string
+          id?: never
           profile_picture?: string | null
           username: string
         }
         Update: {
-          admin?: boolean
+          auth_user_id?: string
+          bio?: string | null
           created_at?: string | null
-          email?: string
-          id?: number
-          password?: string
+          id?: never
           profile_picture?: string | null
           username?: string
         }
