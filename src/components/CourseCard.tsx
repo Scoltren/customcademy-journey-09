@@ -1,9 +1,10 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Clock, Users, Star, BookOpen } from 'lucide-react';
+import { Clock, Users, Star, BookOpen, Bookmark, BookmarkCheck } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Badge } from '@/components/ui/badge';
+import { toast } from 'sonner';
 
 export interface CourseProps {
   id: string;
@@ -24,6 +25,8 @@ const CourseCard: React.FC<{ course: CourseProps; className?: string }> = ({
   course, 
   className 
 }) => {
+  const [isWishlisted, setIsWishlisted] = useState(false);
+  
   const {
     id,
     title,
@@ -44,6 +47,12 @@ const CourseCard: React.FC<{ course: CourseProps; className?: string }> = ({
     Beginner: 'bg-green-500/30 text-green-400 border-green-500/40 font-semibold',
     Intermediate: 'bg-yellow-500/30 text-yellow-400 border-yellow-500/40 font-semibold',
     Advanced: 'bg-red-500/30 text-red-400 border-red-500/40 font-semibold'
+  };
+
+  const handleWishlist = (e: React.MouseEvent) => {
+    e.preventDefault(); // Prevent navigation to course page
+    setIsWishlisted(!isWishlisted);
+    toast.success(isWishlisted ? "Removed from wishlist" : "Added to wishlist");
   };
 
   return (
@@ -79,6 +88,19 @@ const CourseCard: React.FC<{ course: CourseProps; className?: string }> = ({
             {level}
           </Badge>
         </div>
+        
+        {/* Wishlist button in top right */}
+        <button 
+          onClick={handleWishlist} 
+          className="absolute top-4 right-4 p-2 bg-black/50 hover:bg-black/70 rounded-full transition-all duration-200"
+          aria-label={isWishlisted ? "Remove from wishlist" : "Add to wishlist"}
+        >
+          {isWishlisted ? (
+            <BookmarkCheck size={18} className="text-blue-400" />
+          ) : (
+            <Bookmark size={18} className="text-white" />
+          )}
+        </button>
       </div>
       
       <div className={cn(
