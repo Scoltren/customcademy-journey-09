@@ -6,6 +6,7 @@ import FeaturedCourses from '@/components/FeaturedCourses';
 import CategorySection from '@/components/CategorySection';
 import Footer from '@/components/Footer';
 import UserDashboard from '@/components/home/UserDashboard';
+import Navbar from '@/components/Navbar';
 import { Loader2 } from 'lucide-react';
 
 const Index = () => {
@@ -21,17 +22,20 @@ const Index = () => {
 
   return (
     <div className="min-h-screen flex flex-col">
-      {!user ? (
-        // Content for non-logged in users
-        <>
-          <Hero />
-          <FeaturedCourses />
-          <CategorySection />
-        </>
-      ) : (
-        // Content for logged in users
-        <UserDashboard userId={user.id} />
-      )}
+      <Navbar />
+      <div className="pt-16"> {/* Add padding to prevent content from being hidden behind fixed navbar */}
+        {!user ? (
+          // Content for non-logged in users
+          <>
+            <Hero />
+            <FeaturedCourses />
+            <CategorySection />
+          </>
+        ) : (
+          // Content for logged in users
+          <UserDashboard userId={user.id} />
+        )}
+      </div>
       <Footer />
     </div>
   );
