@@ -79,22 +79,30 @@ const RecommendedCoursesSection: React.FC<RecommendedCoursesSectionProps> = ({
 
   const fetchChapterCounts = async (courseIds: number[]) => {
     try {
+      // Fetch all chapters for these courses
       const { data, error } = await supabase
         .from('chapters')
-        .select('course_id, count(*)')
-        .in('course_id', courseIds)
-        .group('course_id');
+        .select('course_id')
+        .in('course_id', courseIds);
       
       if (error) throw error;
       
+      // Count chapters per course manually
+      const counts: {[key: string]: number} = {};
+      
       if (data) {
-        const counts = data.reduce((acc: {[key: string]: number}, item) => {
-          acc[item.course_id] = parseInt(item.count);
-          return acc;
-        }, {});
-        
-        setChapterCounts(counts);
+        data.forEach(chapter => {
+          if (chapter.course_id) {
+            if (!counts[chapter.course_id]) {
+              counts[chapter.course_id] = 1;
+            } else {
+              counts[chapter.course_id]++;
+            }
+          }
+        });
       }
+      
+      setChapterCounts(counts);
     } catch (error) {
       console.error('Error fetching chapter counts:', error);
     }
