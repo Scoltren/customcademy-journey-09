@@ -34,12 +34,13 @@ export const useQuizScoring = (
       });
     });
     
-    return { score, maxScore };
+    return { score, maxScore, percentage: maxScore > 0 ? (score / maxScore) * 100 : 0 };
   };
 
   const saveQuizResults = async (): Promise<void> => {
     if (!user) {
       console.error("Cannot save quiz results: No user logged in");
+      toast.error("Login required to save quiz results");
       return;
     }
     
@@ -47,13 +48,13 @@ export const useQuizScoring = (
       const currentQuizId = quizIds[quizState.currentQuizIndex];
       if (!currentQuizId) {
         console.error("Cannot save quiz results: Invalid quiz ID");
+        toast.error("Could not identify the current quiz");
         return;
       }
       
-      const { score, maxScore } = calculateScore();
-      console.log(`Saving quiz results for quiz ${currentQuizId}, score: ${score}/${maxScore}`);
+      const { score, maxScore, percentage } = calculateScore();
+      console.log(`Saving quiz results for quiz ${currentQuizId}, score: ${score}/${maxScore} (${percentage.toFixed(1)}%)`);
       
-      const percentage = maxScore > 0 ? (score / maxScore) * 100 : 0;
       let skillLevel: string = 'Beginner';
       
       if (percentage >= 80) {
@@ -68,12 +69,17 @@ export const useQuizScoring = (
         console.log(`Updating user skill level for category ${currentCategory.id} to ${skillLevel}`);
         
         // Check if the user interest category record exists
-        const { data: existingInterest } = await supabase
+        const { data: existingInterest, error: interestError } = await supabase
           .from('user_interest_categories')
           .select('*')
           .eq('user_id', user.id)
           .eq('category_id', currentCategory.id)
-          .single();
+          .maybeSingle();
+        
+        if (interestError) {
+          console.error('Error checking user interest:', interestError);
+          throw interestError;
+        }
         
         // If record exists, update it; otherwise, insert a new one
         if (existingInterest) {
@@ -106,12 +112,17 @@ export const useQuizScoring = (
       }
       
       // Check if a result already exists for this quiz and user
-      const { data: existingResult } = await supabase
+      const { data: existingResult, error: resultError } = await supabase
         .from('user_quiz_results')
         .select('*')
         .eq('user_id', user.id)
         .eq('quiz_id', currentQuizId)
         .maybeSingle();
+      
+      if (resultError) {
+        console.error('Error checking quiz result:', resultError);
+        throw resultError;
+      }
         
       // Handle the quiz result saving
       if (existingResult) {
@@ -126,6 +137,10 @@ export const useQuizScoring = (
             console.error("Error updating quiz result:", error);
             throw error;
           }
+          
+          toast.success(`Quiz score improved! New score: ${score}/${maxScore}`);
+        } else {
+          toast.info(`Previous best score maintained: ${existingResult.score}`);
         }
       } else {
         // Insert new result
@@ -141,6 +156,8 @@ export const useQuizScoring = (
           console.error("Error inserting quiz result:", error);
           throw error;
         }
+        
+        toast.success(`Quiz completed! Score: ${score}/${maxScore}`);
       }
       
       // Update the local state with the new score
@@ -152,9 +169,10 @@ export const useQuizScoring = (
         }
       }));
       
-      // Return type is Promise<void>, so we don't return anything
+      return;
     } catch (error) {
       console.error("Error saving quiz results:", error);
+      toast.error("Failed to save quiz results");
       throw error;
     }
   };
