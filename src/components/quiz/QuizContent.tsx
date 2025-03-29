@@ -57,7 +57,12 @@ export const QuizContent: React.FC<QuizContentProps> = ({
                 ? selectedAnswerIds.includes(answer.id) && (!answer.points || answer.points <= 0)
                 : undefined
             }
-            showExplanation={isReviewMode || showFeedback}
+            showExplanation={
+              (isReviewMode || showFeedback) && 
+              // Only show explanation for incorrect answers here
+              selectedAnswerIds.includes(answer.id) && 
+              (!answer.points || answer.points <= 0)
+            }
           />
         ))}
       </div>

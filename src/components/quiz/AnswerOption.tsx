@@ -71,12 +71,11 @@ export const AnswerOption: React.FC<AnswerOptionProps> = ({
         </div>
       </div>
 
-      {/* Show explanation when applicable */}
-      {showExplanation && answer.explanation && (isSelected || isCorrect) && (
-        <div className={`ml-8 p-3 rounded-md ${isCorrect ? "bg-green-500/5 border border-green-500/20" : 
-          isIncorrect ? "bg-red-500/5 border border-red-500/20" : "bg-slate-800"}`}>
+      {/* Only show explanation for incorrect answers here */}
+      {showExplanation && answer.explanation && (
+        <div className="ml-8 p-3 rounded-md bg-red-500/5 border border-red-500/20">
           <p className="text-sm">
-            <span className="font-medium">{isCorrect ? "Correct: " : "Explanation: "}</span>
+            <span className="font-medium">Explanation: </span>
             {answer.explanation}
           </p>
         </div>
