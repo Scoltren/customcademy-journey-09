@@ -140,12 +140,14 @@ const QuizComponent: React.FC<QuizComponentProps> = ({ quizId }) => {
       const selectedAnswerIds = selectedAnswers[question.id] || [];
       question.answers.forEach(answer => {
         if (selectedAnswerIds.includes(answer.id)) {
-          score += Math.max(0, answer.points); // Only add positive points
+          // Add the points (can be positive or negative)
+          score += answer.points;
         }
       });
     });
     
     // Determine skill level based on percentage score
+    // Note: We're only comparing against the total positive points as specified
     const percentage = maxScore > 0 ? (score / maxScore) * 100 : 0;
     let skillLevel: 'Beginner' | 'Intermediate' | 'Advanced' = 'Beginner';
     

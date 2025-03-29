@@ -1,10 +1,9 @@
 
-import React, { useState } from 'react';
+import React from 'react';
 import { Link } from 'react-router-dom';
-import { Clock, Star, BookOpen, Bookmark, BookmarkCheck } from 'lucide-react';
+import { Clock, Star, BookOpen } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Badge } from '@/components/ui/badge';
-import { toast } from 'sonner';
 
 export interface CourseProps {
   id: string;
@@ -26,8 +25,6 @@ const CourseCard: React.FC<{ course: CourseProps; className?: string }> = ({
   course, 
   className 
 }) => {
-  const [isWishlisted, setIsWishlisted] = useState(false);
-  
   const {
     id,
     title,
@@ -42,12 +39,6 @@ const CourseCard: React.FC<{ course: CourseProps; className?: string }> = ({
     featured,
     chapterCount = 0
   } = course;
-
-  const handleWishlist = (e: React.MouseEvent) => {
-    e.preventDefault(); // Prevent navigation to course page
-    setIsWishlisted(!isWishlisted);
-    toast.success(isWishlisted ? "Removed from wishlist" : "Added to wishlist");
-  };
 
   return (
     <Link 
@@ -69,26 +60,14 @@ const CourseCard: React.FC<{ course: CourseProps; className?: string }> = ({
             className="w-full h-full object-cover object-center transform group-hover:scale-105 transition-transform duration-500"
           />
         </div>
-        {/* Wishlist button in top right */}
-        <button 
-          onClick={handleWishlist} 
-          className="absolute top-4 right-4 p-2 bg-black/50 hover:bg-black/70 rounded-full transition-all duration-200"
-          aria-label={isWishlisted ? "Remove from wishlist" : "Add to wishlist"}
-        >
-          {isWishlisted ? (
-            <BookmarkCheck size={18} className="text-blue-400" />
-          ) : (
-            <Bookmark size={18} className="text-white" />
-          )}
-        </button>
       </div>
       
       <div className={cn(
-        "p-6 flex flex-col flex-grow bg-navy/80",
+        "p-6 flex flex-col flex-grow bg-navy/90",
         featured ? "md:w-1/2" : ""
       )}>
         <div className="mb-4 flex flex-wrap gap-2">
-          <Badge className="bg-blue-600/80 hover:bg-blue-600 text-white border-0 font-medium">
+          <Badge className="bg-blue-800 hover:bg-blue-700 text-white border-0 font-medium">
             {category}
           </Badge>
           <Badge className={cn(
