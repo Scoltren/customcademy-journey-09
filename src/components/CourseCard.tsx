@@ -84,6 +84,10 @@ const CourseCard: React.FC<{ course: CourseProps; className?: string }> = ({
           {title}
         </h3>
         
+        <p className="text-slate-400 text-xs mb-2 line-clamp-2">
+          {description}
+        </p>
+        
         <div className="mt-auto pt-2 flex items-center justify-between">
           <div className="flex items-center gap-2 text-xs">
             <Clock size={14} className="text-slate-400" />
@@ -91,7 +95,7 @@ const CourseCard: React.FC<{ course: CourseProps; className?: string }> = ({
           </div>
           <div className="flex items-center gap-1 text-xs">
             <BookOpen size={14} className="text-slate-400" />
-            <span className="text-slate-300">{chapterCount}</span>
+            <span className="text-slate-300">{chapterCount} {chapterCount === 1 ? 'chapter' : 'chapters'}</span>
           </div>
           <div className="flex items-center gap-1 text-xs">
             <Star size={14} className="text-yellow-500" />
