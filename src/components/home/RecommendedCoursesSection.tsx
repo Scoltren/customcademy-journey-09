@@ -21,12 +21,42 @@ const RecommendedCoursesSection: React.FC<RecommendedCoursesSectionProps> = ({
   const [recommendedCourses, setRecommendedCourses] = useState<Course[]>([]);
   const [loadingCourses, setLoadingCourses] = useState(false);
   const [chapterCounts, setChapterCounts] = useState<{[key: string]: number}>({});
+  const [userSkillLevels, setUserSkillLevels] = useState<{[key: number]: string}>({});
+
+  // Fetch user skill levels for each category
+  useEffect(() => {
+    const fetchUserSkillLevels = async () => {
+      if (!userId || userInterests.length === 0) return;
+      
+      try {
+        const { data, error } = await supabase
+          .from('user_interest_categories')
+          .select('category_id, difficulty_level')
+          .eq('user_id', userId);
+          
+        if (error) throw error;
+        
+        const skillLevels: {[key: number]: string} = {};
+        data?.forEach(item => {
+          if (item.category_id && item.difficulty_level) {
+            skillLevels[item.category_id] = item.difficulty_level;
+          }
+        });
+        
+        setUserSkillLevels(skillLevels);
+      } catch (error) {
+        console.error('Error fetching user skill levels:', error);
+      }
+    };
+    
+    fetchUserSkillLevels();
+  }, [userId, userInterests]);
 
   useEffect(() => {
     if (userInterests.length > 0) {
       fetchRecommendedCourses();
     }
-  }, [userInterests]);
+  }, [userInterests, userSkillLevels]);
 
   const fetchRecommendedCourses = async () => {
     try {
@@ -38,36 +68,87 @@ const RecommendedCoursesSection: React.FC<RecommendedCoursesSectionProps> = ({
         return;
       }
 
-      const { data, error } = await supabase
+      // Fetch courses based on user interests and skill levels
+      let query = supabase
         .from('courses')
         .select('*, categories(name)')
-        .in('category_id', categoryIds)
-        .limit(8);
-
-      if (error) throw error;
-      
-      // Format courses to match expected structure
-      const formattedCourses = data.map(course => ({
-        id: course.id,
-        title: course.title,
-        description: course.description,
-        thumbnail: course.thumbnail,
-        price: course.price,
-        overall_rating: course.overall_rating,
-        difficulty_level: course.difficulty_level,
-        category_id: course.category_id,
-        category_name: course.categories?.name || 'Uncategorized',
-        creator_id: course.creator_id,
-        created_at: course.created_at,
-        media: course.media,
-        course_time: course.course_time
-      }));
-      
-      setRecommendedCourses(formattedCourses as Course[]);
-      
-      // Fetch chapter counts
-      if (formattedCourses.length > 0) {
-        fetchChapterCounts(formattedCourses.map(course => course.id));
+        .in('category_id', categoryIds);
+        
+      // Apply skill level filter if we have skill levels
+      if (Object.keys(userSkillLevels).length > 0) {
+        // This query will prioritize courses that match the user's skill level
+        // but still include other courses as fallback
+        const { data, error } = await query;
+        
+        if (error) throw error;
+        
+        if (data && data.length > 0) {
+          // Sort courses to prioritize those matching user's skill level for each category
+          data.sort((a, b) => {
+            const aCategoryId = a.category_id;
+            const bCategoryId = b.category_id;
+            
+            const aSkillMatch = a.difficulty_level === userSkillLevels[aCategoryId];
+            const bSkillMatch = b.difficulty_level === userSkillLevels[bCategoryId];
+            
+            if (aSkillMatch && !bSkillMatch) return -1;
+            if (!aSkillMatch && bSkillMatch) return 1;
+            return 0;
+          });
+        }
+        
+        // Format courses to match expected structure
+        const formattedCourses = data?.map(course => ({
+          id: course.id,
+          title: course.title,
+          description: course.description,
+          thumbnail: course.thumbnail,
+          price: course.price,
+          overall_rating: course.overall_rating,
+          difficulty_level: course.difficulty_level,
+          category_id: course.category_id,
+          category_name: course.categories?.name || 'Uncategorized',
+          creator_id: course.creator_id,
+          created_at: course.created_at,
+          media: course.media,
+          course_time: course.course_time
+        }));
+        
+        setRecommendedCourses(formattedCourses as Course[]);
+        
+        // Fetch chapter counts
+        if (formattedCourses && formattedCourses.length > 0) {
+          fetchChapterCounts(formattedCourses.map(course => course.id));
+        }
+      } else {
+        // If no skill levels, just fetch based on categories
+        const { data, error } = await query.limit(8);
+        
+        if (error) throw error;
+        
+        // Format courses to match expected structure
+        const formattedCourses = data?.map(course => ({
+          id: course.id,
+          title: course.title,
+          description: course.description,
+          thumbnail: course.thumbnail,
+          price: course.price,
+          overall_rating: course.overall_rating,
+          difficulty_level: course.difficulty_level,
+          category_id: course.category_id,
+          category_name: course.categories?.name || 'Uncategorized',
+          creator_id: course.creator_id,
+          created_at: course.created_at,
+          media: course.media,
+          course_time: course.course_time
+        }));
+        
+        setRecommendedCourses(formattedCourses as Course[]);
+        
+        // Fetch chapter counts
+        if (formattedCourses && formattedCourses.length > 0) {
+          fetchChapterCounts(formattedCourses.map(course => course.id));
+        }
       }
     } catch (error: any) {
       console.error('Error fetching recommended courses:', error.message);

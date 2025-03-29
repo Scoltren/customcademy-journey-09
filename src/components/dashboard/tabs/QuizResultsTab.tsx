@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { Link } from 'react-router-dom';
+import { Loader2 } from 'lucide-react';
 
 interface QuizResult {
   id: number;
@@ -21,83 +21,88 @@ interface QuizResultsTabProps {
   isLoading: boolean;
 }
 
-const QuizResultsTab = ({ quizResults, isLoading }: QuizResultsTabProps) => {
+const QuizResultsTab: React.FC<QuizResultsTabProps> = ({ quizResults, isLoading }) => {
+  if (isLoading) {
+    return (
+      <div className="flex justify-center items-center py-12">
+        <Loader2 className="h-8 w-8 animate-spin text-blue-500" />
+      </div>
+    );
+  }
+
+  if (!quizResults || quizResults.length === 0) {
+    return (
+      <div className="py-8 text-center bg-slate-800/50 rounded-lg">
+        <h2 className="text-xl font-semibold mb-2">No Quiz Results Yet</h2>
+        <p className="text-gray-400">
+          Take quizzes to test your knowledge and see your results here.
+        </p>
+      </div>
+    );
+  }
+
+  // Group results by category
+  const groupedResults: {[key: string]: QuizResult[]} = {};
   
-  const getAverageScore = () => {
-    if (quizResults.length === 0) return 0;
-    const totalScore = quizResults.reduce((acc, quiz) => acc + (quiz.score || 0), 0);
-    return Math.round(totalScore / quizResults.length);
-  };
-  
-  const getTotalQuestions = () => {
-    return quizResults.length;
-  };
-  
+  quizResults.forEach(result => {
+    const categoryName = result.quiz?.category?.name || 'Uncategorized';
+    if (!groupedResults[categoryName]) {
+      groupedResults[categoryName] = [];
+    }
+    groupedResults[categoryName].push(result);
+  });
+
   return (
     <div>
-      <h1 className="heading-lg mb-6">Quiz Results</h1>
+      <h2 className="text-2xl font-bold mb-6">Quiz Results</h2>
       
-      {isLoading ? (
-        <div className="glass-card p-6 text-center">
-          <p className="text-white">Loading your quiz results...</p>
-        </div>
-      ) : quizResults.length > 0 ? (
-        <>
-          <div className="glass-card p-6 mb-8">
-            <h2 className="text-xl font-bold text-white mb-4">Performance Summary</h2>
+      <div className="space-y-6">
+        {Object.entries(groupedResults).map(([categoryName, results]) => (
+          <div key={categoryName} className="bg-slate-800/50 rounded-lg overflow-hidden">
+            <div className="bg-slate-700/50 px-6 py-3">
+              <h3 className="font-semibold text-lg">{categoryName}</h3>
+            </div>
             
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
-              <div className="bg-navy/50 rounded-lg p-4 text-center">
-                <h3 className="text-slate-400 mb-2">Average Score</h3>
-                <p className="text-3xl font-bold text-white">
-                  {getAverageScore()}%
-                </p>
-              </div>
-              
-              <div className="bg-navy/50 rounded-lg p-4 text-center">
-                <h3 className="text-slate-400 mb-2">Quizzes Taken</h3>
-                <p className="text-3xl font-bold text-white">{quizResults.length}</p>
-              </div>
-              
-              <div className="bg-navy/50 rounded-lg p-4 text-center">
-                <h3 className="text-slate-400 mb-2">Total Questions</h3>
-                <p className="text-3xl font-bold text-white">
-                  {getTotalQuestions()}
-                </p>
-              </div>
+            <div className="p-4">
+              <table className="w-full">
+                <thead>
+                  <tr className="text-left border-b border-slate-700">
+                    <th className="pb-2 font-medium">Quiz</th>
+                    <th className="pb-2 font-medium">Score</th>
+                    <th className="pb-2 font-medium">Level</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {results.map(result => {
+                    // Calculate skill level based on score
+                    let skillLevel = 'Beginner';
+                    if (result.score >= 8) {
+                      skillLevel = 'Advanced';
+                    } else if (result.score >= 5) {
+                      skillLevel = 'Intermediate';
+                    }
+                    
+                    return (
+                      <tr key={result.id} className="border-b border-slate-700/50">
+                        <td className="py-3">{result.quiz?.title || `Quiz #${result.quiz_id}`}</td>
+                        <td className="py-3">{result.score}</td>
+                        <td className="py-3">
+                          <span className={
+                            skillLevel === 'Beginner' ? 'text-green-400' :
+                            skillLevel === 'Intermediate' ? 'text-yellow-400' : 'text-red-400'
+                          }>
+                            {skillLevel}
+                          </span>
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
             </div>
           </div>
-          
-          <h2 className="text-2xl font-bold text-white mb-4">Quiz History</h2>
-          <div className="space-y-4">
-            {quizResults.map((quiz) => (
-              <div key={quiz.id} className="glass-card p-6">
-                <div className="flex flex-col md:flex-row justify-between items-start md:items-center">
-                  <div>
-                    <h3 className="text-xl font-bold text-white mb-1">{quiz.quiz?.title || 'Quiz'}</h3>
-                    <div className="flex gap-3 mb-3">
-                      <span className="text-sm py-1 px-3 rounded-full bg-blue/10 text-blue-light border border-blue/20">
-                        {quiz.quiz?.category?.name || 'General'}
-                      </span>
-                    </div>
-                  </div>
-                  
-                  <div className="bg-navy/50 rounded-full h-24 w-24 flex flex-col items-center justify-center">
-                    <span className="text-sm text-slate-400">Score</span>
-                    <span className="text-2xl font-bold text-white">{quiz.score}%</span>
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-        </>
-      ) : (
-        <div className="glass-card p-8 text-center">
-          <h3 className="text-xl font-bold text-white mb-3">You haven't taken any quizzes yet</h3>
-          <p className="text-slate-400 mb-6">Take quizzes to test your knowledge and track your progress</p>
-          <Link to="/courses" className="button-primary py-2 px-6">Find Courses with Quizzes</Link>
-        </div>
-      )}
+        ))}
+      </div>
     </div>
   );
 };

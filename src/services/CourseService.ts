@@ -10,47 +10,78 @@ interface CourseWithCategory extends Course {
 }
 
 /**
- * Fetches recommended courses for a user based on their interests
+ * Fetches recommended courses for a user based on their interests and skill levels
  */
 export const fetchRecommendedCourses = async (userId: string): Promise<CourseWithCategory[]> => {
-  const { data: interests, error: interestsError } = await supabase
-    .from('user_interest_categories')
-    .select('category_id')
-    .eq('user_id', userId);
-  
-  if (interestsError) {
-    throw interestsError;
+  try {
+    // First, get user interests with skill levels
+    const { data: interests, error: interestsError } = await supabase
+      .from('user_interest_categories')
+      .select('category_id, difficulty_level')
+      .eq('user_id', userId);
+    
+    if (interestsError) {
+      throw interestsError;
+    }
+    
+    if (!interests || interests.length === 0) {
+      console.log("User has no interests, returning featured courses");
+      return fetchFeaturedCourses();
+    }
+    
+    const categoryIds = interests.map(interest => interest.category_id);
+    console.log("Found user interests:", categoryIds);
+    
+    // Create a map of category to difficulty level
+    const skillLevels: {[key: number]: string} = {};
+    interests.forEach(interest => {
+      if (interest.category_id && interest.difficulty_level) {
+        skillLevels[interest.category_id] = interest.difficulty_level;
+      }
+    });
+    
+    // Get courses that match user interests
+    const { data: courses, error: coursesError } = await supabase
+      .from('courses')
+      .select(`
+        *,
+        categories(name)
+      `)
+      .in('category_id', categoryIds);
+    
+    if (coursesError) {
+      throw coursesError;
+    }
+    
+    // If no courses found, return featured courses
+    if (!courses || courses.length === 0) {
+      console.log("No courses match user interests, returning featured courses");
+      return fetchFeaturedCourses();
+    }
+    
+    // Sort courses based on matching skill level
+    const sortedCourses = [...courses].sort((a, b) => {
+      const aCategoryId = a.category_id;
+      const bCategoryId = b.category_id;
+      
+      // If course difficulty matches user's skill level, prioritize it
+      const aSkillMatch = a.difficulty_level === skillLevels[aCategoryId];
+      const bSkillMatch = b.difficulty_level === skillLevels[bCategoryId];
+      
+      if (aSkillMatch && !bSkillMatch) return -1;
+      if (!aSkillMatch && bSkillMatch) return 1;
+      return 0;
+    });
+    
+    // Get chapter counts for each course
+    const coursesWithCounts = await addChapterCountsToCourses(sortedCourses);
+    console.log(`Returning ${coursesWithCounts.length} recommended courses`);
+    
+    return coursesWithCounts;
+  } catch (error) {
+    console.error("Error in fetchRecommendedCourses:", error);
+    return fetchFeaturedCourses(); // Fallback to featured courses on error
   }
-  
-  if (!interests || interests.length === 0) {
-    return [];
-  }
-  
-  const categoryIds = interests.map(interest => interest.category_id);
-  
-  // First, get courses that match user interests
-  const { data: courses, error: coursesError } = await supabase
-    .from('courses')
-    .select(`
-      *,
-      categories(name)
-    `)
-    .in('category_id', categoryIds)
-    .limit(6);
-  
-  if (coursesError) {
-    throw coursesError;
-  }
-  
-  // Fall back to featured courses if no matches
-  if (!courses || courses.length === 0) {
-    return fetchFeaturedCourses();
-  }
-  
-  // Get chapter counts for each course
-  const coursesWithCounts = await addChapterCountsToCourses(courses);
-  
-  return coursesWithCounts;
 };
 
 /**
@@ -67,6 +98,29 @@ export const fetchUserInterests = async (userId: string): Promise<number[]> => {
   }
   
   return data?.map(item => Number(item.category_id)) || [];
+};
+
+/**
+ * Fetches user skill levels for each category
+ */
+export const fetchUserSkillLevels = async (userId: string): Promise<{[key: number]: string}> => {
+  const { data, error } = await supabase
+    .from('user_interest_categories')
+    .select('category_id, difficulty_level')
+    .eq('user_id', userId);
+    
+  if (error) {
+    throw error;
+  }
+  
+  const skillLevels: {[key: number]: string} = {};
+  data?.forEach(item => {
+    if (item.category_id && item.difficulty_level) {
+      skillLevels[item.category_id] = item.difficulty_level;
+    }
+  });
+  
+  return skillLevels;
 };
 
 /**
