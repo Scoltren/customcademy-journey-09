@@ -42,7 +42,7 @@ const CourseGrid: React.FC<CourseGridProps> = ({ courses, isUserLoggedIn, hasUse
   }
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+    <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-8 w-full">
       {courses.map((course) => (
         <CourseCard
           key={course.id}
@@ -59,6 +59,7 @@ const CourseGrid: React.FC<CourseGridProps> = ({ courses, isUserLoggedIn, hasUse
             rating: course.overall_rating || 4.5,
             price: course.price || 0
           }}
+          className="h-full"
         />
       ))}
     </div>

@@ -2,11 +2,11 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
 import { Loader2 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { Course } from '@/types/course';
+import CourseCard from '@/components/CourseCard';
 
 interface RecommendedCoursesSectionProps {
   userId: string;
@@ -71,6 +71,13 @@ const RecommendedCoursesSection: React.FC<RecommendedCoursesSectionProps> = ({
     }
   };
 
+  const validateDifficultyLevel = (level: string | null): 'Beginner' | 'Intermediate' | 'Advanced' => {
+    if (level === 'Beginner' || level === 'Intermediate' || level === 'Advanced') {
+      return level;
+    }
+    return 'Beginner'; // Default fallback
+  };
+
   return (
     <div className="mb-12">
       <h2 className="text-3xl font-bold mb-6">Recommended Courses</h2>
@@ -80,54 +87,28 @@ const RecommendedCoursesSection: React.FC<RecommendedCoursesSectionProps> = ({
           <Loader2 className="w-6 h-6 animate-spin" />
         </div>
       ) : recommendedCourses.length > 0 ? (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
           {recommendedCourses.map((course) => (
-            <Link key={course.id} to={`/courses/${course.id}`} className="block">
-              <div className="bg-white dark:bg-gray-800 rounded-lg overflow-hidden shadow-md hover:shadow-lg transition-shadow">
-                <div className="aspect-video relative bg-gray-200 dark:bg-gray-700">
-                  {course.thumbnail ? (
-                    <img 
-                      src={course.thumbnail} 
-                      alt={course.title} 
-                      className="w-full h-full object-cover"
-                    />
-                  ) : (
-                    <div className="w-full h-full flex items-center justify-center">
-                      <span className="text-gray-400">No image</span>
-                    </div>
-                  )}
-                </div>
-                <div className="p-4">
-                  <div className="flex items-center mb-2">
-                    <Badge variant="outline" className="text-xs">
-                      {course.category_name}
-                    </Badge>
-                    {course.overall_rating ? (
-                      <div className="ml-auto flex items-center text-amber-500">
-                        <span className="text-sm font-medium">{course.overall_rating.toFixed(1)}</span>
-                        <span className="ml-1">★</span>
-                      </div>
-                    ) : null}
-                  </div>
-                  <h3 className="font-semibold text-lg mb-1 line-clamp-2">{course.title}</h3>
-                  <p className="text-gray-500 dark:text-gray-400 text-sm line-clamp-2 mb-2">
-                    {course.description || 'No description available'}
-                  </p>
-                  <div className="mt-2 flex justify-between items-center">
-                    <span className="font-bold">
-                      {course.price ? `$${course.price.toFixed(2)}` : 'Free'}
-                    </span>
-                    <span className="text-xs text-gray-500 dark:text-gray-400">
-                      {course.difficulty_level || 'All Levels'}
-                    </span>
-                  </div>
-                </div>
-              </div>
-            </Link>
+            <CourseCard
+              key={course.id}
+              course={{
+                id: course.id.toString(),
+                title: course.title,
+                description: course.description || 'No description available',
+                instructor: 'Instructor', 
+                image: course.thumbnail || 'https://images.unsplash.com/photo-1498050108023-c5249f4df085',
+                category: course.category_name || 'Development',
+                level: validateDifficultyLevel(course.difficulty_level),
+                duration: '30 hours',
+                students: 1000,
+                rating: course.overall_rating || 4.5,
+                price: course.price || 0
+              }}
+            />
           ))}
         </div>
       ) : (
-        <div className="bg-gray-50 dark:bg-gray-800 rounded-lg p-6 text-center">
+        <div className="bg-slate-50 dark:bg-gray-800 rounded-lg p-6 text-center">
           <p className="text-gray-600 dark:text-gray-300 mb-4">
             {userInterests.length > 0 
               ? "No courses match your interests yet" 
