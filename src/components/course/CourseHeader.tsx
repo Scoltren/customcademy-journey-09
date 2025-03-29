@@ -7,6 +7,7 @@ import { Course } from '@/types/course';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { useNavigate } from 'react-router-dom';
+import { PaymentService } from '@/services/PaymentService';
 
 interface CourseHeaderProps {
   course: Course;
@@ -16,6 +17,7 @@ const CourseHeader: React.FC<CourseHeaderProps> = ({ course }) => {
   const { user, isEnrolled } = useAuth();
   const [enrollmentStatus, setEnrollmentStatus] = useState<boolean>(false);
   const [isEnrolling, setIsEnrolling] = useState<boolean>(false);
+  const [isProcessingPayment, setIsProcessingPayment] = useState<boolean>(false);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -29,7 +31,7 @@ const CourseHeader: React.FC<CourseHeaderProps> = ({ course }) => {
     checkEnrollment();
   }, [user, course.id, isEnrolled]);
 
-  const handleEnroll = async () => {
+  const handleFreeEnrollment = async () => {
     if (!user) {
       toast.info('Please log in to enroll in this course');
       navigate('/login');
@@ -62,6 +64,47 @@ const CourseHeader: React.FC<CourseHeaderProps> = ({ course }) => {
       toast.error('Failed to enroll in the course');
     } finally {
       setIsEnrolling(false);
+    }
+  };
+
+  const handlePaidEnrollment = async () => {
+    if (!user) {
+      toast.info('Please log in to purchase this course');
+      navigate('/login');
+      return;
+    }
+
+    if (!course.price) {
+      handleFreeEnrollment();
+      return;
+    }
+
+    setIsProcessingPayment(true);
+    try {
+      const courseIdNumber = typeof course.id === 'string' ? parseInt(course.id, 10) : course.id;
+      
+      if (isNaN(courseIdNumber)) {
+        throw new Error("Invalid ID format");
+      }
+
+      const response = await PaymentService.createCheckoutSession({
+        courseId: courseIdNumber,
+        price: course.price,
+        title: course.title,
+        userId: user.id
+      });
+
+      if (response?.url) {
+        // Redirect to Stripe Checkout
+        window.location.href = response.url;
+      } else {
+        throw new Error('No checkout URL returned');
+      }
+    } catch (error) {
+      console.error('Error initiating payment:', error);
+      toast.error('Failed to process payment. Please try again.');
+    } finally {
+      setIsProcessingPayment(false);
     }
   };
 
@@ -122,10 +165,10 @@ const CourseHeader: React.FC<CourseHeaderProps> = ({ course }) => {
             ) : (
               <Button 
                 className="button-primary"
-                onClick={handleEnroll}
-                disabled={isEnrolling}
+                onClick={course.price ? handlePaidEnrollment : handleFreeEnrollment}
+                disabled={isEnrolling || isProcessingPayment}
               >
-                {isEnrolling ? 'Enrolling...' : 'Enroll Now'}
+                {isEnrolling ? 'Enrolling...' : isProcessingPayment ? 'Processing...' : course.price ? 'Purchase Now' : 'Enroll Now'}
               </Button>
             )}
           </div>

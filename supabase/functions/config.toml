@@ -1,0 +1,14 @@
+
+project_id = "earqddyjwuassqvgogqw"
+
+[create-checkout-session]
+verify_jwt = true
+max_duration = 60
+
+[verify-payment-status]
+verify_jwt = true
+max_duration = 60
+
+[stripe-webhook]
+verify_jwt = false
+max_duration = 60

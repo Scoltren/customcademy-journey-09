@@ -214,6 +214,53 @@ export type Database = {
           },
         ]
       }
+      payments: {
+        Row: {
+          amount: number
+          course_id: number
+          created_at: string
+          currency: string
+          id: string
+          status: string
+          stripe_checkout_id: string | null
+          stripe_payment_id: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          amount: number
+          course_id: number
+          created_at?: string
+          currency?: string
+          id?: string
+          status?: string
+          stripe_checkout_id?: string | null
+          stripe_payment_id?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          amount?: number
+          course_id?: number
+          created_at?: string
+          currency?: string
+          id?: string
+          status?: string
+          stripe_checkout_id?: string | null
+          stripe_payment_id?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "payments_course_id_fkey"
+            columns: ["course_id"]
+            isOneToOne: false
+            referencedRelation: "courses"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       questions: {
         Row: {
           id: number
@@ -334,6 +381,36 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      subscription_status: {
+        Row: {
+          created_at: string
+          current_period_end: string | null
+          id: string
+          status: string
+          stripe_subscription_id: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          current_period_end?: string | null
+          id?: string
+          status?: string
+          stripe_subscription_id: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          current_period_end?: string | null
+          id?: string
+          status?: string
+          stripe_subscription_id?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
       }
       user_interest_categories: {
         Row: {

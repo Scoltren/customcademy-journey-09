@@ -14,6 +14,7 @@ import NotFound from "./pages/NotFound";
 import Dashboard from "./pages/Dashboard";
 import SelectInterests from "./pages/SelectInterests";
 import CategoryQuiz from "./pages/CategoryQuiz";
+import PaymentSuccess from "./pages/PaymentSuccess";
 
 import "./App.css";
 
@@ -33,9 +34,9 @@ const App = () => {
             <Route path="/category-quiz" element={<CategoryQuiz />} />
             <Route path="/courses" element={<Courses />} />
             <Route path="/courses/:id" element={<CourseDetail />} />
-            {/* Add redirect from singular to plural form */}
             <Route path="/course/:id" element={<CourseDetail />} />
             <Route path="/dashboard" element={<Dashboard />} />
+            <Route path="/payment-success" element={<PaymentSuccess />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </BrowserRouter>
