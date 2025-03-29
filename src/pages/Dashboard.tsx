@@ -86,7 +86,7 @@ const Dashboard = () => {
       // Fetch enrolled courses with progress
       const { data: subscriptions, error: subscriptionsError } = await supabase
         .from('subscribed_courses')
-        .select('*, course:course_id(id, title, description, thumbnail, difficulty_level, media, course_time, creator_id)')
+        .select('*, course:course_id(id, title, description, thumbnail, difficulty_level, media, course_time, creator_id, overall_rating, price, category_id, created_at)')
         .eq('user_id', user?.id || '');
       
       if (subscriptionsError) throw subscriptionsError;
@@ -101,10 +101,11 @@ const Dashboard = () => {
             
             if (chaptersError) throw chaptersError;
             
+            // Make sure we maintain all the Course properties while adding our custom ones
             return {
               ...sub.course,
-              progress: sub.progress,
-              completedChapters: Math.floor((chapters?.length || 0) * (sub.progress / 100)),
+              progress: sub.progress || 0,
+              completedChapters: Math.floor((chapters?.length || 0) * ((sub.progress || 0) / 100)),
               totalChapters: chapters?.length || 0
             };
           })
