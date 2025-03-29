@@ -1,12 +1,15 @@
 
 import React from "react";
 import { Answer, Question } from "@/types/quiz";
+import { CheckCircle, XCircle } from "lucide-react";
 
 interface AnswerOptionProps {
   answer: Answer;
   isSelected: boolean;
   currentQuestion?: Question;
   onSelect: (answerId: number) => void;
+  isCorrect?: boolean;
+  isIncorrect?: boolean;
 }
 
 export const AnswerOption: React.FC<AnswerOptionProps> = ({
@@ -14,35 +17,57 @@ export const AnswerOption: React.FC<AnswerOptionProps> = ({
   isSelected,
   currentQuestion,
   onSelect,
+  isCorrect,
+  isIncorrect,
 }) => {
+  // Determine if this is a multiple choice question
+  const isMultipleChoice = currentQuestion?.multiple_correct;
+
+  // Determine the styling based on selection state and correctness
+  const getBorderStyle = () => {
+    if (isCorrect) return "border-green-500";
+    if (isIncorrect) return "border-red-500";
+    if (isSelected) return "border-blue-500";
+    return "border-gray-600";
+  };
+
+  const getBackgroundStyle = () => {
+    if (isCorrect) return "bg-green-500/10";
+    if (isIncorrect) return "bg-red-500/10";
+    if (isSelected) return "bg-blue-500/10";
+    return "bg-transparent";
+  };
+
   return (
     <div
-      className={`p-4 rounded-md cursor-pointer transition-all ${
-        isSelected
-          ? "border-blue-500 bg-blue-900/20 border"
-          : "border border-slate-700 hover:border-blue-400/50"
-      }`}
+      className={`p-4 rounded-lg border ${getBorderStyle()} ${getBackgroundStyle()} transition-colors cursor-pointer`}
       onClick={() => onSelect(answer.id)}
     >
       <div className="flex items-center gap-3">
-        <div className={`w-5 h-5 flex items-center justify-center ${
-          currentQuestion?.multiple_correct 
-            ? "border rounded-md" 
-            : "border rounded-full"
-        } ${
-          isSelected
-            ? "bg-blue-500 border-blue-500 text-white"
-            : "border-slate-500"
-        }`}>
+        <div
+          className={`w-5 h-5 flex-shrink-0 ${
+            isMultipleChoice ? "rounded-sm" : "rounded-full"
+          } border ${isSelected ? "border-blue-500" : "border-gray-600"} flex items-center justify-center`}
+        >
           {isSelected && (
-            <div className={`${
-              currentQuestion?.multiple_correct 
-                ? "w-2 h-2 bg-white" 
-                : "w-3 h-3 bg-white rounded-full"
-            }`}></div>
+            <div
+              className={`${
+                isMultipleChoice ? "w-3 h-3 rounded-sm" : "w-3 h-3 rounded-full"
+              } ${isCorrect ? "bg-green-500" : isIncorrect ? "bg-red-500" : "bg-blue-500"}`}
+            ></div>
+          )}
+          {isCorrect && !isSelected && <CheckCircle className="w-4 h-4 text-green-500" />}
+        </div>
+        <div className="flex-1">
+          <p className={`${isCorrect ? "font-medium text-green-400" : isIncorrect ? "text-red-400" : ""}`}>
+            {answer.answer_text}
+          </p>
+          {(isCorrect || isIncorrect) && answer.explanation && (
+            <p className="mt-2 text-sm text-slate-400">{answer.explanation}</p>
           )}
         </div>
-        <div className="text-gray-200">{answer.answer_text}</div>
+        {isCorrect && <CheckCircle className="w-5 h-5 text-green-500" />}
+        {isIncorrect && <XCircle className="w-5 h-5 text-red-500" />}
       </div>
     </div>
   );
