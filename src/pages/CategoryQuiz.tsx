@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext";
@@ -94,7 +93,6 @@ const CategoryQuiz = () => {
         const answersResults = await Promise.all(answersPromises);
         const answersData = answersResults.map(result => result.data || []);
         
-        // Determine which questions have multiple correct answers
         const questionsWithMultipleFlag = questionsData.map((question, index) => {
           const questionAnswers = answersData[index] || [];
           const correctAnswers = questionAnswers.filter(answer => answer.points && answer.points > 0);
@@ -131,9 +129,7 @@ const CategoryQuiz = () => {
       setQuizState(prev => {
         const currentSelected = prev.selectedAnswers[currentQuestion.id] || [];
         
-        // If this question allows multiple answers
         if (currentQuestion.multiple_correct) {
-          // Toggle selection
           if (currentSelected.includes(answerId)) {
             return {
               ...prev,
@@ -152,7 +148,6 @@ const CategoryQuiz = () => {
             };
           }
         } else {
-          // Single selection for regular questions
           return {
             ...prev,
             selectedAnswers: {
@@ -174,16 +169,14 @@ const CategoryQuiz = () => {
       const selectedAnswerIds = quizState.selectedAnswers[question.id] || [];
       const questionAnswers = quizState.answers[index] || [];
       
-      // Calculate max score from positive point values
       const correctAnswers = questionAnswers.filter(a => a.points && a.points > 0);
       correctAnswers.forEach(answer => {
         maxScore += answer.points || 0;
       });
       
-      // Calculate user's score
       questionAnswers.forEach(answer => {
         if (selectedAnswerIds.includes(answer.id) && answer.points) {
-          score += answer.points > 0 ? answer.points : 0; // Only add positive points
+          score += answer.points > 0 ? answer.points : 0;
         }
       });
     });
@@ -198,7 +191,6 @@ const CategoryQuiz = () => {
       const currentQuizId = quizIds[quizState.currentQuizIndex];
       const { score, maxScore } = calculateScore();
       
-      // Calculate skill level based on percentage
       const percentage = maxScore > 0 ? (score / maxScore) * 100 : 0;
       let skillLevel: string = 'Beginner';
       
@@ -208,11 +200,9 @@ const CategoryQuiz = () => {
         skillLevel = 'Intermediate';
       }
       
-      // Get category associated with this quiz
       const currentCategory = categories.find(c => c.quiz_id === currentQuizId);
       
       if (currentCategory) {
-        // Update user's skill level for this category
         const { error: interestError } = await supabase
           .from('user_interest_categories')
           .upsert({
@@ -303,7 +293,6 @@ const CategoryQuiz = () => {
           const answersResults = await Promise.all(answersPromises);
           const answersData = answersResults.map(result => result.data || []);
           
-          // Determine which questions have multiple correct answers
           const questionsWithMultipleFlag = questionsData.map((question, index) => {
             const questionAnswers = answersData[index] || [];
             const correctAnswers = questionAnswers.filter(answer => answer.points && answer.points > 0);
@@ -337,7 +326,7 @@ const CategoryQuiz = () => {
 
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center min-h-screen bg-gradient-to-b from-blue-500 to-blue-600 p-4">
+      <div className="flex items-center justify-center min-h-screen bg-gradient-to-b from-blue-950 to-slate-950 p-4">
         <div className="text-white text-xl">Loading quiz...</div>
       </div>
     );
@@ -349,12 +338,12 @@ const CategoryQuiz = () => {
   const selectedAnswerIds = currentQuestion ? (quizState.selectedAnswers[currentQuestion.id] || []) : [];
 
   return (
-    <div className="flex items-center justify-center min-h-screen bg-gradient-to-b from-blue-500 to-blue-600 p-4">
+    <div className="flex items-center justify-center min-h-screen bg-gradient-to-b from-blue-950 to-slate-950 p-4">
       <div className="absolute top-4 left-4">
         <Button 
           variant="outline" 
           size="sm"
-          className="bg-white/80 hover:bg-white"
+          className="bg-slate-800 hover:bg-slate-700 text-white border-slate-700"
           onClick={() => navigate("/")}
         >
           <ArrowLeft className="mr-2 h-4 w-4" />
@@ -362,23 +351,23 @@ const CategoryQuiz = () => {
         </Button>
       </div>
       <div className="w-full max-w-3xl">
-        <Card className="backdrop-blur-sm bg-white/90 dark:bg-black/80 border-none shadow-xl transition-all duration-300">
+        <Card className="backdrop-blur-sm bg-slate-950 border-slate-800 shadow-xl transition-all duration-300">
           <CardHeader className="space-y-1">
             <div className="flex justify-between items-center">
-              <div className="text-sm text-muted-foreground">
+              <div className="text-sm text-gray-400">
                 Quiz {quizState.currentQuizIndex + 1} of {quizIds.length}
               </div>
-              <div className="text-sm text-muted-foreground">
+              <div className="text-sm text-gray-400">
                 Question {quizState.currentQuestionIndex + 1} of {quizState.questions.length}
               </div>
             </div>
-            <CardTitle className="text-2xl font-bold tracking-tight">
+            <CardTitle className="text-2xl font-bold tracking-tight text-white">
               {currentCategory?.name} Quiz
             </CardTitle>
-            <CardDescription className="text-lg font-medium">
+            <CardDescription className="text-lg font-medium text-gray-300">
               {currentQuestion?.question_text}
               {currentQuestion?.multiple_correct && (
-                <span className="text-sm font-normal text-blue-600 dark:text-blue-400 ml-2 block mt-1">
+                <span className="text-sm font-normal text-blue-400 ml-2 block mt-1">
                   (Select all correct answers)
                 </span>
               )}
@@ -389,10 +378,10 @@ const CategoryQuiz = () => {
               {currentAnswers.map((answer) => (
                 <div
                   key={answer.id}
-                  className={`p-4 border rounded-md cursor-pointer transition-all ${
+                  className={`p-4 rounded-md cursor-pointer transition-all ${
                     selectedAnswerIds.includes(answer.id)
-                      ? "border-blue-500 bg-blue-50 dark:bg-blue-900/20"
-                      : "border-gray-200 hover:border-gray-300"
+                      ? "border-blue-500 bg-blue-900/20 border"
+                      : "border border-slate-700 hover:border-blue-400/50"
                   }`}
                   onClick={() => handleSelectAnswer(answer.id)}
                 >
@@ -404,7 +393,7 @@ const CategoryQuiz = () => {
                     } ${
                       selectedAnswerIds.includes(answer.id)
                         ? "bg-blue-500 border-blue-500 text-white"
-                        : "border-gray-300"
+                        : "border-slate-500"
                     }`}>
                       {selectedAnswerIds.includes(answer.id) && (
                         <div className={`${
@@ -414,14 +403,14 @@ const CategoryQuiz = () => {
                         }`}></div>
                       )}
                     </div>
-                    <div>{answer.answer_text}</div>
+                    <div className="text-gray-200">{answer.answer_text}</div>
                   </div>
                 </div>
               ))}
             </div>
           </CardContent>
           <CardFooter className="flex justify-between">
-            <div className="text-sm text-muted-foreground">
+            <div className="text-sm text-gray-400">
               {currentQuestion?.multiple_correct 
                 ? "Select all correct answers" 
                 : "Select the best answer"}
@@ -429,7 +418,7 @@ const CategoryQuiz = () => {
             <Button 
               onClick={handleNextQuestion}
               disabled={!selectedAnswerIds.length}
-              className="bg-black text-white dark:bg-white dark:text-black hover:bg-black/90 dark:hover:bg-white/90"
+              className="bg-blue-600 hover:bg-blue-700 text-white"
             >
               {quizState.currentQuestionIndex < quizState.questions.length - 1
                 ? "Next Question"
