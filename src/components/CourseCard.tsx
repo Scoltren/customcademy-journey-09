@@ -44,16 +44,16 @@ const CourseCard: React.FC<{ course: CourseProps; className?: string }> = ({
     <Link 
       to={`/course/${id}`} 
       className={cn(
-        "glass-card overflow-hidden group transition-all duration-500 flex flex-col card-hover",
-        featured ? "md:col-span-2 md:flex-row" : "",
+        "glass-card overflow-hidden group transition-all duration-500 flex flex-col card-hover h-[360px]",
+        featured ? "md:col-span-2 md:flex-row md:h-[280px]" : "",
         className
       )}
     >
       <div className={cn(
-        "relative overflow-hidden",
-        featured ? "md:w-1/2" : "w-full"
+        "relative overflow-hidden h-[55%]",
+        featured ? "md:w-1/2 md:h-full" : "w-full"
       )}>
-        <div className="aspect-video w-full h-full overflow-hidden">
+        <div className="w-full h-full overflow-hidden">
           <img 
             src={image} 
             alt={title} 
@@ -63,15 +63,15 @@ const CourseCard: React.FC<{ course: CourseProps; className?: string }> = ({
       </div>
       
       <div className={cn(
-        "p-6 flex flex-col flex-grow bg-navy/90",
+        "p-4 flex flex-col flex-grow bg-midnight",
         featured ? "md:w-1/2" : ""
       )}>
-        <div className="mb-4 flex flex-wrap gap-2">
-          <Badge className="bg-blue-800 hover:bg-blue-700 text-white border-0 font-medium">
+        <div className="mb-2 flex flex-wrap gap-2">
+          <Badge className="bg-blue-900 hover:bg-blue-800 text-white border-0 font-medium text-xs">
             {category}
           </Badge>
           <Badge className={cn(
-            "border",
+            "border text-xs",
             level === 'Beginner' ? 'bg-green-600/80 hover:bg-green-600 text-white border-0' :
             level === 'Intermediate' ? 'bg-orange-500/80 hover:bg-orange-500 text-white border-0' :
             'bg-red-600/80 hover:bg-red-600 text-white border-0'
@@ -80,44 +80,22 @@ const CourseCard: React.FC<{ course: CourseProps; className?: string }> = ({
           </Badge>
         </div>
         
-        <h3 className="text-xl font-bold mb-2 line-clamp-2 text-white group-hover:text-blue-light transition-colors duration-300">
+        <h3 className="text-sm font-bold mb-1 line-clamp-1 text-white group-hover:text-blue-light transition-colors duration-300">
           {title}
         </h3>
         
-        <p className="text-slate-400 mb-4 text-sm line-clamp-2">
-          {description}
-        </p>
-        
-        <div className="flex items-center gap-2 mb-4">
-          <div className="w-8 h-8 rounded-full bg-slate-700 overflow-hidden">
-            <img 
-              src={`https://ui-avatars.com/api/?name=${instructor.replace(' ', '+')}&background=random`} 
-              alt={instructor} 
-              className="w-full h-full object-cover"
-            />
+        <div className="mt-auto pt-2 flex items-center justify-between">
+          <div className="flex items-center gap-2 text-xs">
+            <Clock size={14} className="text-slate-400" />
+            <span className="text-slate-300">{duration}</span>
           </div>
-          <span className="text-slate-300 text-sm">{instructor}</span>
-        </div>
-        
-        <div className="grid grid-cols-3 gap-3 mb-5">
-          <div className="flex items-center gap-2">
-            <Clock size={16} className="text-slate-400" />
-            <span className="text-slate-300 text-sm">{duration}</span>
+          <div className="flex items-center gap-1 text-xs">
+            <BookOpen size={14} className="text-slate-400" />
+            <span className="text-slate-300">{chapterCount}</span>
           </div>
-          <div className="flex items-center gap-2">
-            <Star size={16} className="text-yellow-500" />
-            <span className="text-slate-300 text-sm">{rating ? rating.toFixed(1) : 'N/A'}</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <BookOpen size={16} className="text-slate-400" />
-            <span className="text-slate-300 text-sm">{chapterCount} {chapterCount === 1 ? 'chapter' : 'chapters'}</span>
-          </div>
-        </div>
-        
-        <div className="mt-auto pt-4 border-t border-slate-700 flex items-center justify-between">
-          <span className="text-xl font-bold text-white">${price.toFixed(2)}</span>
-          <div className="button-primary py-2 opacity-0 translate-y-4 group-hover:opacity-100 group-hover:translate-y-0 transition-all duration-300">
-            View Course
+          <div className="flex items-center gap-1 text-xs">
+            <Star size={14} className="text-yellow-500" />
+            <span className="text-slate-300">{rating ? rating.toFixed(1) : 'N/A'}</span>
           </div>
         </div>
       </div>
