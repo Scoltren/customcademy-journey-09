@@ -43,11 +43,13 @@ export const PaymentService = {
   
   verifyPaymentStatus: async ({ sessionId }: PaymentVerificationParams) => {
     try {
+      console.log('Verifying payment status for session:', sessionId);
       const { data, error } = await supabase.functions.invoke('verify-payment-status', {
         body: { sessionId }
       });
       
       if (error) throw error;
+      console.log('Payment verification response:', data);
       return data;
     } catch (error) {
       console.error('Error verifying payment status:', error);

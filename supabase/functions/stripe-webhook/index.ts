@@ -46,6 +46,11 @@ serve(async (req) => {
     const supabaseUrl = Deno.env.get('SUPABASE_URL') || '';
     const supabaseKey = Deno.env.get('SUPABASE_ANON_KEY') || '';
     
+    if (!supabaseUrl || !supabaseKey) {
+      console.error('Supabase configuration missing');
+      return new Response('Server configuration error', { status: 500 });
+    }
+    
     // Handle the event
     switch (event.type) {
       case 'checkout.session.completed': {
