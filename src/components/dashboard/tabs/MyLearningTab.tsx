@@ -4,6 +4,7 @@ import { Link } from 'react-router-dom';
 import { BookOpen, Clock } from 'lucide-react';
 import { Course } from '@/types/course';
 import UserInterests from '../UserInterests';
+import CourseProgressBar from '@/components/course/content/CourseProgressBar';
 
 interface MyLearningTabProps {
   enrolledCourses: (Course & {progress: number, completedChapters: number, totalChapters: number})[];
@@ -61,16 +62,7 @@ const MyLearningTab = ({
                     </div>
                     
                     <div className="mb-4">
-                      <div className="flex items-center justify-between mb-2">
-                        <span className="text-slate-400">Progress</span>
-                        <span className="text-white">{course.progress}%</span>
-                      </div>
-                      <div className="progress-bar">
-                        <div 
-                          className="progress-bar-fill" 
-                          style={{ width: `${course.progress}%` }}
-                        ></div>
-                      </div>
+                      <CourseProgressBar progress={course.progress} />
                     </div>
                     
                     <div className="flex flex-wrap gap-4 text-sm">
