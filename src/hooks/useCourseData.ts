@@ -1,3 +1,4 @@
+
 import { useParams } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
@@ -129,7 +130,8 @@ export const useCourseData = () => {
   const {
     data: courseProgress = 0,
     isLoading: progressLoading,
-    error: progressError
+    error: progressError,
+    refetch: refetchProgress
   } = useQuery({
     queryKey: ['courseProgress', id, user?.id],
     queryFn: async () => {
@@ -224,6 +226,7 @@ export const useCourseData = () => {
     courseError,
     chaptersError,
     commentsError,
-    courseProgress
+    courseProgress,
+    refetchProgress
   };
 };

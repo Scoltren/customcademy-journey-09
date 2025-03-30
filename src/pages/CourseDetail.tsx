@@ -1,5 +1,4 @@
-
-import React from 'react';
+import React, { useEffect } from 'react';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import { useCourseData } from '@/hooks/useCourseData';
@@ -10,7 +9,17 @@ import LoadingState from '@/components/course/LoadingState';
 import NotFoundState from '@/components/course/NotFoundState';
 
 const CourseDetail = () => {
-  const { course, chapters, comments, isLoading, courseProgress } = useCourseData();
+  const { course, chapters, comments, isLoading, courseProgress, refetchProgress } = useCourseData();
+
+  useEffect(() => {
+    if (refetchProgress) {
+      const intervalId = setInterval(() => {
+        refetchProgress();
+      }, 5000);
+      
+      return () => clearInterval(intervalId);
+    }
+  }, [refetchProgress]);
 
   if (isLoading) {
     return <LoadingState />;

@@ -153,7 +153,9 @@ const CourseContent: React.FC<CourseContentProps> = ({
         
         // Update subscribed_courses table with new progress based on chapter's progress_when_finished
         if (progressValue !== null) {
-          await updateCourseProgress(numericCourseId, user.id, progressValue);
+          const newLocalProgress = await updateCourseProgress(numericCourseId, user.id, progressValue);
+          // Update local state immediately with the calculated progress
+          setLocalProgress(newLocalProgress);
         }
         
         // Update UI to show chapter as completed
@@ -169,7 +171,7 @@ const CourseContent: React.FC<CourseContentProps> = ({
     }
   };
   
-  const updateCourseProgress = async (courseId: number, userId: string, progressValue: number | null) => {
+  const updateCourseProgress = async (courseId: number, userId: string, progressValue: number | null): Promise<number> => {
     try {
       // Get current progress
       const { data: currentProgress, error: progressError } = await supabase
@@ -195,8 +197,8 @@ const CourseContent: React.FC<CourseContentProps> = ({
       
       if (updateError) throw updateError;
       
-      // Update local state for the progress bar
-      setLocalProgress(newProgress);
+      // Return the new progress value for local state update
+      return newProgress;
       
     } catch (error) {
       console.error("Error updating course progress:", error);

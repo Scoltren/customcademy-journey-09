@@ -41,11 +41,12 @@ const CourseProgressBar: React.FC<CourseProgressBarProps> = ({ progress }) => {
         {status === 'completed' ? (
           <CheckCircle2 size={16} className="text-green-500" />
         ) : (
-          <BookOpen size={16} className={status === 'not-started' ? "text-slate-400" : "text-blue-400"} />
+          <BookOpen size={16} className={status !== 'not-started' ? "text-blue-400" : "text-slate-400"} />
         )}
         <span className={`text-sm font-medium ${
           status === 'completed' ? 'text-green-500' : 
           status === 'advanced' ? 'text-blue-500' : 
+          status === 'halfway' ? 'text-blue-400' :
           status === 'started' ? 'text-blue-400' :
           'text-slate-400'
         }`}>
