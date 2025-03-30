@@ -412,6 +412,42 @@ export type Database = {
         }
         Relationships: []
       }
+      user_chapter_progress: {
+        Row: {
+          chapter_id: number
+          course_id: number
+          finished: boolean
+          user_id: string
+        }
+        Insert: {
+          chapter_id: number
+          course_id: number
+          finished?: boolean
+          user_id: string
+        }
+        Update: {
+          chapter_id?: number
+          course_id?: number
+          finished?: boolean
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_chapter_progress_chapter_id_fkey"
+            columns: ["chapter_id"]
+            isOneToOne: false
+            referencedRelation: "chapters"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "user_chapter_progress_course_id_fkey"
+            columns: ["course_id"]
+            isOneToOne: false
+            referencedRelation: "courses"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       user_interest_categories: {
         Row: {
           category_id: number

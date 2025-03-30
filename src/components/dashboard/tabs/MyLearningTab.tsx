@@ -88,18 +88,12 @@ const MyLearningTab = ({
                       </div>
                     </div>
                     
-                    <div className="mt-6 flex gap-3">
+                    <div className="mt-6">
                       <Link 
                         to={`/course/${course.id}/learn`}
                         className="button-primary py-2 px-4"
                       >
                         Continue Learning
-                      </Link>
-                      <Link 
-                        to={`/course/${course.id}`}
-                        className="button-secondary py-2 px-4"
-                      >
-                        Course Details
                       </Link>
                     </div>
                   </div>
