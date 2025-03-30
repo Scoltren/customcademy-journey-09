@@ -8,7 +8,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { useNavigate } from 'react-router-dom';
 import { PaymentService } from '@/services/PaymentService';
-import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 
 interface CourseHeaderProps {
   course: Course;
@@ -103,8 +103,10 @@ const CourseHeader: React.FC<CourseHeaderProps> = ({ course }) => {
       console.log('Checkout response:', response);
 
       if (response?.url) {
-        // Redirect to Stripe Checkout
-        window.location.href = response.url;
+        // Add a small delay before redirecting to ensure the dialog is visible
+        setTimeout(() => {
+          window.location.href = response.url;
+        }, 500);
       } else {
         throw new Error('No checkout URL returned');
       }
@@ -112,7 +114,6 @@ const CourseHeader: React.FC<CourseHeaderProps> = ({ course }) => {
       console.error('Error initiating payment:', error);
       toast.error('Failed to process payment. Please try again.');
       setIsLoadingDialog(false);
-    } finally {
       setIsProcessingPayment(false);
     }
   };
@@ -188,11 +189,11 @@ const CourseHeader: React.FC<CourseHeaderProps> = ({ course }) => {
       <Dialog open={isLoadingDialog} onOpenChange={setIsLoadingDialog}>
         <DialogContent className="sm:max-w-md">
           <DialogTitle>Processing Payment</DialogTitle>
+          <DialogDescription>
+            Connecting to payment provider. You'll be redirected to Stripe shortly...
+          </DialogDescription>
           <div className="flex flex-col items-center justify-center py-6">
             <div className="w-12 h-12 border-4 border-t-transparent border-blue-500 rounded-full animate-spin mb-4"></div>
-            <p className="text-center text-slate-400">
-              Connecting to payment provider. You'll be redirected to Stripe shortly...
-            </p>
           </div>
         </DialogContent>
       </Dialog>

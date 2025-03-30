@@ -52,29 +52,8 @@ serve(async (req) => {
       },
     });
     
-    // Record the payment attempt in our database
-    const supabaseUrl = Deno.env.get('SUPABASE_URL') || '';
-    const supabaseKey = Deno.env.get('SUPABASE_ANON_KEY') || '';
-    
-    const response = await fetch(`${supabaseUrl}/rest/v1/payments`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${supabaseKey}`,
-        'apikey': supabaseKey,
-      },
-      body: JSON.stringify({
-        user_id: userId,
-        course_id: courseId,
-        amount: price,
-        status: 'pending',
-        stripe_checkout_id: session.id,
-      }),
-    });
-    
-    if (!response.ok) {
-      console.error('Failed to create payment record:', await response.text());
-    }
+    // Skip the payment record creation since it's failing due to RLS policies
+    // We'll handle this in the webhook instead
     
     return new Response(
       JSON.stringify({ 
