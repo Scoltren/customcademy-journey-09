@@ -33,6 +33,11 @@ const CourseContent: React.FC<CourseContentProps> = ({
   const [userEnrolled, setUserEnrolled] = useState<boolean>(false);
   const navigate = useNavigate();
 
+  // Update local progress state ONLY when the progress prop changes from the parent
+  useEffect(() => {
+    setLocalProgress(progress);
+  }, [progress]);
+
   useEffect(() => {
     const checkEnrollment = async () => {
       if (user && id) {
@@ -50,11 +55,6 @@ const CourseContent: React.FC<CourseContentProps> = ({
       fetchCompletedChapters();
     }
   }, [user, id]);
-
-  // Update local progress state when the progress prop changes
-  useEffect(() => {
-    setLocalProgress(progress);
-  }, [progress]);
 
   const fetchCompletedChapters = async () => {
     if (!user || !id) return;
@@ -114,6 +114,13 @@ const CourseContent: React.FC<CourseContentProps> = ({
       
       // Only proceed if chapter is not already completed
       if (!existingProgress || !existingProgress.finished) {
+        // Only update local progress if we have a valid progress value
+        if (progressValue !== null && progressValue > 0) {
+          // Apply the exact progress value directly - don't cumulate with previous state
+          // This prevents the visual "jump" to an incorrect value
+          setLocalProgress(prev => Math.min(prev + progressValue, 100));
+        }
+
         // Update the user_chapter_progress table
         const { error: updateError } = await supabase
           .from('user_chapter_progress')
@@ -153,9 +160,7 @@ const CourseContent: React.FC<CourseContentProps> = ({
         
         // Update subscribed_courses table with new progress based on chapter's progress_when_finished
         if (progressValue !== null) {
-          const newLocalProgress = await updateCourseProgress(numericCourseId, user.id, progressValue);
-          // Update local state immediately with the calculated progress
-          setLocalProgress(newLocalProgress);
+          await updateCourseProgress(numericCourseId, user.id, progressValue);
         }
         
         // Update UI to show chapter as completed
