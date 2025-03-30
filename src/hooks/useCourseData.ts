@@ -1,4 +1,3 @@
-
 import { useParams } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
@@ -155,7 +154,8 @@ export const useCourseData = () => {
         .from('user_chapter_progress')
         .select('chapter_id, finished')
         .eq('course_id', numericId)
-        .eq('user_id', user.id);
+        .eq('user_id', user.id)
+        .eq('finished', true);
       
       if (progressError) {
         console.error('Error fetching user progress:', progressError);
@@ -169,7 +169,7 @@ export const useCourseData = () => {
         completedChapters.forEach(progress => {
           if (progress.finished) {
             const chapter = chaptersData.find(c => c.id === progress.chapter_id);
-            if (chapter && chapter.progress_when_finished) {
+            if (chapter && chapter.progress_when_finished !== null) {
               totalProgress += chapter.progress_when_finished;
             }
           }

@@ -51,6 +51,11 @@ const CourseContent: React.FC<CourseContentProps> = ({
     }
   }, [user, id]);
 
+  // Update local progress state when the progress prop changes
+  useEffect(() => {
+    setLocalProgress(progress);
+  }, [progress]);
+
   const fetchCompletedChapters = async () => {
     if (!user || !id) return;
     
@@ -71,9 +76,6 @@ const CourseContent: React.FC<CourseContentProps> = ({
       
       const finishedChapterIds = data?.map(item => item.chapter_id) || [];
       setCompletedChapters(finishedChapterIds);
-      
-      // We no longer calculate progress here as it will be fetched from the database
-      
     } catch (error) {
       console.error('Error fetching completed chapters:', error);
     }
@@ -150,7 +152,9 @@ const CourseContent: React.FC<CourseContentProps> = ({
         }
         
         // Update subscribed_courses table with new progress based on chapter's progress_when_finished
-        await updateCourseProgress(numericCourseId, user.id, progressValue);
+        if (progressValue !== null) {
+          await updateCourseProgress(numericCourseId, user.id, progressValue);
+        }
         
         // Update UI to show chapter as completed
         setCompletedChapters(prev => [...prev, chapterId]);
@@ -177,7 +181,7 @@ const CourseContent: React.FC<CourseContentProps> = ({
       
       if (progressError) throw progressError;
       
-      // Calculate new progress by adding chapter's progress_when_finished value (or 0 if null)
+      // Calculate new progress with the exact value from progress_when_finished
       const currentValue = currentProgress?.progress || 0;
       const progressToAdd = progressValue || 0;
       const newProgress = Math.min(currentValue + progressToAdd, 100); // Cap at 100%

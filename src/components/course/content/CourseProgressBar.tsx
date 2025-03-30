@@ -31,6 +31,7 @@ const CourseProgressBar: React.FC<CourseProgressBarProps> = ({ progress }) => {
           className={`h-2.5 ${
             status === 'completed' ? 'bg-slate-700 [&>div]:bg-green-500' : 
             status === 'advanced' ? 'bg-slate-700 [&>div]:bg-blue-500' : 
+            status === 'halfway' ? 'bg-slate-700 [&>div]:bg-blue-400' :
             status === 'started' ? 'bg-slate-700 [&>div]:bg-blue-400' :
             'bg-slate-700 [&>div]:bg-slate-600'
           }`} 
