@@ -72,11 +72,7 @@ const CourseContent: React.FC<CourseContentProps> = ({
       const finishedChapterIds = data?.map(item => item.chapter_id) || [];
       setCompletedChapters(finishedChapterIds);
       
-      // Calculate progress based on completed chapters
-      if (chapters.length > 0) {
-        const completionPercentage = (finishedChapterIds.length / chapters.length) * 100;
-        setLocalProgress(completionPercentage);
-      }
+      // We no longer calculate progress here as it will be fetched from the database
       
     } catch (error) {
       console.error('Error fetching completed chapters:', error);
@@ -103,52 +99,65 @@ const CourseContent: React.FC<CourseContentProps> = ({
         throw new Error("Invalid ID format");
       }
       
-      // Update the user_chapter_progress table
-      const { error: updateError } = await supabase
+      // Check if chapter is already completed to avoid duplicate progress
+      const { data: existingProgress, error: checkError } = await supabase
         .from('user_chapter_progress')
-        .update({ finished: true })
+        .select('finished')
         .eq('course_id', numericCourseId)
         .eq('user_id', user.id)
-        .eq('chapter_id', chapterId);
+        .eq('chapter_id', chapterId)
+        .maybeSingle();
       
-      if (updateError) {
-        // If update fails, check if the record exists
-        const { data: existingRecord, error: checkError } = await supabase
+      if (checkError) throw checkError;
+      
+      // Only proceed if chapter is not already completed
+      if (!existingProgress || !existingProgress.finished) {
+        // Update the user_chapter_progress table
+        const { error: updateError } = await supabase
           .from('user_chapter_progress')
-          .select('*')
+          .update({ finished: true })
           .eq('course_id', numericCourseId)
           .eq('user_id', user.id)
-          .eq('chapter_id', chapterId)
-          .maybeSingle();
+          .eq('chapter_id', chapterId);
         
-        if (checkError) throw checkError;
-        
-        // If record doesn't exist, insert it
-        if (!existingRecord) {
-          const { error: insertError } = await supabase
+        if (updateError) {
+          // If update fails, check if the record exists
+          const { data: existingRecord, error: checkError } = await supabase
             .from('user_chapter_progress')
-            .insert({
-              course_id: numericCourseId,
-              user_id: user.id,
-              chapter_id: chapterId,
-              finished: true
-            });
+            .select('*')
+            .eq('course_id', numericCourseId)
+            .eq('user_id', user.id)
+            .eq('chapter_id', chapterId)
+            .maybeSingle();
           
-          if (insertError) throw insertError;
-        } else {
-          throw updateError;
+          if (checkError) throw checkError;
+          
+          // If record doesn't exist, insert it
+          if (!existingRecord) {
+            const { error: insertError } = await supabase
+              .from('user_chapter_progress')
+              .insert({
+                course_id: numericCourseId,
+                user_id: user.id,
+                chapter_id: chapterId,
+                finished: true
+              });
+            
+            if (insertError) throw insertError;
+          } else {
+            throw updateError;
+          }
         }
+        
+        // Update subscribed_courses table with new progress based on chapter's progress_when_finished
+        await updateCourseProgress(numericCourseId, user.id, progressValue);
+        
+        // Update UI to show chapter as completed
+        setCompletedChapters(prev => [...prev, chapterId]);
+        toast.success("Chapter marked as completed!");
+      } else {
+        toast.info("Chapter already completed");
       }
-      
-      // Update subscribed_courses table with new progress percentage
-      await updateCourseProgress(numericCourseId, user.id);
-      
-      // Update UI to show chapter as completed
-      setCompletedChapters(prev => [...prev, chapterId]);
-      toast.success("Chapter marked as completed!");
-      
-      // Refetch completed chapters to update the UI
-      fetchCompletedChapters();
       
     } catch (error) {
       console.error("Error marking chapter as completed:", error);
@@ -156,42 +165,34 @@ const CourseContent: React.FC<CourseContentProps> = ({
     }
   };
   
-  const updateCourseProgress = async (courseId: number, userId: string) => {
+  const updateCourseProgress = async (courseId: number, userId: string, progressValue: number | null) => {
     try {
-      // First, get the total number of chapters in the course
-      const { data: totalChapters, error: chaptersError } = await supabase
-        .from('chapters')
-        .select('id')
-        .eq('course_id', courseId);
-      
-      if (chaptersError) throw chaptersError;
-      
-      // Get the number of completed chapters
-      const { data: completedChapters, error: completedError } = await supabase
-        .from('user_chapter_progress')
-        .select('chapter_id')
+      // Get current progress
+      const { data: currentProgress, error: progressError } = await supabase
+        .from('subscribed_courses')
+        .select('progress')
         .eq('course_id', courseId)
         .eq('user_id', userId)
-        .eq('finished', true);
+        .single();
       
-      if (completedError) throw completedError;
+      if (progressError) throw progressError;
       
-      // Calculate progress percentage
-      const totalCount = totalChapters?.length || 0;
-      const completedCount = completedChapters?.length || 0;
-      const progressPercentage = totalCount > 0 ? Math.round((completedCount / totalCount) * 100) : 0;
+      // Calculate new progress by adding chapter's progress_when_finished value (or 0 if null)
+      const currentValue = currentProgress?.progress || 0;
+      const progressToAdd = progressValue || 0;
+      const newProgress = Math.min(currentValue + progressToAdd, 100); // Cap at 100%
       
       // Update the progress in subscribed_courses
       const { error: updateError } = await supabase
         .from('subscribed_courses')
-        .update({ progress: progressPercentage })
+        .update({ progress: newProgress })
         .eq('course_id', courseId)
         .eq('user_id', userId);
       
       if (updateError) throw updateError;
       
       // Update local state for the progress bar
-      setLocalProgress(progressPercentage);
+      setLocalProgress(newProgress);
       
     } catch (error) {
       console.error("Error updating course progress:", error);

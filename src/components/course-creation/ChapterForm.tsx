@@ -1,10 +1,10 @@
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { toast } from 'sonner';
-import { Loader2, PlusCircle, Trash2 } from 'lucide-react';
+import { Loader2, PlusCircle, Trash2, Info } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import {
@@ -22,6 +22,7 @@ import { Separator } from '@/components/ui/separator';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { FileUploader } from './FileUploader';
 import { CourseCreationService, ChapterFormData } from '@/services/CourseCreationService';
+import { Progress } from '@/components/ui/progress';
 
 const chapterFormSchema = z.object({
   title: z.string().min(3, 'Title must be at least 3 characters').max(100, 'Title must be less than 100 characters'),
@@ -39,17 +40,45 @@ export const ChapterForm = ({ courseId, onPublishCourse }: ChapterFormProps) => 
   const [chapters, setChapters] = useState<any[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [videoFile, setVideoFile] = useState<File | null>(null);
+  const [totalProgress, setTotalProgress] = useState(0);
+  const [remainingProgress, setRemainingProgress] = useState(100);
   
   const form = useForm<z.infer<typeof chapterFormSchema>>({
     resolver: zodResolver(chapterFormSchema),
     defaultValues: {
       title: '',
       chapter_text: '',
-      progress_when_finished: 10,
+      progress_when_finished: remainingProgress > 0 ? remainingProgress : 0,
     },
   });
   
+  // Update the form value whenever remainingProgress changes
+  useEffect(() => {
+    const currentValue = form.getValues('progress_when_finished');
+    // Only auto-update if the field hasn't been manually changed or if it exceeds remaining
+    if (!currentValue || currentValue > remainingProgress) {
+      form.setValue('progress_when_finished', 
+        remainingProgress > 0 ? remainingProgress : 0, 
+        { shouldValidate: true }
+      );
+    }
+  }, [remainingProgress, form]);
+  
+  // Calculate total progress and remaining progress whenever chapters change
+  useEffect(() => {
+    const total = chapters.reduce((sum, chapter) => sum + (chapter.progress_when_finished || 0), 0);
+    setTotalProgress(total);
+    setRemainingProgress(100 - total);
+  }, [chapters]);
+  
   const addChapter = async (values: z.infer<typeof chapterFormSchema>) => {
+    // Validate that we're not exceeding 100% total progress
+    const newTotalProgress = totalProgress + values.progress_when_finished;
+    if (newTotalProgress > 100) {
+      toast.error(`Total progress (${newTotalProgress}%) exceeds 100%. Please adjust the progress value.`);
+      return;
+    }
+    
     try {
       setIsSubmitting(true);
       
@@ -66,7 +95,13 @@ export const ChapterForm = ({ courseId, onPublishCourse }: ChapterFormProps) => 
       toast.success('Chapter added successfully!');
       
       // Reset form
-      form.reset();
+      form.reset({
+        title: '',
+        chapter_text: '',
+        progress_when_finished: remainingProgress - values.progress_when_finished > 0 
+          ? remainingProgress - values.progress_when_finished 
+          : 0,
+      });
       setVideoFile(null);
     } catch (error) {
       console.error('Chapter creation error:', error);
@@ -89,6 +124,12 @@ export const ChapterForm = ({ courseId, onPublishCourse }: ChapterFormProps) => 
       return;
     }
     
+    // Check if total progress adds up to 100%
+    if (totalProgress < 100) {
+      toast.error(`Total progress (${totalProgress}%) must be 100% before publishing. Add more chapters or adjust progress values.`);
+      return;
+    }
+    
     toast.success('Course published successfully!');
     onPublishCourse();
   };
@@ -103,6 +144,20 @@ export const ChapterForm = ({ courseId, onPublishCourse }: ChapterFormProps) => 
           </CardDescription>
         </CardHeader>
         <CardContent>
+          <div className="mb-6">
+            <div className="flex justify-between mb-2">
+              <span className="text-sm font-medium">Total Progress: {totalProgress}%</span>
+              <span className="text-sm font-medium">Remaining: {remainingProgress}%</span>
+            </div>
+            <Progress value={totalProgress} className="h-2" />
+            {totalProgress > 100 && (
+              <p className="text-red-500 text-sm mt-1 flex items-center">
+                <Info className="h-4 w-4 mr-1" />
+                Total progress exceeds 100%. Please adjust chapter progress values.
+              </p>
+            )}
+          </div>
+          
           <Form {...form}>
             <form onSubmit={form.handleSubmit(addChapter)} className="space-y-6">
               <FormField
@@ -147,12 +202,20 @@ export const ChapterForm = ({ courseId, onPublishCourse }: ChapterFormProps) => 
                       <Input 
                         type="number" 
                         min="1" 
-                        max="100" 
+                        max={remainingProgress > 0 ? remainingProgress : 100}
                         {...field}
+                        onChange={(e) => {
+                          const value = parseInt(e.target.value);
+                          if (!isNaN(value) && value > remainingProgress) {
+                            toast.warning(`This value exceeds the remaining progress (${remainingProgress}%)`);
+                          }
+                          field.onChange(e);
+                        }}
                       />
                     </FormControl>
                     <FormDescription>
                       How much progress (%) should be added when this chapter is completed.
+                      {remainingProgress > 0 && ` Suggested value: ${remainingProgress}%`}
                     </FormDescription>
                     <FormMessage />
                   </FormItem>
@@ -184,7 +247,7 @@ export const ChapterForm = ({ courseId, onPublishCourse }: ChapterFormProps) => 
               
               <Button 
                 type="submit" 
-                disabled={isSubmitting || chapters.length >= 10}
+                disabled={isSubmitting || chapters.length >= 10 || remainingProgress <= 0}
                 className="w-full flex items-center gap-2"
               >
                 {isSubmitting ? (
@@ -203,6 +266,12 @@ export const ChapterForm = ({ courseId, onPublishCourse }: ChapterFormProps) => 
               {chapters.length >= 10 && (
                 <p className="text-amber-500 text-sm text-center">
                   You've reached the maximum number of chapters (10).
+                </p>
+              )}
+              
+              {remainingProgress <= 0 && (
+                <p className="text-amber-500 text-sm text-center">
+                  Total progress is already at 100%. Remove or adjust existing chapters to add more.
                 </p>
               )}
             </form>
@@ -239,20 +308,27 @@ export const ChapterForm = ({ courseId, onPublishCourse }: ChapterFormProps) => 
               ))}
             </div>
             
-            {chapters.length < 2 ? (
-              <Alert className="mt-4">
-                <AlertDescription>
-                  Please add at least one more chapter before publishing.
-                </AlertDescription>
-              </Alert>
-            ) : (
-              <Button 
-                onClick={handlePublish} 
-                className="w-full mt-6"
-              >
-                Publish Course
-              </Button>
-            )}
+            <Alert className="mt-4">
+              <AlertDescription>
+                {totalProgress < 100 ? (
+                  `Total progress is ${totalProgress}%. You need to reach 100% before publishing.`
+                ) : totalProgress > 100 ? (
+                  `Total progress exceeds 100% (${totalProgress}%). Please adjust chapter progress values.`
+                ) : chapters.length < 2 ? (
+                  `Please add at least one more chapter before publishing.`
+                ) : (
+                  `You're ready to publish your course!`
+                )}
+              </AlertDescription>
+            </Alert>
+            
+            <Button 
+              onClick={handlePublish} 
+              className="w-full mt-6"
+              disabled={totalProgress !== 100 || chapters.length < 2}
+            >
+              Publish Course
+            </Button>
           </CardContent>
         </Card>
       )}
