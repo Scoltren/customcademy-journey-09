@@ -19,7 +19,7 @@ export interface Course {
   price: number | null;
   media: string | null;
   category_id: number | null;
-  creator_id: number | null; // Changed from string to number to match database
+  creator_id: string | null; // Changed from number to string to match UUID in auth.users
   created_at: string | null;
   course_time: number | null;
   category_name?: string;

@@ -166,7 +166,7 @@ export type Database = {
           category_id: number | null
           course_time: number | null
           created_at: string | null
-          creator_id: number | null
+          creator_id: string | null
           description: string | null
           difficulty_level: string | null
           id: number
@@ -180,7 +180,7 @@ export type Database = {
           category_id?: number | null
           course_time?: number | null
           created_at?: string | null
-          creator_id?: number | null
+          creator_id?: string | null
           description?: string | null
           difficulty_level?: string | null
           id?: number
@@ -194,7 +194,7 @@ export type Database = {
           category_id?: number | null
           course_time?: number | null
           created_at?: string | null
-          creator_id?: number | null
+          creator_id?: string | null
           description?: string | null
           difficulty_level?: string | null
           id?: number

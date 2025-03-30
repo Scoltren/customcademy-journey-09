@@ -61,11 +61,6 @@ export const CourseCreationService = {
         );
       }
       
-      // Note: We're working around a type mismatch between the auth user ID (UUID string)
-      // and the creator_id column in the courses table (number).
-      // In a real-world scenario, this should be properly handled with consistent types
-      // or by creating a separate users table that maps auth IDs to numeric IDs.
-      
       // Insert course into database
       const { data: course, error: courseError } = await supabase
         .from('courses')
@@ -77,9 +72,7 @@ export const CourseCreationService = {
           course_time: courseData.course_time,
           price: courseData.price,
           thumbnail: thumbnailUrl,
-          // Cast the creator_id to any to bypass TypeScript's type checking
-          // This is a workaround for the type mismatch between string and number
-          creator_id: creatorId as any
+          creator_id: creatorId // Now this is correctly a UUID string matching auth.users.id
         })
         .select()
         .single();
