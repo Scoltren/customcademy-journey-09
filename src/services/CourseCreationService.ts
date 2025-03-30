@@ -1,9 +1,26 @@
 
-import { supabaseClient } from "@/integrations/supabase/client";
+import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
 
 // Constants
 const BUCKET_NAME = "course-media";
+
+export interface CourseFormData {
+  title: string;
+  description: string;
+  difficulty_level: string;
+  category_id: number;
+  course_time: number;
+  price: number;
+  thumbnail: File | null;
+}
+
+export interface ChapterFormData {
+  title: string;
+  chapter_text: string;
+  progress_when_finished: number;
+  video_file: File | null;
+}
 
 export class CourseCreationService {
   /**
@@ -15,7 +32,7 @@ export class CourseCreationService {
   static async uploadFile(file: File, path?: string): Promise<string | null> {
     try {
       // Check if the bucket exists
-      const { data: buckets, error: bucketError } = await supabaseClient.storage.listBuckets();
+      const { data: buckets, error: bucketError } = await supabase.storage.listBuckets();
       
       if (bucketError) {
         console.error("Error checking buckets:", bucketError);
@@ -46,7 +63,7 @@ export class CourseCreationService {
       const filePath = path ? `${path}/${fileName}` : fileName;
       
       // Upload the file
-      const { data, error } = await supabaseClient.storage
+      const { data, error } = await supabase.storage
         .from(BUCKET_NAME)
         .upload(filePath, file, {
           cacheControl: '3600',
@@ -64,7 +81,7 @@ export class CourseCreationService {
       }
       
       // Get the public URL of the file
-      const { data: publicUrl } = supabaseClient.storage
+      const { data: publicUrl } = supabase.storage
         .from(BUCKET_NAME)
         .getPublicUrl(data.path);
       
@@ -79,5 +96,97 @@ export class CourseCreationService {
       return null;
     }
   }
+  
+  /**
+   * Creates a new course
+   * @param courseData The course data
+   * @param userId The ID of the user creating the course
+   * @returns The created course
+   */
+  static async createCourse(courseData: CourseFormData, userId: string) {
+    // Upload thumbnail if provided
+    let thumbnailUrl = null;
+    if (courseData.thumbnail) {
+      thumbnailUrl = await CourseCreationService.uploadFile(courseData.thumbnail, 'thumbnails');
+    }
+    
+    // Create course record
+    const { data, error } = await supabase.from('courses').insert({
+      title: courseData.title,
+      description: courseData.description,
+      difficulty_level: courseData.difficulty_level,
+      category_id: courseData.category_id,
+      course_time: courseData.course_time,
+      price: courseData.price,
+      thumbnail: thumbnailUrl,
+      creator_id: userId
+    }).select().single();
+    
+    if (error) {
+      console.error('Error creating course:', error);
+      toast({
+        title: 'Error',
+        description: 'Failed to create course. Please try again.',
+        variant: 'destructive',
+      });
+      throw error;
+    }
+    
+    return data;
+  }
+  
+  /**
+   * Adds a chapter to a course
+   * @param chapterData The chapter data
+   * @param courseId The ID of the course
+   * @returns The created chapter
+   */
+  static async addChapter(chapterData: ChapterFormData, courseId: number) {
+    // Upload video if provided
+    let videoUrl = null;
+    if (chapterData.video_file) {
+      videoUrl = await CourseCreationService.uploadFile(chapterData.video_file, 'videos');
+    }
+    
+    // Create chapter record
+    const { data, error } = await supabase.from('chapters').insert({
+      title: chapterData.title,
+      chapter_text: chapterData.chapter_text,
+      progress_when_finished: chapterData.progress_when_finished,
+      video_link: videoUrl,
+      course_id: courseId
+    }).select().single();
+    
+    if (error) {
+      console.error('Error adding chapter:', error);
+      toast({
+        title: 'Error',
+        description: 'Failed to add chapter. Please try again.',
+        variant: 'destructive',
+      });
+      throw error;
+    }
+    
+    return data;
+  }
+  
+  /**
+   * Gets all categories
+   * @returns List of categories
+   */
+  static async getCategories() {
+    const { data, error } = await supabase.from('categories').select('*');
+    
+    if (error) {
+      console.error('Error fetching categories:', error);
+      toast({
+        title: 'Error',
+        description: 'Failed to fetch categories. Please try again.',
+        variant: 'destructive',
+      });
+      return [];
+    }
+    
+    return data;
+  }
 }
-

@@ -17,7 +17,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Input } from '@/components/ui/input';
-import CourseCreationService from '@/services/CourseCreationService';
+import { CourseCreationService } from '@/services/CourseCreationService';
 import { CourseFormValues } from '../schema/course-form-schema';
 
 interface CourseDetailsProps {

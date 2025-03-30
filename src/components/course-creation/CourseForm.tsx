@@ -5,7 +5,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { Form } from '@/components/ui/form';
-import CourseCreationService, { CourseFormData } from '@/services/CourseCreationService';
+import { CourseCreationService, CourseFormData } from '@/services/CourseCreationService';
 import { FormLayout } from './layout/FormLayout';
 import { CourseBasicInfo } from './sections/CourseBasicInfo';
 import { CourseDetails } from './sections/CourseDetails';
