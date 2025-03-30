@@ -1,171 +1,83 @@
 
-import { supabase } from '@/integrations/supabase/client';
-import { toast } from 'sonner';
+import { supabaseClient } from "@/integrations/supabase/client";
+import { toast } from "@/hooks/use-toast";
 
-export interface CourseFormData {
-  title: string;
-  description: string;
-  difficulty_level: string;
-  category_id: number;
-  course_time: number;
-  price: number;
-  thumbnail: File | null;
-}
+// Constants
+const BUCKET_NAME = "course-media";
 
-export interface ChapterFormData {
-  title: string;
-  chapter_text: string;
-  progress_when_finished: number;
-  video_file: File | null;
-}
-
-export const CourseCreationService = {
-  uploadFile: async (file: File, bucket: string, folder: string) => {
+export class CourseCreationService {
+  /**
+   * Uploads a file to Supabase storage
+   * @param file The file to upload
+   * @param path Optional path within the bucket
+   * @returns URL of the uploaded file or null if upload failed
+   */
+  static async uploadFile(file: File, path?: string): Promise<string | null> {
     try {
-      // We'll use course-media bucket for all media uploads
-      const BUCKET_NAME = 'course-media';
+      // Check if the bucket exists
+      const { data: buckets, error: bucketError } = await supabaseClient.storage.listBuckets();
       
-      // Verify the bucket exists before attempting upload
-      const { data: buckets, error: bucketsError } = await supabase.storage.listBuckets();
-      
-      if (bucketsError) {
-        console.error('Error listing buckets:', bucketsError);
-        throw bucketsError;
+      if (bucketError) {
+        console.error("Error checking buckets:", bucketError);
+        toast({
+          title: "Error",
+          description: "Failed to check storage buckets",
+          variant: "destructive",
+        });
+        return null;
       }
       
-      const bucketExists = buckets.some(b => b.name === BUCKET_NAME);
+      // Changed from b.name to b.id as per requirement
+      const bucketExists = buckets.some(b => b.id === BUCKET_NAME);
+      
       if (!bucketExists) {
-        console.error(`Bucket ${BUCKET_NAME} does not exist`);
-        throw new Error(`Bucket ${BUCKET_NAME} does not exist`);
+        console.error(`Bucket ${BUCKET_NAME} does not exist in Supabase storage`);
+        toast({
+          title: "Storage Error",
+          description: `Required storage bucket not found. Please contact support.`,
+          variant: "destructive",
+        });
+        return null;
       }
       
-      console.log(`Uploading to ${BUCKET_NAME}/${folder}`);
-      const fileExt = file.name.split('.').pop();
-      const filePath = `${folder}/${Math.random().toString(36).substring(2)}.${fileExt}`;
+      // Generate a unique file name to avoid collisions
+      const fileExtension = file.name.split('.').pop();
+      const fileName = `${Date.now()}-${Math.random().toString(36).substring(2, 15)}.${fileExtension}`;
+      const filePath = path ? `${path}/${fileName}` : fileName;
       
-      const { data: uploadData, error: uploadError } = await supabase
-        .storage
+      // Upload the file
+      const { data, error } = await supabaseClient.storage
         .from(BUCKET_NAME)
-        .upload(filePath, file);
+        .upload(filePath, file, {
+          cacheControl: '3600',
+          upsert: false
+        });
       
-      if (uploadError) {
-        console.error('Error uploading file:', uploadError);
-        throw uploadError;
-      }
-      
-      const { data } = supabase
-        .storage
-        .from(BUCKET_NAME)
-        .getPublicUrl(filePath);
-        
-      console.log('File uploaded successfully, URL:', data.publicUrl);
-      return data.publicUrl;
-    } catch (error) {
-      console.error('File upload error:', error);
-      toast.error('Failed to upload file. Please try again.');
-      throw error;
-    }
-  },
-  
-  createCourse: async (courseData: CourseFormData, creatorId: string) => {
-    try {
-      let thumbnailUrl = null;
-      
-      // Upload thumbnail if exists
-      if (courseData.thumbnail) {
-        thumbnailUrl = await CourseCreationService.uploadFile(
-          courseData.thumbnail, 
-          'course-media', // Use course-media bucket
-          'thumbnails'
-        );
-      }
-      
-      // Insert course into database
-      const { data: course, error: courseError } = await supabase
-        .from('courses')
-        .insert({
-          title: courseData.title,
-          description: courseData.description,
-          difficulty_level: courseData.difficulty_level,
-          category_id: courseData.category_id,
-          course_time: courseData.course_time,
-          price: courseData.price,
-          thumbnail: thumbnailUrl,
-          creator_id: creatorId
-        })
-        .select()
-        .single();
-      
-      if (courseError) {
-        console.error('Error creating course:', courseError);
-        throw courseError;
-      }
-      
-      return course;
-    } catch (error) {
-      console.error('Course creation error:', error);
-      toast.error('Failed to create course. Please try again.');
-      throw error;
-    }
-  },
-  
-  addChapter: async (chapterData: ChapterFormData, courseId: number) => {
-    try {
-      let videoUrl = null;
-      
-      // Upload video if exists
-      if (chapterData.video_file) {
-        videoUrl = await CourseCreationService.uploadFile(
-          chapterData.video_file, 
-          'course-media', // Use course-media bucket
-          'videos'
-        );
-      }
-      
-      // Insert chapter into database
-      const { data: chapter, error: chapterError } = await supabase
-        .from('chapters')
-        .insert({
-          title: chapterData.title,
-          chapter_text: chapterData.chapter_text,
-          progress_when_finished: chapterData.progress_when_finished,
-          video_link: videoUrl,
-          course_id: courseId
-        })
-        .select()
-        .single();
-      
-      if (chapterError) {
-        console.error('Error creating chapter:', chapterError);
-        throw chapterError;
-      }
-      
-      return chapter;
-    } catch (error) {
-      console.error('Chapter creation error:', error);
-      toast.error('Failed to create chapter. Please try again.');
-      throw error;
-    }
-  },
-  
-  getCategories: async () => {
-    try {
-      const { data, error } = await supabase
-        .from('categories')
-        .select('*');
-        
       if (error) {
-        console.error('Error fetching categories:', error);
-        throw error;
+        console.error("Error uploading file:", error);
+        toast({
+          title: "Upload Failed",
+          description: error.message || "Failed to upload file. Please try again.",
+          variant: "destructive",
+        });
+        return null;
       }
       
-      return data || [];
+      // Get the public URL of the file
+      const { data: publicUrl } = supabaseClient.storage
+        .from(BUCKET_NAME)
+        .getPublicUrl(data.path);
+      
+      return publicUrl.publicUrl;
     } catch (error) {
-      console.error('Categories fetch error:', error);
-      toast.error('Failed to load categories. Please refresh the page.');
-      throw error;
+      console.error("Unexpected error during file upload:", error);
+      toast({
+        title: "Upload Failed",
+        description: "An unexpected error occurred. Please try again.",
+        variant: "destructive",
+      });
+      return null;
     }
   }
-};
+}
 
-export default CourseCreationService;
