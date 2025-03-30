@@ -11,44 +11,23 @@ const SUPABASE_PUBLISHABLE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiO
 
 export const supabase = createClient<Database>(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY);
 
-// Create storage buckets if they don't exist
-const createBucketsIfNeeded = async () => {
+// Check if course-media bucket exists - no need to create buckets as they already exist
+const verifyBucketsExist = async () => {
   try {
-    // Check if course-thumbnails bucket exists
-    const { data: thumbnailBuckets, error: thumbnailCheckError } = await supabase.storage.listBuckets();
+    // Check if course-media bucket exists
+    const { data: buckets, error } = await supabase.storage.listBuckets();
     
-    const thumbnailBucketExists = thumbnailBuckets?.some(bucket => bucket.name === 'course-thumbnails');
+    const courseBucketExists = buckets?.some(bucket => bucket.name === 'course-media');
     
-    if (!thumbnailBucketExists) {
-      console.log('Creating course-thumbnails bucket');
-      const { error: thumbnailError } = await supabase.storage.createBucket('course-thumbnails', {
-        public: true,
-        fileSizeLimit: 10485760, // 10MB
-      });
-      
-      if (thumbnailError) {
-        console.error('Error creating thumbnail bucket:', thumbnailError);
-      }
-    }
-
-    // Check if course-videos bucket exists
-    const videoBucketExists = thumbnailBuckets?.some(bucket => bucket.name === 'course-videos');
-    
-    if (!videoBucketExists) {
-      console.log('Creating course-videos bucket');
-      const { error: videoError } = await supabase.storage.createBucket('course-videos', {
-        public: true,
-        fileSizeLimit: 104857600, // 100MB
-      });
-      
-      if (videoError) {
-        console.error('Error creating video bucket:', videoError);
-      }
+    if (!courseBucketExists) {
+      console.error('Warning: course-media bucket does not exist in Supabase storage');
+    } else {
+      console.log('Successfully verified course-media bucket exists');
     }
   } catch (error) {
-    console.error('Error creating buckets:', error);
+    console.error('Error verifying buckets:', error);
   }
 };
 
-// Call the function to create buckets when this module is loaded
-createBucketsIfNeeded();
+// Call the function to verify buckets when this module is loaded
+verifyBucketsExist();

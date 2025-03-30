@@ -22,30 +22,30 @@ export interface ChapterFormData {
 export const CourseCreationService = {
   uploadFile: async (file: File, bucket: string, folder: string) => {
     try {
-      // First ensure the bucket exists
-      const { data: buckets } = await supabase.storage.listBuckets();
+      // We'll use course-media bucket for all media uploads
+      const BUCKET_NAME = 'course-media';
       
-      const bucketExists = buckets?.some(b => b.name === bucket);
+      // Verify the bucket exists before attempting upload
+      const { data: buckets, error: bucketsError } = await supabase.storage.listBuckets();
       
-      if (!bucketExists) {
-        console.log(`Creating ${bucket} bucket as it doesn't exist`);
-        const { error: createError } = await supabase.storage.createBucket(bucket, {
-          public: true,
-          fileSizeLimit: bucket === 'course-thumbnails' ? 10485760 : 104857600, // 10MB or 100MB
-        });
-        
-        if (createError) {
-          console.error(`Error creating ${bucket} bucket:`, createError);
-          throw createError;
-        }
+      if (bucketsError) {
+        console.error('Error listing buckets:', bucketsError);
+        throw bucketsError;
       }
       
+      const bucketExists = buckets.some(b => b.name === BUCKET_NAME);
+      if (!bucketExists) {
+        console.error(`Bucket ${BUCKET_NAME} does not exist`);
+        throw new Error(`Bucket ${BUCKET_NAME} does not exist`);
+      }
+      
+      console.log(`Uploading to ${BUCKET_NAME}/${folder}`);
       const fileExt = file.name.split('.').pop();
       const filePath = `${folder}/${Math.random().toString(36).substring(2)}.${fileExt}`;
       
       const { data: uploadData, error: uploadError } = await supabase
         .storage
-        .from(bucket)
+        .from(BUCKET_NAME)
         .upload(filePath, file);
       
       if (uploadError) {
@@ -55,9 +55,10 @@ export const CourseCreationService = {
       
       const { data } = supabase
         .storage
-        .from(bucket)
+        .from(BUCKET_NAME)
         .getPublicUrl(filePath);
         
+      console.log('File uploaded successfully, URL:', data.publicUrl);
       return data.publicUrl;
     } catch (error) {
       console.error('File upload error:', error);
@@ -74,7 +75,7 @@ export const CourseCreationService = {
       if (courseData.thumbnail) {
         thumbnailUrl = await CourseCreationService.uploadFile(
           courseData.thumbnail, 
-          'course-thumbnails',
+          'course-media', // Use course-media bucket
           'thumbnails'
         );
       }
@@ -90,7 +91,7 @@ export const CourseCreationService = {
           course_time: courseData.course_time,
           price: courseData.price,
           thumbnail: thumbnailUrl,
-          creator_id: creatorId // Now this is correctly a UUID string matching auth.users.id
+          creator_id: creatorId
         })
         .select()
         .single();
@@ -116,7 +117,7 @@ export const CourseCreationService = {
       if (chapterData.video_file) {
         videoUrl = await CourseCreationService.uploadFile(
           chapterData.video_file, 
-          'course-videos',
+          'course-media', // Use course-media bucket
           'videos'
         );
       }
