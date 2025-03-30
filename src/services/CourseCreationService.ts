@@ -22,6 +22,24 @@ export interface ChapterFormData {
 export const CourseCreationService = {
   uploadFile: async (file: File, bucket: string, folder: string) => {
     try {
+      // First ensure the bucket exists
+      const { data: buckets } = await supabase.storage.listBuckets();
+      
+      const bucketExists = buckets?.some(b => b.name === bucket);
+      
+      if (!bucketExists) {
+        console.log(`Creating ${bucket} bucket as it doesn't exist`);
+        const { error: createError } = await supabase.storage.createBucket(bucket, {
+          public: true,
+          fileSizeLimit: bucket === 'course-thumbnails' ? 10485760 : 104857600, // 10MB or 100MB
+        });
+        
+        if (createError) {
+          console.error(`Error creating ${bucket} bucket:`, createError);
+          throw createError;
+        }
+      }
+      
       const fileExt = file.name.split('.').pop();
       const filePath = `${folder}/${Math.random().toString(36).substring(2)}.${fileExt}`;
       

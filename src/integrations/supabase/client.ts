@@ -14,24 +14,36 @@ export const supabase = createClient<Database>(SUPABASE_URL, SUPABASE_PUBLISHABL
 // Create storage buckets if they don't exist
 const createBucketsIfNeeded = async () => {
   try {
-    // Check if course-thumbnails bucket exists, create if not
-    const { data: thumbnailBuckets, error: thumbnailError } = await supabase.storage.getBucket('course-thumbnails');
-    if (!thumbnailBuckets && thumbnailError) {
+    // Check if course-thumbnails bucket exists
+    const { data: thumbnailBuckets, error: thumbnailCheckError } = await supabase.storage.listBuckets();
+    
+    const thumbnailBucketExists = thumbnailBuckets?.some(bucket => bucket.name === 'course-thumbnails');
+    
+    if (!thumbnailBucketExists) {
       console.log('Creating course-thumbnails bucket');
-      await supabase.storage.createBucket('course-thumbnails', {
+      const { error: thumbnailError } = await supabase.storage.createBucket('course-thumbnails', {
         public: true,
         fileSizeLimit: 10485760, // 10MB
       });
+      
+      if (thumbnailError) {
+        console.error('Error creating thumbnail bucket:', thumbnailError);
+      }
     }
 
-    // Check if course-videos bucket exists, create if not
-    const { data: videoBuckets, error: videoError } = await supabase.storage.getBucket('course-videos');
-    if (!videoBuckets && videoError) {
+    // Check if course-videos bucket exists
+    const videoBucketExists = thumbnailBuckets?.some(bucket => bucket.name === 'course-videos');
+    
+    if (!videoBucketExists) {
       console.log('Creating course-videos bucket');
-      await supabase.storage.createBucket('course-videos', {
+      const { error: videoError } = await supabase.storage.createBucket('course-videos', {
         public: true,
         fileSizeLimit: 104857600, // 100MB
       });
+      
+      if (videoError) {
+        console.error('Error creating video bucket:', videoError);
+      }
     }
   } catch (error) {
     console.error('Error creating buckets:', error);
