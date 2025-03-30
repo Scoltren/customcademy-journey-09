@@ -8,6 +8,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { useNavigate } from 'react-router-dom';
 import { PaymentService } from '@/services/PaymentService';
+import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog';
 
 interface CourseHeaderProps {
   course: Course;
@@ -18,6 +19,7 @@ const CourseHeader: React.FC<CourseHeaderProps> = ({ course }) => {
   const [enrollmentStatus, setEnrollmentStatus] = useState<boolean>(false);
   const [isEnrolling, setIsEnrolling] = useState<boolean>(false);
   const [isProcessingPayment, setIsProcessingPayment] = useState<boolean>(false);
+  const [isLoadingDialog, setIsLoadingDialog] = useState<boolean>(false);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -80,6 +82,8 @@ const CourseHeader: React.FC<CourseHeaderProps> = ({ course }) => {
     }
 
     setIsProcessingPayment(true);
+    setIsLoadingDialog(true);
+    
     try {
       const courseIdNumber = typeof course.id === 'string' ? parseInt(course.id, 10) : course.id;
       
@@ -87,12 +91,16 @@ const CourseHeader: React.FC<CourseHeaderProps> = ({ course }) => {
         throw new Error("Invalid ID format");
       }
 
+      console.log('Initiating checkout for course:', courseIdNumber);
+      
       const response = await PaymentService.createCheckoutSession({
         courseId: courseIdNumber,
         price: course.price,
         title: course.title,
         userId: user.id
       });
+
+      console.log('Checkout response:', response);
 
       if (response?.url) {
         // Redirect to Stripe Checkout
@@ -103,6 +111,7 @@ const CourseHeader: React.FC<CourseHeaderProps> = ({ course }) => {
     } catch (error) {
       console.error('Error initiating payment:', error);
       toast.error('Failed to process payment. Please try again.');
+      setIsLoadingDialog(false);
     } finally {
       setIsProcessingPayment(false);
     }
@@ -174,6 +183,19 @@ const CourseHeader: React.FC<CourseHeaderProps> = ({ course }) => {
           </div>
         </div>
       </div>
+      
+      {/* Loading Dialog */}
+      <Dialog open={isLoadingDialog} onOpenChange={setIsLoadingDialog}>
+        <DialogContent className="sm:max-w-md">
+          <DialogTitle>Processing Payment</DialogTitle>
+          <div className="flex flex-col items-center justify-center py-6">
+            <div className="w-12 h-12 border-4 border-t-transparent border-blue-500 rounded-full animate-spin mb-4"></div>
+            <p className="text-center text-slate-400">
+              Connecting to payment provider. You'll be redirected to Stripe shortly...
+            </p>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
