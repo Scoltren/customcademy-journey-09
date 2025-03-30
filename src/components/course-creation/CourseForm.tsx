@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -66,7 +65,12 @@ export const CourseForm = ({ onSubmitSuccess, userId }: CourseFormProps) => {
   const onSubmit = async (values: z.infer<typeof courseFormSchema>) => {
     try {
       const courseData: CourseFormData = {
-        ...values,
+        title: values.title,
+        description: values.description,
+        difficulty_level: values.difficulty_level,
+        category_id: values.category_id,
+        course_time: values.course_time,
+        price: values.price,
         thumbnail: thumbnailFile
       };
       

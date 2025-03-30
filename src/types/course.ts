@@ -1,9 +1,9 @@
 
 export interface Chapter {
   id: number;
+  title: string;
   chapter_text: string;
   video_link: string | null;
-  title?: string;
   course_id?: number;
   quiz_id?: number | null;
   progress_when_finished?: number | null;

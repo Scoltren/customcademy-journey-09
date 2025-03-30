@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -54,7 +53,9 @@ export const ChapterForm = ({ courseId, onPublishCourse }: ChapterFormProps) => 
       setIsSubmitting(true);
       
       const chapterData: ChapterFormData = {
-        ...values,
+        title: values.title,
+        chapter_text: values.chapter_text,
+        progress_when_finished: values.progress_when_finished,
         video_file: videoFile
       };
       
