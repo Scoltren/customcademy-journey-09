@@ -44,7 +44,7 @@ export class CourseCreationService {
         return null;
       }
       
-      // Changed from b.name to b.id as per requirement
+      // Match by bucket ID
       const bucketExists = buckets.some(b => b.id === BUCKET_NAME);
       
       if (!bucketExists) {
@@ -80,12 +80,12 @@ export class CourseCreationService {
         return null;
       }
       
-      // Get the public URL of the file
-      const { data: publicUrl } = supabase.storage
+      // Get the public URL of the file since the bucket is public
+      const { data: publicUrlData } = supabase.storage
         .from(BUCKET_NAME)
         .getPublicUrl(data.path);
       
-      return publicUrl.publicUrl;
+      return publicUrlData.publicUrl;
     } catch (error) {
       console.error("Unexpected error during file upload:", error);
       toast({
