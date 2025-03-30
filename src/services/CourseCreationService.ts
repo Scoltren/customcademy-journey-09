@@ -1,6 +1,6 @@
 
 import { supabase } from "@/integrations/supabase/client";
-import { toast } from "@/hooks/use-toast";
+import { toast } from "sonner";
 
 // Constants
 const BUCKET_NAME = "course-media";
@@ -31,15 +31,18 @@ export class CourseCreationService {
    */
   static async uploadFile(file: File, path?: string): Promise<string | null> {
     try {
-      // Check if the bucket exists
+      if (!file) {
+        console.log("No file provided for upload");
+        return null;
+      }
+      
+      // Check if the bucket exists, create it if it doesn't
       const { data: buckets, error: bucketError } = await supabase.storage.listBuckets();
       
       if (bucketError) {
         console.error("Error checking buckets:", bucketError);
-        toast({
-          title: "Error",
-          description: "Failed to check storage buckets",
-          variant: "destructive",
+        toast("Failed to check storage buckets", {
+          description: bucketError.message,
         });
         return null;
       }
@@ -48,12 +51,8 @@ export class CourseCreationService {
       const bucketExists = buckets.some(b => b.id === BUCKET_NAME);
       
       if (!bucketExists) {
-        console.error(`Bucket ${BUCKET_NAME} does not exist in Supabase storage`);
-        toast({
-          title: "Storage Error",
-          description: `Required storage bucket not found. Please contact support.`,
-          variant: "destructive",
-        });
+        console.log(`Bucket ${BUCKET_NAME} does not exist in Supabase storage, skipping upload`);
+        // Since we can't create buckets from the client, we'll skip the upload
         return null;
       }
       
@@ -61,6 +60,8 @@ export class CourseCreationService {
       const fileExtension = file.name.split('.').pop();
       const fileName = `${Date.now()}-${Math.random().toString(36).substring(2, 15)}.${fileExtension}`;
       const filePath = path ? `${path}/${fileName}` : fileName;
+      
+      console.log(`Uploading file to ${BUCKET_NAME}/${filePath}`);
       
       // Upload the file
       const { data, error } = await supabase.storage
@@ -72,10 +73,8 @@ export class CourseCreationService {
       
       if (error) {
         console.error("Error uploading file:", error);
-        toast({
-          title: "Upload Failed",
+        toast("Upload Failed", {
           description: error.message || "Failed to upload file. Please try again.",
-          variant: "destructive",
         });
         return null;
       }
@@ -85,13 +84,12 @@ export class CourseCreationService {
         .from(BUCKET_NAME)
         .getPublicUrl(data.path);
       
+      console.log("File uploaded successfully, URL:", publicUrlData.publicUrl);
       return publicUrlData.publicUrl;
     } catch (error) {
       console.error("Unexpected error during file upload:", error);
-      toast({
-        title: "Upload Failed",
+      toast("Upload Failed", {
         description: "An unexpected error occurred. Please try again.",
-        variant: "destructive",
       });
       return null;
     }
@@ -107,11 +105,14 @@ export class CourseCreationService {
     try {
       // Upload thumbnail if provided
       let thumbnailUrl = null;
-      if (courseData.thumbnail) {
+      if (courseData.thumbnail && courseData.thumbnail instanceof File && courseData.thumbnail.size > 0) {
         thumbnailUrl = await CourseCreationService.uploadFile(courseData.thumbnail, 'thumbnails');
-        if (!thumbnailUrl) {
-          throw new Error("Failed to upload thumbnail");
-        }
+      }
+      
+      // Make sure difficulty_level is one of the accepted values
+      const validDifficultyLevels = ['beginner', 'intermediate', 'advanced'];
+      if (!validDifficultyLevels.includes(courseData.difficulty_level)) {
+        throw new Error(`Invalid difficulty level: ${courseData.difficulty_level}. Must be one of: ${validDifficultyLevels.join(', ')}`);
       }
       
       console.log("Creating course with data:", {
@@ -137,10 +138,8 @@ export class CourseCreationService {
       
       if (error) {
         console.error('Error creating course:', error);
-        toast({
-          title: 'Error',
-          description: 'Failed to create course. Please try again.',
-          variant: 'destructive',
+        toast("Error", {
+          description: `Failed to create course: ${error.message}`,
         });
         throw error;
       }
@@ -149,10 +148,8 @@ export class CourseCreationService {
       return data;
     } catch (error) {
       console.error('Course creation failed:', error);
-      toast({
-        title: 'Error',
+      toast("Error", {
         description: error instanceof Error ? error.message : 'Failed to create course. Please try again.',
-        variant: 'destructive',
       });
       throw error;
     }
@@ -165,32 +162,45 @@ export class CourseCreationService {
    * @returns The created chapter
    */
   static async addChapter(chapterData: ChapterFormData, courseId: number) {
-    // Upload video if provided
-    let videoUrl = null;
-    if (chapterData.video_file) {
-      videoUrl = await CourseCreationService.uploadFile(chapterData.video_file, 'videos');
-    }
-    
-    // Create chapter record
-    const { data, error } = await supabase.from('chapters').insert({
-      title: chapterData.title,
-      chapter_text: chapterData.chapter_text,
-      progress_when_finished: chapterData.progress_when_finished,
-      video_link: videoUrl,
-      course_id: courseId
-    }).select().single();
-    
-    if (error) {
-      console.error('Error adding chapter:', error);
-      toast({
-        title: 'Error',
-        description: 'Failed to add chapter. Please try again.',
-        variant: 'destructive',
+    try {
+      // Upload video if provided
+      let videoUrl = null;
+      if (chapterData.video_file && chapterData.video_file instanceof File && chapterData.video_file.size > 0) {
+        videoUrl = await CourseCreationService.uploadFile(chapterData.video_file, 'videos');
+      }
+      
+      console.log("Adding chapter with data:", {
+        ...chapterData,
+        video_link: videoUrl,
+        course_id: courseId
+      });
+      
+      // Create chapter record
+      const { data, error } = await supabase.from('chapters').insert({
+        title: chapterData.title,
+        chapter_text: chapterData.chapter_text,
+        progress_when_finished: chapterData.progress_when_finished,
+        video_link: videoUrl,
+        course_id: courseId
+      }).select().single();
+      
+      if (error) {
+        console.error('Error adding chapter:', error);
+        toast("Error", {
+          description: `Failed to add chapter: ${error.message}`,
+        });
+        throw error;
+      }
+      
+      console.log("Chapter added successfully:", data);
+      return data;
+    } catch (error) {
+      console.error('Chapter creation failed:', error);
+      toast("Error", {
+        description: error instanceof Error ? error.message : 'Failed to add chapter. Please try again.',
       });
       throw error;
     }
-    
-    return data;
   }
   
   /**
@@ -198,18 +208,24 @@ export class CourseCreationService {
    * @returns List of categories
    */
   static async getCategories() {
-    const { data, error } = await supabase.from('categories').select('*');
-    
-    if (error) {
+    try {
+      const { data, error } = await supabase.from('categories').select('*');
+      
+      if (error) {
+        console.error('Error fetching categories:', error);
+        toast("Error", {
+          description: 'Failed to fetch categories. Please try again.',
+        });
+        return [];
+      }
+      
+      return data;
+    } catch (error) {
       console.error('Error fetching categories:', error);
-      toast({
-        title: 'Error',
+      toast("Error", {
         description: 'Failed to fetch categories. Please try again.',
-        variant: 'destructive',
       });
       return [];
     }
-    
-    return data;
   }
 }

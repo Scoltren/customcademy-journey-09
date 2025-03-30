@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { UseFormReturn } from 'react-hook-form';
 import {
   FormField,
@@ -19,8 +19,23 @@ interface CourseThumbnailProps {
 
 export const CourseThumbnail = ({ form, onThumbnailChange }: CourseThumbnailProps) => {
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  
+  // Clean up the preview URL when component unmounts
+  useEffect(() => {
+    return () => {
+      if (previewUrl) {
+        URL.revokeObjectURL(previewUrl);
+      }
+    };
+  }, [previewUrl]);
 
   const handleFileChange = (file: File | null) => {
+    // Clean up previous preview URL if it exists
+    if (previewUrl) {
+      URL.revokeObjectURL(previewUrl);
+      setPreviewUrl(null);
+    }
+    
     onThumbnailChange(file);
     form.setValue('thumbnail', file);
     
@@ -28,12 +43,6 @@ export const CourseThumbnail = ({ form, onThumbnailChange }: CourseThumbnailProp
     if (file) {
       const url = URL.createObjectURL(file);
       setPreviewUrl(url);
-      
-      // Clean up URL when component unmounts or file changes
-      return () => URL.revokeObjectURL(url);
-    } else {
-      setPreviewUrl(null);
-      return undefined;
     }
   };
 

@@ -12,6 +12,7 @@ import { CourseDetails } from './sections/CourseDetails';
 import { CoursePricing } from './sections/CoursePricing';
 import { CourseThumbnail } from './sections/CourseThumbnail';
 import { courseFormSchema, CourseFormValues } from './schema/course-form-schema';
+import { Loader2 } from 'lucide-react';
 
 interface CourseFormProps {
   onSubmitSuccess: (courseId: number) => void;
@@ -57,7 +58,11 @@ export const CourseForm = ({ onSubmitSuccess, userId }: CourseFormProps) => {
       onSubmitSuccess(course.id);
     } catch (error) {
       console.error('Course form submission error:', error);
-      toast.error('Failed to create course. Please try again.');
+      toast.error(
+        error instanceof Error && error.message 
+          ? `Failed to create course: ${error.message}` 
+          : 'Failed to create course. Please try again.'
+      );
     } finally {
       setIsSubmitting(false);
     }
@@ -83,7 +88,12 @@ export const CourseForm = ({ onSubmitSuccess, userId }: CourseFormProps) => {
             className="w-full" 
             disabled={isSubmitting}
           >
-            {isSubmitting ? 'Creating Course...' : 'Continue to Add Chapters'}
+            {isSubmitting ? (
+              <>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                Creating Course...
+              </>
+            ) : 'Continue to Add Chapters'}
           </Button>
         </form>
       </Form>
