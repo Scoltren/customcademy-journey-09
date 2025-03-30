@@ -1,5 +1,5 @@
 
-import React, { useEffect } from 'react';
+import React from 'react';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import { useCourseData } from '@/hooks/useCourseData';
@@ -13,7 +13,8 @@ import { toast } from 'sonner';
 const CourseDetail = () => {
   const { course, chapters, comments, isLoading, courseProgress, refetchProgress } = useCourseData();
 
-  useEffect(() => {
+  // Setup progress refresh interval if refetch function is available
+  React.useEffect(() => {
     if (refetchProgress) {
       const intervalId = setInterval(() => {
         refetchProgress();
@@ -23,20 +24,22 @@ const CourseDetail = () => {
     }
   }, [refetchProgress]);
 
-  if (isLoading) {
-    return <LoadingState />;
-  }
-
-  if (!course) {
-    return <NotFoundState />;
-  }
-
   // Show a toast notification when progress reaches 100%
-  useEffect(() => {
+  React.useEffect(() => {
     if (courseProgress === 100) {
       toast.success('Congratulations! You completed the course!');
     }
   }, [courseProgress]);
+
+  // Render loading state if data is loading
+  if (isLoading) {
+    return <LoadingState />;
+  }
+
+  // Render not found state if course data is missing
+  if (!course) {
+    return <NotFoundState />;
+  }
 
   return (
     <div className="min-h-screen bg-midnight">
