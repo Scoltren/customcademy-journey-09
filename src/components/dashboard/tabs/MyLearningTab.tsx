@@ -63,13 +63,16 @@ const MyLearningTab = ({
                     
                     <div className="mb-4">
                       <CourseProgressBar progress={course.progress} />
+                      <div className="text-sm text-slate-400 mt-1">
+                        {course.completedChapters}/{course.totalChapters} chapters completed
+                      </div>
                     </div>
                     
                     <div className="flex flex-wrap gap-4 text-sm">
                       <div className="flex items-center gap-1">
                         <BookOpen size={16} className="text-blue-light" />
                         <span className="text-slate-300">
-                          {course.completedChapters}/{course.totalChapters} lessons
+                          {course.totalChapters} lessons
                         </span>
                       </div>
                       <div className="flex items-center gap-1">
@@ -82,7 +85,7 @@ const MyLearningTab = ({
                     
                     <div className="mt-6">
                       <Link 
-                        to={`/course/${course.id}/learn`}
+                        to={`/course/${course.id}`}
                         className="button-primary py-2 px-4"
                       >
                         Continue Learning
