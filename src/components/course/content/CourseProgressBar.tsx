@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { Progress } from '@/components/ui/progress';
-import { CheckCircle2, BookOpen } from 'lucide-react';
+import { CheckCircle2, BookOpen, Award } from 'lucide-react';
 
 interface CourseProgressBarProps {
   progress: number;
@@ -40,6 +40,8 @@ const CourseProgressBar: React.FC<CourseProgressBarProps> = ({ progress }) => {
       <div className="flex items-center gap-1">
         {status === 'completed' ? (
           <CheckCircle2 size={16} className="text-green-500" />
+        ) : status === 'advanced' ? (
+          <Award size={16} className="text-blue-500" />
         ) : (
           <BookOpen size={16} className={status !== 'not-started' ? "text-blue-400" : "text-slate-400"} />
         )}

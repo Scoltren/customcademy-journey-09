@@ -1,3 +1,4 @@
+
 import React, { useEffect } from 'react';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
@@ -7,6 +8,7 @@ import CourseContent from '@/components/course/CourseContent';
 import ReviewsSection from '@/components/course/ReviewsSection';
 import LoadingState from '@/components/course/LoadingState';
 import NotFoundState from '@/components/course/NotFoundState';
+import { toast } from 'sonner';
 
 const CourseDetail = () => {
   const { course, chapters, comments, isLoading, courseProgress, refetchProgress } = useCourseData();
@@ -28,6 +30,13 @@ const CourseDetail = () => {
   if (!course) {
     return <NotFoundState />;
   }
+
+  // Show a toast notification when progress reaches 100%
+  useEffect(() => {
+    if (courseProgress === 100) {
+      toast.success('Congratulations! You completed the course!');
+    }
+  }, [courseProgress]);
 
   return (
     <div className="min-h-screen bg-midnight">
