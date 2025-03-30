@@ -13,7 +13,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { useIsMobile } from "../hooks/use-mobile";
-import { Home, Menu, X } from "lucide-react";
+import { Home, Menu, PlusCircle, X } from "lucide-react";
 import {
   NavigationMenu,
   NavigationMenuContent,
@@ -89,7 +89,16 @@ const Navbar = () => {
               </div>
               
               {user ? (
-                <div className="relative z-10">
+                <div className="relative z-10 flex items-center space-x-3">
+                  <Button 
+                    onClick={() => navigate("/create-course")}
+                    className="flex items-center gap-2"
+                    size="sm"
+                  >
+                    <PlusCircle size={16} />
+                    Create a course
+                  </Button>
+                  
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
                       <Avatar className="h-8 w-8 cursor-pointer">
@@ -150,6 +159,12 @@ const Navbar = () => {
             </Link>
             {user ? (
               <>
+                <Link
+                  to="/create-course"
+                  className="block px-3 py-2 text-base font-medium text-white hover:bg-blue-600"
+                >
+                  Create a course
+                </Link>
                 <Link
                   to="/dashboard"
                   className="block px-3 py-2 text-base font-medium text-white hover:bg-blue-600"

@@ -15,6 +15,7 @@ import Dashboard from "./pages/Dashboard";
 import SelectInterests from "./pages/SelectInterests";
 import CategoryQuiz from "./pages/CategoryQuiz";
 import PaymentSuccess from "./pages/PaymentSuccess";
+import CreateCourse from "./pages/CreateCourse";
 
 import "./App.css";
 
@@ -37,6 +38,7 @@ const App = () => {
             <Route path="/course/:id" element={<CourseDetail />} />
             <Route path="/dashboard" element={<Dashboard />} />
             <Route path="/payment-success" element={<PaymentSuccess />} />
+            <Route path="/create-course" element={<CreateCourse />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </BrowserRouter>

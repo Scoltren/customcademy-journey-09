@@ -10,3 +10,33 @@ const SUPABASE_PUBLISHABLE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiO
 // import { supabase } from "@/integrations/supabase/client";
 
 export const supabase = createClient<Database>(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY);
+
+// Create storage buckets if they don't exist
+const createBucketsIfNeeded = async () => {
+  try {
+    // Check if course-thumbnails bucket exists, create if not
+    const { data: thumbnailBuckets, error: thumbnailError } = await supabase.storage.getBucket('course-thumbnails');
+    if (!thumbnailBuckets && thumbnailError) {
+      console.log('Creating course-thumbnails bucket');
+      await supabase.storage.createBucket('course-thumbnails', {
+        public: true,
+        fileSizeLimit: 10485760, // 10MB
+      });
+    }
+
+    // Check if course-videos bucket exists, create if not
+    const { data: videoBuckets, error: videoError } = await supabase.storage.getBucket('course-videos');
+    if (!videoBuckets && videoError) {
+      console.log('Creating course-videos bucket');
+      await supabase.storage.createBucket('course-videos', {
+        public: true,
+        fileSizeLimit: 104857600, // 100MB
+      });
+    }
+  } catch (error) {
+    console.error('Error creating buckets:', error);
+  }
+};
+
+// Call the function to create buckets when this module is loaded
+createBucketsIfNeeded();
