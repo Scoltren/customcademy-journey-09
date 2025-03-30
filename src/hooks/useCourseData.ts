@@ -5,6 +5,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { Course, Chapter, Comment } from '@/types/course';
 import { useEffect } from 'react';
 import { toast } from 'sonner';
+import { useAuth } from '@/contexts/AuthContext';
 
 export const useCourseData = () => {
   // Check if we're in a browser environment before using hooks
@@ -16,11 +17,13 @@ export const useCourseData = () => {
       isLoading: false,
       courseError: null,
       chaptersError: null,
-      commentsError: null
+      commentsError: null,
+      courseProgress: 0
     };
   }
 
   const { id } = useParams<{ id: string }>();
+  const { user } = useAuth();
   
   // Fetch course data
   const { 
@@ -123,6 +126,62 @@ export const useCourseData = () => {
     enabled: !!id,
   });
   
+  // Fetch user chapter progress
+  const {
+    data: courseProgress = 0,
+    isLoading: progressLoading,
+    error: progressError
+  } = useQuery({
+    queryKey: ['courseProgress', id, user?.id],
+    queryFn: async () => {
+      if (!id || !user?.id) return 0;
+      
+      const numericId = parseInt(id, 10);
+      if (isNaN(numericId)) return 0;
+
+      // Fetch all chapters with their progress_when_finished values
+      const { data: chaptersData, error: chaptersError } = await supabase
+        .from('chapters')
+        .select('id, progress_when_finished')
+        .eq('course_id', numericId);
+      
+      if (chaptersError) {
+        console.error('Error fetching chapters for progress:', chaptersError);
+        return 0;
+      }
+
+      // Fetch completed chapters from user_chapter_progress
+      const { data: completedChapters, error: progressError } = await supabase
+        .from('user_chapter_progress')
+        .select('chapter_id, finished')
+        .eq('course_id', numericId)
+        .eq('user_id', user.id);
+      
+      if (progressError) {
+        console.error('Error fetching user progress:', progressError);
+        return 0;
+      }
+
+      // Calculate total progress based on completed chapters
+      let totalProgress = 0;
+      
+      if (completedChapters && chaptersData) {
+        completedChapters.forEach(progress => {
+          if (progress.finished) {
+            const chapter = chaptersData.find(c => c.id === progress.chapter_id);
+            if (chapter && chapter.progress_when_finished) {
+              totalProgress += chapter.progress_when_finished;
+            }
+          }
+        });
+      }
+      
+      console.log('Calculated course progress:', totalProgress);
+      return Math.min(totalProgress, 100);
+    },
+    enabled: !!id && !!user?.id,
+  });
+  
   // Convert the commentsData to match our Comment type
   const comments: Comment[] = commentsData.map(comment => ({
     id: comment.id,
@@ -149,9 +208,13 @@ export const useCourseData = () => {
       console.error('Error fetching comments:', commentsError);
       toast.error('Failed to load course reviews');
     }
-  }, [courseError, chaptersError, commentsError]);
 
-  const isLoading = courseLoading || chaptersLoading || commentsLoading;
+    if (progressError) {
+      console.error('Error fetching progress:', progressError);
+    }
+  }, [courseError, chaptersError, commentsError, progressError]);
+
+  const isLoading = courseLoading || chaptersLoading || commentsLoading || progressLoading;
 
   return {
     course,
@@ -160,6 +223,7 @@ export const useCourseData = () => {
     isLoading,
     courseError,
     chaptersError,
-    commentsError
+    commentsError,
+    courseProgress
   };
 };

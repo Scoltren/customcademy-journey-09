@@ -31,7 +31,8 @@ const CourseProgressBar: React.FC<CourseProgressBarProps> = ({ progress }) => {
           className={`h-2.5 ${
             status === 'completed' ? 'bg-slate-700 [&>div]:bg-green-500' : 
             status === 'advanced' ? 'bg-slate-700 [&>div]:bg-blue-500' : 
-            'bg-slate-700 [&>div]:bg-blue-400'
+            status === 'started' ? 'bg-slate-700 [&>div]:bg-blue-400' :
+            'bg-slate-700 [&>div]:bg-slate-600'
           }`} 
         />
       </div>
@@ -39,12 +40,13 @@ const CourseProgressBar: React.FC<CourseProgressBarProps> = ({ progress }) => {
         {status === 'completed' ? (
           <CheckCircle2 size={16} className="text-green-500" />
         ) : (
-          <BookOpen size={16} className="text-blue-400" />
+          <BookOpen size={16} className={status === 'not-started' ? "text-slate-400" : "text-blue-400"} />
         )}
         <span className={`text-sm font-medium ${
           status === 'completed' ? 'text-green-500' : 
           status === 'advanced' ? 'text-blue-500' : 
-          'text-blue-400'
+          status === 'started' ? 'text-blue-400' :
+          'text-slate-400'
         }`}>
           {Math.round(validProgress)}%
         </span>

@@ -64,7 +64,7 @@ export const useDashboardData = (userId: string | undefined) => {
       
       setUserInterests(transformedInterests);
       
-      // Fetch enrolled courses with progress
+      // Fetch enrolled courses
       const { data: subscriptions, error: subscriptionsError } = await supabase
         .from('subscribed_courses')
         .select('*, course:course_id(id, title, description, thumbnail, difficulty_level, media, course_time, creator_id, overall_rating, price, category_id, created_at)')
@@ -75,18 +75,47 @@ export const useDashboardData = (userId: string | undefined) => {
       if (subscriptions && subscriptions.length > 0) {
         const coursesWithDetails = await Promise.all(
           subscriptions.map(async (sub) => {
+            // Fetch chapters for the course
             const { data: chapters, error: chaptersError } = await supabase
               .from('chapters')
-              .select('*')
+              .select('id, progress_when_finished')
               .eq('course_id', sub.course_id);
             
             if (chaptersError) throw chaptersError;
             
-            // Create a properly typed course object by explicitly casting
+            // Fetch user progress for this course
+            const { data: userProgress, error: progressError } = await supabase
+              .from('user_chapter_progress')
+              .select('chapter_id, finished')
+              .eq('course_id', sub.course_id)
+              .eq('user_id', userId);
+            
+            if (progressError) throw progressError;
+            
+            // Calculate completed chapters
+            const completedChapterCount = userProgress?.filter(p => p.finished).length || 0;
+            
+            // Calculate progress based on completed chapters' progress_when_finished values
+            let calculatedProgress = 0;
+            if (userProgress && chapters) {
+              userProgress.forEach(progress => {
+                if (progress.finished) {
+                  const chapter = chapters.find(c => c.id === progress.chapter_id);
+                  if (chapter && chapter.progress_when_finished) {
+                    calculatedProgress += chapter.progress_when_finished;
+                  }
+                }
+              });
+            }
+            
+            // Ensure progress doesn't exceed 100%
+            calculatedProgress = Math.min(calculatedProgress, 100);
+            
+            // Create a properly typed course object
             const courseWithProgress: EnrolledCourse = {
               ...sub.course as unknown as Course,
-              progress: sub.progress || 0,
-              completedChapters: Math.floor((chapters?.length || 0) * ((sub.progress || 0) / 100)),
+              progress: calculatedProgress,
+              completedChapters: completedChapterCount,
               totalChapters: chapters?.length || 0
             };
             

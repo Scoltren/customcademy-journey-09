@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import { useCourseData } from '@/hooks/useCourseData';
@@ -8,45 +8,9 @@ import CourseContent from '@/components/course/CourseContent';
 import ReviewsSection from '@/components/course/ReviewsSection';
 import LoadingState from '@/components/course/LoadingState';
 import NotFoundState from '@/components/course/NotFoundState';
-import { useAuth } from '@/contexts/AuthContext';
-import { supabase } from '@/integrations/supabase/client';
-import { useParams } from 'react-router-dom';
 
 const CourseDetail = () => {
-  const { course, chapters, comments, isLoading } = useCourseData();
-  const { user } = useAuth();
-  const { id } = useParams<{ id: string }>();
-  const [courseProgress, setCourseProgress] = useState<number>(0);
-  
-  useEffect(() => {
-    // Fetch course progress if user is logged in
-    const fetchProgress = async () => {
-      if (user && id) {
-        try {
-          const numericCourseId = parseInt(id, 10);
-          
-          if (isNaN(numericCourseId)) {
-            console.error("Invalid ID format");
-            return;
-          }
-          
-          const { data, error } = await supabase
-            .from('subscribed_courses')
-            .select('progress')
-            .eq('course_id', numericCourseId)
-            .eq('user_id', user.id) // user.id is already the auth_user_id (UUID as string)
-            .single();
-          
-          if (error) throw error;
-          setCourseProgress(data?.progress || 0);
-        } catch (error) {
-          console.error('Error fetching course progress:', error);
-        }
-      }
-    };
-    
-    fetchProgress();
-  }, [user, id]);
+  const { course, chapters, comments, isLoading, courseProgress } = useCourseData();
 
   if (isLoading) {
     return <LoadingState />;
