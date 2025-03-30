@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { UseFormReturn } from 'react-hook-form';
 import {
   FormField,
@@ -18,6 +18,25 @@ interface CourseThumbnailProps {
 }
 
 export const CourseThumbnail = ({ form, onThumbnailChange }: CourseThumbnailProps) => {
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+
+  const handleFileChange = (file: File | null) => {
+    onThumbnailChange(file);
+    form.setValue('thumbnail', file);
+    
+    // Create preview URL if file exists
+    if (file) {
+      const url = URL.createObjectURL(file);
+      setPreviewUrl(url);
+      
+      // Clean up URL when component unmounts or file changes
+      return () => URL.revokeObjectURL(url);
+    } else {
+      setPreviewUrl(null);
+      return undefined;
+    }
+  };
+
   return (
     <FormField
       control={form.control}
@@ -28,15 +47,21 @@ export const CourseThumbnail = ({ form, onThumbnailChange }: CourseThumbnailProp
           <FormControl>
             <FileUploader
               accept="image/*"
-              onChange={(file) => {
-                onThumbnailChange(file);
-                field.onChange(file);
-              }}
+              onChange={handleFileChange}
             />
           </FormControl>
           <FormDescription>
             Upload an image to represent your course. Recommended size 16:9.
           </FormDescription>
+          {previewUrl && (
+            <div className="mt-2">
+              <img 
+                src={previewUrl} 
+                alt="Thumbnail preview" 
+                className="max-h-40 rounded-md border border-gray-300"
+              />
+            </div>
+          )}
           <FormMessage />
         </FormItem>
       )}

@@ -20,6 +20,7 @@ interface CourseFormProps {
 
 export const CourseForm = ({ onSubmitSuccess, userId }: CourseFormProps) => {
   const [thumbnailFile, setThumbnailFile] = useState<File | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   
   const form = useForm<CourseFormValues>({
     resolver: zodResolver(courseFormSchema),
@@ -34,7 +35,11 @@ export const CourseForm = ({ onSubmitSuccess, userId }: CourseFormProps) => {
   });
   
   const onSubmit = async (values: CourseFormValues) => {
+    if (isSubmitting) return;
+    
     try {
+      setIsSubmitting(true);
+      
       const courseData: CourseFormData = {
         title: values.title,
         description: values.description,
@@ -45,12 +50,16 @@ export const CourseForm = ({ onSubmitSuccess, userId }: CourseFormProps) => {
         thumbnail: thumbnailFile
       };
       
+      console.log("Submitting course data:", courseData);
+      
       const course = await CourseCreationService.createCourse(courseData, userId);
       toast.success('Course created successfully! Now add chapters.');
       onSubmitSuccess(course.id);
     } catch (error) {
       console.error('Course form submission error:', error);
       toast.error('Failed to create course. Please try again.');
+    } finally {
+      setIsSubmitting(false);
     }
   };
   
@@ -69,8 +78,12 @@ export const CourseForm = ({ onSubmitSuccess, userId }: CourseFormProps) => {
             onThumbnailChange={setThumbnailFile} 
           />
           
-          <Button type="submit" className="w-full">
-            Continue to Add Chapters
+          <Button 
+            type="submit" 
+            className="w-full" 
+            disabled={isSubmitting}
+          >
+            {isSubmitting ? 'Creating Course...' : 'Continue to Add Chapters'}
           </Button>
         </form>
       </Form>

@@ -104,35 +104,58 @@ export class CourseCreationService {
    * @returns The created course
    */
   static async createCourse(courseData: CourseFormData, userId: string) {
-    // Upload thumbnail if provided
-    let thumbnailUrl = null;
-    if (courseData.thumbnail) {
-      thumbnailUrl = await CourseCreationService.uploadFile(courseData.thumbnail, 'thumbnails');
-    }
-    
-    // Create course record
-    const { data, error } = await supabase.from('courses').insert({
-      title: courseData.title,
-      description: courseData.description,
-      difficulty_level: courseData.difficulty_level,
-      category_id: courseData.category_id,
-      course_time: courseData.course_time,
-      price: courseData.price,
-      thumbnail: thumbnailUrl,
-      creator_id: userId
-    }).select().single();
-    
-    if (error) {
-      console.error('Error creating course:', error);
+    try {
+      // Upload thumbnail if provided
+      let thumbnailUrl = null;
+      if (courseData.thumbnail) {
+        thumbnailUrl = await CourseCreationService.uploadFile(courseData.thumbnail, 'thumbnails');
+        if (!thumbnailUrl) {
+          throw new Error("Failed to upload thumbnail");
+        }
+      }
+      
+      console.log("Creating course with data:", {
+        ...courseData,
+        thumbnail: thumbnailUrl,
+        creator_id: userId
+      });
+      
+      // Create course record
+      const { data, error } = await supabase.from('courses')
+        .insert({
+          title: courseData.title,
+          description: courseData.description,
+          difficulty_level: courseData.difficulty_level,
+          category_id: courseData.category_id,
+          course_time: courseData.course_time,
+          price: courseData.price,
+          thumbnail: thumbnailUrl,
+          creator_id: userId
+        })
+        .select()
+        .single();
+      
+      if (error) {
+        console.error('Error creating course:', error);
+        toast({
+          title: 'Error',
+          description: 'Failed to create course. Please try again.',
+          variant: 'destructive',
+        });
+        throw error;
+      }
+      
+      console.log("Course created successfully:", data);
+      return data;
+    } catch (error) {
+      console.error('Course creation failed:', error);
       toast({
         title: 'Error',
-        description: 'Failed to create course. Please try again.',
+        description: error instanceof Error ? error.message : 'Failed to create course. Please try again.',
         variant: 'destructive',
       });
       throw error;
     }
-    
-    return data;
   }
   
   /**
