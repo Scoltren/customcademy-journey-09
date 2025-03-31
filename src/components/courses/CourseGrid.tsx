@@ -64,7 +64,7 @@ const CourseGrid: React.FC<CourseGridProps> = ({ courses, isUserLoggedIn, hasUse
               category: course.categories?.name || course.category_name || 'Development',
               level: validateDifficultyLevel(course.difficulty_level),
               duration: durationText,
-              students: 0, // Not showing this anymore as requested
+              students: 0,
               rating: course.overall_rating || 0,
               price: course.price || 0,
               chapterCount: chapterCount

@@ -1,4 +1,3 @@
-
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
@@ -43,40 +42,6 @@ export class CourseCreationService {
         return null;
       }
       
-      // Check if the bucket exists, create it if it doesn't
-      const { data: buckets, error: bucketError } = await supabase.storage.listBuckets();
-      
-      if (bucketError) {
-        console.error("Error checking buckets:", bucketError);
-        toast.error('Failed to check storage buckets: ' + bucketError.message);
-        return null;
-      }
-      
-      // Match by bucket ID
-      const bucketExists = buckets.some(b => b.id === BUCKET_NAME);
-      
-      if (!bucketExists) {
-        console.log(`Bucket ${BUCKET_NAME} does not exist in Supabase storage, creating it`);
-        // Try to create the bucket if it doesn't exist
-        try {
-          const { error: createError } = await supabase.storage.createBucket(BUCKET_NAME, {
-            public: true
-          });
-          
-          if (createError) {
-            console.error("Error creating bucket:", createError);
-            toast.error('Failed to create storage bucket. Please contact support.');
-            return null;
-          }
-          
-          console.log(`Bucket ${BUCKET_NAME} created successfully`);
-        } catch (err) {
-          console.error("Error creating bucket:", err);
-          toast.error('Failed to create storage bucket. Please try again later.');
-          return null;
-        }
-      }
-      
       // Generate a unique file name to avoid collisions
       const fileExtension = file.name.split('.').pop();
       const fileName = `${Date.now()}-${Math.random().toString(36).substring(2, 15)}.${fileExtension}`;
@@ -98,7 +63,7 @@ export class CourseCreationService {
         return null;
       }
       
-      // Get the public URL of the file since the bucket is public
+      // Get the public URL of the file
       const { data: publicUrlData } = supabase.storage
         .from(BUCKET_NAME)
         .getPublicUrl(data.path);

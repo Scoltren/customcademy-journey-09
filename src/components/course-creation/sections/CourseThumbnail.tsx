@@ -21,6 +21,7 @@ export const CourseThumbnail = ({ form, onThumbnailChange, existingThumbnail }: 
     if (file) {
       const url = URL.createObjectURL(file);
       setPreviewUrl(url);
+      console.log("Preview URL created:", url);
     } else {
       setPreviewUrl(existingThumbnail || null);
     }
