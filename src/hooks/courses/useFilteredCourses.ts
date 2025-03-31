@@ -1,4 +1,3 @@
-
 import { useState, useMemo } from 'react';
 import { Course } from '@/types/course';
 
@@ -27,7 +26,9 @@ export const useFilteredCourses = (allCourses: Course[]) => {
         return false;
       }
       
-      if (selectedCategory !== 'All Categories' && course.categories?.name !== selectedCategory) {
+      if (selectedCategory !== 'All Categories' && 
+          course.categories?.name !== selectedCategory && 
+          course.category_name !== selectedCategory) {
         return false;
       }
       

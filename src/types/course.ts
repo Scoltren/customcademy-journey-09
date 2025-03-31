@@ -23,6 +23,11 @@ export interface Course {
   created_at: string | null;
   course_time: number | null;
   category_name?: string;
+  // Add missing properties
+  categories?: {
+    name: string;
+  } | null;
+  chapters_count?: number;
 }
 
 export interface Comment {

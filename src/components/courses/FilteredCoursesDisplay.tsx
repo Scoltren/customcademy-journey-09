@@ -54,7 +54,7 @@ const FilteredCoursesDisplay: React.FC<FilteredCoursesDisplayProps> = ({
             description: course.description || "",
             instructor: 'Instructor',
             image: course.thumbnail || 'https://images.unsplash.com/photo-1498050108023-c5249f4df085',
-            category: course.categories?.name || 'Development',
+            category: course.categories?.name || course.category_name || 'Development',
             level: validateDifficultyLevel(course.difficulty_level),
             duration: course.course_time ? `${course.course_time} hours` : '30 hours',
             students: 0,
