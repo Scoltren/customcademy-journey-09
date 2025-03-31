@@ -1,178 +1,109 @@
 
-import { useState, useCallback, useEffect, useRef } from 'react';
-import { useQuizLogger } from './navigation/useQuizLogger';
-import { useQuizDataLoader } from './navigation/useQuizDataLoader';
-import { useQuizResultSaver } from './navigation/useQuizResultSaver';
-import { useQuizNavigator } from './navigation/useQuizNavigator';
+import { useCallback } from 'react';
+import { toast } from 'sonner';
 
 export const useQuizNavigation = (
-  user: any,
-  quizIds: number[],
-  categories: any[],
-  quizStateManager: any
+  stateManager: any,
+  loadQuizData: (quizIds: number[], categories: any[]) => Promise<void>,
+  saveQuizResults: (quizId: number, score: number, categoryId?: number) => Promise<boolean>
 ) => {
-  const [savedQuizIds, setSavedQuizIds] = useState<number[]>([]);
-  const [isNavigating, setIsNavigating] = useState(false);
-  const [loadAttempts, setLoadAttempts] = useState(0);
-  const initialLoadRef = useRef(false);
-  
-  // Initialize the logger
-  const { logNavigation, logCurrentState } = useQuizLogger();
-  
-  // Initialize the data loader
-  const { loadQuizData } = useQuizDataLoader(
-    quizStateManager, 
-    logNavigation, 
-    logCurrentState
-  );
-  
-  // Initialize the results saver
-  const { saveCurrentQuizResults } = useQuizResultSaver(logNavigation);
-  
-  // Initialize the navigator
-  const { handleNextQuestion: navigateToNextQuestion } = useQuizNavigator(
-    quizStateManager,
-    (quizIdsParam, categoriesParam, savedQuizIdsParam) => 
-      loadQuizData(quizIdsParam, categoriesParam, savedQuizIdsParam),
-    (userParam, quizIdsParam, categoriesParam, quizStateParam, savedQuizIdsParam) => {
-      const result = saveCurrentQuizResults(
-        userParam, 
-        quizIdsParam, 
-        categoriesParam, 
-        quizStateParam, 
-        savedQuizIdsParam
-      );
-      
-      // Update saved quiz IDs if save is successful
-      result.then(success => {
-        if (success) {
-          const currentQuizId = quizIdsParam[quizStateParam.currentQuizIndex];
-          setSavedQuizIds(prev => {
-            // Only add if it's not already in the array
-            if (!prev.includes(currentQuizId)) {
-              logNavigation(`Added quiz ${currentQuizId} to savedQuizIds`);
-              return [...prev, currentQuizId];
-            }
-            return prev;
-          });
-        }
-      });
-      
-      return result;
-    },
-    logNavigation,
-    logCurrentState
-  );
-  
-  // Wrapper for loadQuizData with protection against infinite loops
-  const loadQuizDataWrapper = useCallback(() => {
-    // Don't load if we're already navigating or completed
-    if (isNavigating || quizStateManager.isCompleted) {
-      logNavigation("Skipping loadQuizData call - navigation in progress or quiz completed");
-      return Promise.resolve();
-    }
-    
-    setIsNavigating(true);
-    
-    return loadQuizData(quizIds, categories, savedQuizIds)
-      .catch(error => {
-        // Increment load attempt counter
-        setLoadAttempts(prev => {
-          const newCount = prev + 1;
-          if (newCount >= 3) {
-            logNavigation(`Failed to load quiz after ${newCount} attempts, giving up`);
-            quizStateManager.setIsCompleted(true);
-          }
-          return newCount;
-        });
-      })
-      .finally(() => {
-        setIsNavigating(false);
-      });
-  }, [
-    isNavigating, 
-    quizStateManager.isCompleted, 
-    loadQuizData, 
-    quizIds, 
-    categories, 
-    savedQuizIds
-  ]);
-  
-  // Wrapper for handleNextQuestion
-  const handleNextQuestionWrapper = useCallback(() => {
-    // Don't proceed if we're already navigating
-    if (isNavigating) {
-      logNavigation("Skipping handleNextQuestion call - navigation already in progress");
-      return Promise.resolve();
-    }
-    
-    return navigateToNextQuestion(
-      user,
-      quizIds,
-      categories,
-      savedQuizIds,
-      setLoadAttempts,
-      isNavigating,
-      setIsNavigating
-    );
-  }, [
-    navigateToNextQuestion, 
-    user, 
-    quizIds, 
-    categories, 
-    savedQuizIds, 
-    isNavigating
-  ]);
-  
-  // Wrapper for saveCurrentQuizResults
-  const saveCurrentQuizResultsWrapper = useCallback(() => {
-    // Don't save if we're already saving or completed
-    if (isNavigating) {
-      logNavigation("Skipping saveQuizResults call - navigation in progress");
-      return Promise.resolve(false);
-    }
-    
-    return saveCurrentQuizResults(
-      user, 
-      quizIds, 
-      categories, 
-      quizStateManager.quizState, 
-      savedQuizIds
-    ).then(success => {
-      if (success) {
-        // Mark this quiz as saved to prevent duplicates
-        const currentQuizId = quizIds[quizStateManager.quizState.currentQuizIndex];
-        setSavedQuizIds(prev => {
-          if (!prev.includes(currentQuizId)) {
-            return [...prev, currentQuizId];
-          }
-          return prev;
-        });
-      }
-      return success;
+  const {
+    quizState,
+    setQuizState,
+    setCurrentQuestion,
+    setCurrentAnswers,
+    setSelectedAnswerIds,
+    setIsCompleted,
+    loadAnswersForQuestion
+  } = stateManager;
+
+  // Handle moving to the next question or quiz
+  const handleNextQuestion = useCallback(async (user: any, quizIds: number[], categories: any[]) => {
+    console.log("Current state:", {
+      currentQuizIndex: quizState.currentQuizIndex,
+      currentQuestionIndex: quizState.currentQuestionIndex,
+      totalQuestions: quizState.questions.length,
+      totalQuizzes: quizIds.length
     });
-  }, [
-    isNavigating,
-    user, 
-    quizIds, 
-    categories, 
-    quizStateManager.quizState, 
-    savedQuizIds, 
-    saveCurrentQuizResults
-  ]);
-  
-  // Single effect to handle initial quiz loading - prevents multiple loading attempts
-  useEffect(() => {
-    if (quizIds.length > 0 && !initialLoadRef.current && !quizStateManager.isCompleted) {
-      initialLoadRef.current = true;
-      logNavigation("Initial quiz load triggered");
-      loadQuizDataWrapper();
+    
+    try {
+      // Check if we need to move to the next question
+      if (quizState.currentQuestionIndex < quizState.questions.length - 1) {
+        // Move to the next question in the current quiz
+        const nextIndex = quizState.currentQuestionIndex + 1;
+        const nextQuestion = quizState.questions[nextIndex];
+        
+        console.log(`Moving to next question: ${nextIndex + 1}/${quizState.questions.length}`);
+        
+        setQuizState(prev => ({
+          ...prev,
+          currentQuestionIndex: nextIndex
+        }));
+        
+        setCurrentQuestion(nextQuestion);
+        setSelectedAnswerIds([]);
+        
+        // Load answers for the next question
+        await loadAnswersForQuestion(nextQuestion.id);
+        
+      } else {
+        // Current quiz is finished, save results first
+        const currentQuizId = quizIds[quizState.currentQuizIndex];
+        const currentCategory = categories[quizState.currentQuizIndex];
+        
+        await saveQuizResults(
+          currentQuizId, 
+          quizState.score, 
+          currentCategory?.id
+        );
+        
+        // Move to the next quiz
+        const nextQuizIndex = quizState.currentQuizIndex + 1;
+        
+        console.log(`Current quiz finished. Moving to next quiz index: ${nextQuizIndex}`);
+        
+        // Check if there are more quizzes
+        if (nextQuizIndex >= quizIds.length) {
+          console.log("All quizzes completed");
+          setIsCompleted(true);
+          return;
+        }
+        
+        // Reset state for the next quiz
+        setCurrentQuestion(null);
+        setCurrentAnswers([]);
+        setSelectedAnswerIds([]);
+        
+        setQuizState(prev => ({
+          ...prev,
+          currentQuizIndex: nextQuizIndex,
+          currentQuestionIndex: 0,
+          questions: [],
+          score: 0 // Reset score for the next quiz
+        }));
+        
+        // Load the next quiz data
+        setTimeout(() => {
+          loadQuizData(quizIds, categories);
+        }, 300);
+      }
+    } catch (error) {
+      console.error("Error in handleNextQuestion:", error);
+      toast.error("An error occurred. Please try again.");
     }
-  }, [quizIds, quizStateManager.isCompleted, loadQuizDataWrapper]);
-  
+  }, [
+    quizState,
+    setQuizState,
+    setCurrentQuestion,
+    setCurrentAnswers,
+    setSelectedAnswerIds,
+    setIsCompleted,
+    loadAnswersForQuestion,
+    saveQuizResults,
+    loadQuizData
+  ]);
+
   return {
-    loadQuizData: loadQuizDataWrapper,
-    handleNextQuestion: handleNextQuestionWrapper,
-    saveCurrentQuizResults: saveCurrentQuizResultsWrapper
+    handleNextQuestion
   };
 };

@@ -1,55 +1,106 @@
 
-import { useCallback } from 'react';
+import { useCallback, useEffect, useRef } from 'react';
 import { useQuizState } from './useQuizState';
+import { useCurrentAnswers } from './answers/useCurrentAnswers';
+import { useQuizResults } from './useQuizResults';
+import { useQuizDataLoader } from './useQuizDataLoader';
 import { useQuizNavigation } from './useQuizNavigation';
-import { toast } from 'sonner';
 
 export const useQuiz = (user: any, quizIds: number[], categories: any[]) => {
-  // Initialize quiz state manager
-  const quizStateManager = useQuizState(quizIds);
+  // Track initial load
+  const initialLoadRef = useRef(false);
   
+  // Initialize quiz state
   const {
     quizState,
+    setQuizState,
     isLoading,
-    currentCategory,
+    setIsLoading,
     currentQuestion,
-    currentAnswers,
-    selectedAnswerIds,
+    setCurrentQuestion,
+    currentCategory,
+    setCurrentCategory,
     isCompleted,
+    setIsCompleted,
+    updateScore
+  } = useQuizState();
+  
+  // Initialize answers state
+  const {
+    currentAnswers,
+    setCurrentAnswers,
+    selectedAnswerIds,
+    setSelectedAnswerIds,
     handleSelectAnswer,
-    updateScore,
+    loadAnswersForQuestion
+  } = useCurrentAnswers();
+  
+  // Create state manager for passing to other hooks
+  const stateManager = {
+    quizState,
+    setQuizState,
     setIsLoading,
     setCurrentQuestion,
     setCurrentCategory,
     setIsCompleted,
     loadAnswersForQuestion,
-    setSelectedAnswerIds
-  } = quizStateManager;
+    setSelectedAnswerIds,
+    setCurrentAnswers
+  };
   
-  // Logging utilities for debugging
-  const logNavigation = useCallback((message: string, data?: any) => {
-    console.log(`[Quiz Navigation] ${message}`, data || '');
-  }, []);
+  // Initialize quiz results
+  const { saveQuizResults } = useQuizResults(user);
   
-  const logCurrentState = useCallback((state: any, quizIdsArray: number[], categoriesArray: any[], savedQuizIdsArray: number[]) => {
-    console.log('[Quiz State]', {
-      currentQuizIndex: state.currentQuizIndex,
-      currentQuizId: quizIdsArray[state.currentQuizIndex],
-      currentQuestionIndex: state.currentQuestionIndex,
-      totalQuestions: state.questions?.length || 0,
-      currentCategory: categoriesArray[state.currentQuizIndex]?.name,
-      totalQuizzes: quizIdsArray.length
-    });
-  }, []);
+  // Initialize quiz data loader
+  const { loadQuizData } = useQuizDataLoader(stateManager);
   
-  // Initialize quiz navigation with the state manager
-  const {
+  // Initialize quiz navigation
+  const { handleNextQuestion } = useQuizNavigation(
+    stateManager,
     loadQuizData,
-    handleNextQuestion,
-    saveCurrentQuizResults
-  } = useQuizNavigation(user, quizIds, categories, quizStateManager);
+    saveQuizResults
+  );
   
-  // Return all the necessary functions and state
+  // Load quiz data on first render
+  useEffect(() => {
+    if (quizIds.length > 0 && !initialLoadRef.current && !isCompleted) {
+      initialLoadRef.current = true;
+      console.log("Initial quiz load triggered");
+      loadQuizData(quizIds, categories);
+    }
+  }, [quizIds, categories, isCompleted, loadQuizData]);
+  
+  // Create a wrapped next question handler
+  const handleNextQuestionWrapper = useCallback(() => {
+    return handleNextQuestion(user, quizIds, categories);
+  }, [handleNextQuestion, user, quizIds, categories]);
+  
+  // Create a wrapped save results function
+  const saveQuizResultsWrapper = useCallback(async () => {
+    const currentQuizId = quizIds[quizState.currentQuizIndex];
+    const currentCategoryId = categories[quizState.currentQuizIndex]?.id;
+    
+    return await saveQuizResults(
+      currentQuizId,
+      quizState.score,
+      currentCategoryId
+    );
+  }, [saveQuizResults, quizIds, categories, quizState]);
+  
+  // Debug logging
+  const logQuizState = useCallback(() => {
+    console.log("Current Quiz State:", {
+      quizIds: quizIds.map(id => id),
+      categories: categories.map(c => c.name),
+      currentQuizIndex: quizState.currentQuizIndex,
+      currentQuestionIndex: quizState.currentQuestionIndex,
+      score: quizState.score,
+      totalQuestions: quizState.questions.length,
+      isCompleted,
+      isLoading
+    });
+  }, [quizState, quizIds, categories, isCompleted, isLoading]);
+
   return {
     quizState,
     isLoading,
@@ -58,12 +109,10 @@ export const useQuiz = (user: any, quizIds: number[], categories: any[]) => {
     currentAnswers,
     selectedAnswerIds,
     handleSelectAnswer,
-    handleNextQuestion,
-    saveQuizResults: saveCurrentQuizResults,
+    handleNextQuestion: handleNextQuestionWrapper,
+    saveQuizResults: saveQuizResultsWrapper,
     isCompleted,
     updateScore,
-    // Adding debugging logs for tracking
-    logNavigation,
-    logCurrentState
+    logQuizState
   };
 };
