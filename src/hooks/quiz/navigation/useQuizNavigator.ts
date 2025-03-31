@@ -90,7 +90,8 @@ export const useQuizNavigator = (
         
         // Give state time to update before loading next quiz
         setTimeout(() => {
-          setLoadAttempts(0); // Reset load attempts for the new quiz
+          // Fixed: Use a function to set the load attempts to 0 instead of passing the value directly
+          setLoadAttempts(() => 0);
           loadQuizData(quizIds, categories, savedQuizIds);
         }, 300);
       }
