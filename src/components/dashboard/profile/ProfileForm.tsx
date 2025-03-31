@@ -4,15 +4,13 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/contexts/AuthContext';
+import { UserProfile } from '@/components/dashboard/profile/useProfileData';
 
 interface ProfileFormProps {
   isEditing: boolean;
   loading: boolean;
-  profileData: {
-    username: string;
-    bio: string;
-  };
-  onProfileDataChange: (data: { username: string, bio: string }) => void;
+  profileData: UserProfile;
+  onProfileDataChange: (data: UserProfile) => void;
   onCancel: () => void;
   onSave: () => void;
 }
