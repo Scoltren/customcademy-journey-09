@@ -8,7 +8,7 @@ export const useRecommendedCourses = (userId: string, userInterests: number[]) =
   const [recommendedCourses, setRecommendedCourses] = useState<Course[]>([]);
   const [loadingCourses, setLoadingCourses] = useState(false);
   const [chapterCounts, setChapterCounts] = useState<{[key: string]: number}>({});
-  const [userSkillLevels, setUserSkillLevels] = useState<{[key: number]: string}>({});
+  const [userSkillLevels, setUserSkillLevels] = useState<{[key: number]: string | null}>({});
 
   // Fetch user skill levels for each category
   useEffect(() => {
@@ -23,10 +23,10 @@ export const useRecommendedCourses = (userId: string, userInterests: number[]) =
           
         if (error) throw error;
         
-        const skillLevels: {[key: number]: string} = {};
+        const skillLevels: {[key: number]: string | null} = {};
         data?.forEach(item => {
-          if (item.category_id && item.difficulty_level) {
-            skillLevels[item.category_id] = item.difficulty_level;
+          if (item.category_id) {
+            skillLevels[item.category_id] = item.difficulty_level || null;
           }
         });
         
@@ -72,17 +72,22 @@ export const useRecommendedCourses = (userId: string, userInterests: number[]) =
       }
       
       // Filter and prioritize courses that match both category and difficulty level
-      const matchingCourses: Course[] = [];
+      const exactMatchCourses: Course[] = [];
+      const nullLevelCategoryCourses: Course[] = [];
       const otherCourses: Course[] = [];
       
       data.forEach(course => {
         const categoryId = course.category_id;
-        if (categoryId && userSkillLevels[categoryId]) {
+        if (categoryId && categoryId in userSkillLevels) {
           const userLevel = userSkillLevels[categoryId];
           
+          // For NULL difficulty levels, include all courses for that category
+          if (userLevel === null) {
+            nullLevelCategoryCourses.push(course);
+          }
           // Check for exact difficulty level match
-          if (course.difficulty_level && course.difficulty_level === userLevel) {
-            matchingCourses.push(course);
+          else if (course.difficulty_level && course.difficulty_level === userLevel) {
+            exactMatchCourses.push(course);
           } else {
             otherCourses.push(course);
           }
@@ -91,8 +96,8 @@ export const useRecommendedCourses = (userId: string, userInterests: number[]) =
         }
       });
       
-      // Combine the arrays - exact matches first, then others
-      const sortedCourses = [...matchingCourses, ...otherCourses];
+      // Combine the arrays - exact matches first, then null level categories, then others
+      const sortedCourses = [...exactMatchCourses, ...nullLevelCategoryCourses, ...otherCourses];
       
       // Format courses to match expected structure
       const formattedCourses = sortedCourses.map(course => ({

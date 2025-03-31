@@ -1,5 +1,5 @@
 
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { saveQuizResults } from './quizResultsService';
@@ -11,6 +11,7 @@ export const useQuizNavigation = (
   quizStateManager: any
 ) => {
   const [savedQuizIds, setSavedQuizIds] = useState<number[]>([]);
+  const [isNavigating, setIsNavigating] = useState(false);
   
   const {
     quizState,
@@ -24,9 +25,15 @@ export const useQuizNavigation = (
     loadAnswersForQuestion
   } = quizStateManager;
   
+  // Log function to help track quiz navigation
+  const logNavigation = useCallback((message: string, data?: any) => {
+    console.log(`[QuizNavigation] ${message}`, data ? data : '');
+  }, []);
+  
   // Load the current quiz questions and first question's answers
   const loadQuizData = useCallback(async () => {
     if (!quizIds.length || quizState.currentQuizIndex >= quizIds.length) {
+      logNavigation(`No more quizzes available, completing quiz flow`);
       setIsCompleted(true);
       return;
     }
@@ -36,7 +43,7 @@ export const useQuizNavigation = (
     try {
       const currentQuizId = quizIds[quizState.currentQuizIndex];
 
-      console.log(`Loading quiz ${quizState.currentQuizIndex + 1}/${quizIds.length}: Quiz ID ${currentQuizId}`);
+      logNavigation(`Loading quiz ${quizState.currentQuizIndex + 1}/${quizIds.length}: Quiz ID ${currentQuizId}`);
       
       // Set current category
       setCurrentCategory(categories[quizState.currentQuizIndex] || null);
@@ -51,6 +58,8 @@ export const useQuizNavigation = (
       
       if (!questions || !questions.length) {
         toast.error("No questions available for this quiz");
+        logNavigation(`No questions found for quiz ${currentQuizId}, moving to next quiz`);
+        
         // Move to the next quiz if this one has no questions
         setQuizState(prev => ({
           ...prev,
@@ -59,6 +68,8 @@ export const useQuizNavigation = (
         loadQuizData();
         return;
       }
+      
+      logNavigation(`Loaded ${questions.length} questions for quiz ${currentQuizId}`);
       
       // Set questions and current question
       setQuizState(prev => ({
@@ -78,7 +89,7 @@ export const useQuizNavigation = (
     } finally {
       setIsLoading(false);
     }
-  }, [quizIds, categories, quizState.currentQuizIndex, loadAnswersForQuestion, setCurrentCategory, setCurrentQuestion, setIsCompleted, setIsLoading, setQuizState]);
+  }, [quizIds, categories, quizState.currentQuizIndex, loadAnswersForQuestion, setCurrentCategory, setCurrentQuestion, setIsCompleted, setIsLoading, setQuizState, logNavigation]);
   
   // Save current quiz results
   const saveCurrentQuizResults = useCallback(async () => {
@@ -88,12 +99,14 @@ export const useQuizNavigation = (
     
     // Check if we've already saved this quiz result to prevent duplicates
     if (savedQuizIds.includes(currentQuizId)) {
-      console.log(`Quiz ${currentQuizId} results already saved, skipping.`);
+      logNavigation(`Quiz ${currentQuizId} results already saved, skipping.`);
       return true;
     }
     
     // Get the current category id
     const currentCategoryId = categories[quizState.currentQuizIndex]?.id;
+    
+    logNavigation(`Saving results for quiz ${currentQuizId}, category ${currentCategoryId}, score ${quizState.score}`);
     
     // Save the quiz result
     const success = await saveQuizResults(
@@ -109,61 +122,79 @@ export const useQuizNavigation = (
     }
     
     return success;
-  }, [user, quizIds, categories, quizState.currentQuizIndex, quizState.score, savedQuizIds]);
+  }, [user, quizIds, categories, quizState.currentQuizIndex, quizState.score, savedQuizIds, logNavigation]);
   
   // Handle moving to the next question or quiz
   const handleNextQuestion = useCallback(async () => {
-    // Check if we need to move to the next question
-    if (quizState.currentQuestionIndex < quizState.questions.length - 1) {
-      // Move to the next question in the current quiz
-      const nextIndex = quizState.currentQuestionIndex + 1;
-      const nextQuestion = quizState.questions[nextIndex];
-      
-      setQuizState(prev => ({
-        ...prev,
-        currentQuestionIndex: nextIndex
-      }));
-      
-      setCurrentQuestion(nextQuestion);
-      
-      // Load answers for the next question
-      await loadAnswersForQuestion(nextQuestion.id);
-      
-    } else {
-      // Current quiz is finished, save results first
-      await saveCurrentQuizResults();
-      
-      // Move to the next quiz
-      const nextQuizIndex = quizState.currentQuizIndex + 1;
-      
-      console.log(`Moving to next quiz: ${nextQuizIndex + 1}/${quizIds.length}`);
-      
-      // Check if the next index is valid before proceeding
-      if (nextQuizIndex >= quizIds.length) {
-        console.log("All quizzes completed");
-        setIsCompleted(true);
-        return;
+    // Prevent multiple navigation attempts
+    if (isNavigating) {
+      logNavigation('Navigation already in progress, ignoring request');
+      return;
+    }
+    
+    setIsNavigating(true);
+    
+    try {
+      // Check if we need to move to the next question
+      if (quizState.currentQuestionIndex < quizState.questions.length - 1) {
+        // Move to the next question in the current quiz
+        const nextIndex = quizState.currentQuestionIndex + 1;
+        const nextQuestion = quizState.questions[nextIndex];
+        
+        logNavigation(`Moving to next question: ${nextIndex + 1}/${quizState.questions.length}`);
+        
+        setQuizState(prev => ({
+          ...prev,
+          currentQuestionIndex: nextIndex
+        }));
+        
+        setCurrentQuestion(nextQuestion);
+        
+        // Load answers for the next question
+        await loadAnswersForQuestion(nextQuestion.id);
+        
+      } else {
+        // Current quiz is finished, save results first
+        await saveCurrentQuizResults();
+        
+        // Move to the next quiz
+        const nextQuizIndex = quizState.currentQuizIndex + 1;
+        
+        logNavigation(`Moving to next quiz: ${nextQuizIndex + 1}/${quizIds.length}`);
+        
+        // Check if the next index is valid before proceeding
+        if (nextQuizIndex >= quizIds.length) {
+          logNavigation("All quizzes completed");
+          setIsCompleted(true);
+          return;
+        }
+        
+        setQuizState(prev => ({
+          ...prev,
+          currentQuizIndex: nextQuizIndex,
+          currentQuestionIndex: 0,
+          questions: [],
+          score: 0 // Reset score for the next quiz
+        }));
+        
+        // Reset current question and answers
+        setCurrentQuestion(null);
+        setCurrentAnswers([]);
+        setSelectedAnswerIds([]);
+        
+        // Force reload of quiz data with a slight delay to ensure state updates
+        setTimeout(() => {
+          loadQuizData();
+        }, 200);
       }
-      
-      setQuizState(prev => ({
-        ...prev,
-        currentQuizIndex: nextQuizIndex,
-        currentQuestionIndex: 0,
-        questions: [],
-        score: 0 // Reset score for the next quiz
-      }));
-      
-      // Reset current question and answers
-      setCurrentQuestion(null);
-      setCurrentAnswers([]);
-      setSelectedAnswerIds([]);
-      
-      // Set a small timeout to allow state updates to propagate
-      setTimeout(() => {
-        loadQuizData();
-      }, 100);
+    } catch (error) {
+      console.error("Error in handleNextQuestion:", error);
+      toast.error("An error occurred. Please try again.");
+    } finally {
+      setIsNavigating(false);
     }
   }, [
+    isNavigating,
     quizState, 
     quizIds, 
     loadQuizData, 
@@ -173,7 +204,8 @@ export const useQuizNavigation = (
     setQuizState, 
     loadAnswersForQuestion, 
     saveCurrentQuizResults, 
-    setIsCompleted
+    setIsCompleted,
+    logNavigation
   ]);
   
   return {

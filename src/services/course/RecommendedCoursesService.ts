@@ -33,10 +33,10 @@ export const fetchRecommendedCourses = async (userId: string): Promise<CourseWit
     console.log("Found user interests:", categoryIds);
     
     // Create a map of category to difficulty level
-    const skillLevels: {[key: number]: string} = {};
+    const skillLevels: {[key: number]: string | null} = {};
     interests.forEach(interest => {
-      if (interest.category_id && interest.difficulty_level) {
-        skillLevels[interest.category_id] = interest.difficulty_level;
+      if (interest.category_id) {
+        skillLevels[interest.category_id] = interest.difficulty_level || null;
       }
     });
     
@@ -68,6 +68,12 @@ export const fetchRecommendedCourses = async (userId: string): Promise<CourseWit
       if (aCategoryId && bCategoryId) {
         const aSkillLevel = skillLevels[aCategoryId];
         const bSkillLevel = skillLevels[bCategoryId];
+        
+        // For NULL difficulty levels, include all courses for that category
+        // without considering difficulty level matching
+        if (aSkillLevel === null && bSkillLevel === null) return 0;
+        if (aSkillLevel === null) return -1; // Prioritize categories with null difficulty
+        if (bSkillLevel === null) return 1;
         
         const aIsExactMatch = a.difficulty_level === aSkillLevel;
         const bIsExactMatch = b.difficulty_level === bSkillLevel;
