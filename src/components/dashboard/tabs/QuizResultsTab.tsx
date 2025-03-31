@@ -1,9 +1,9 @@
+
 import React from 'react';
 import { Loader2 } from 'lucide-react';
 import { 
   Table,
   TableBody,
-  TableCaption,
   TableCell,
   TableHead,
   TableHeader,
@@ -50,66 +50,49 @@ const QuizResultsTab: React.FC<QuizResultsTabProps> = ({ quizResults, isLoading 
     );
   }
 
-  // Group results by category
-  const groupedResults: {[key: string]: QuizResult[]} = {};
-  
-  quizResults.forEach(result => {
-    const categoryName = result.quiz?.category?.name || 'Uncategorized';
-    if (!groupedResults[categoryName]) {
-      groupedResults[categoryName] = [];
-    }
-    groupedResults[categoryName].push(result);
-  });
-
   return (
     <div>
       <h2 className="text-2xl font-bold mb-6">Quiz Results</h2>
       
-      <div className="space-y-6">
-        {Object.entries(groupedResults).map(([categoryName, results]) => (
-          <div key={categoryName} className="bg-slate-800/50 rounded-lg overflow-hidden">
-            <div className="bg-slate-700/50 px-6 py-3">
-              <h3 className="font-semibold text-lg">{categoryName}</h3>
-            </div>
-            
-            <div className="p-4">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Quiz</TableHead>
-                    <TableHead>Category</TableHead>
-                    <TableHead>Score</TableHead>
-                    <TableHead>Level</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {results.map(result => {
-                    // Calculate skill level based on score
-                    const skillLevel = calculateDifficultyLevel(result.score);
-                    
-                    const categoryName = result.quiz?.category?.name || 'Unknown';
-                    
-                    return (
-                      <TableRow key={result.id}>
-                        <TableCell>{result.quiz?.title || `Quiz #${result.quiz_id}`}</TableCell>
-                        <TableCell>{categoryName}</TableCell>
-                        <TableCell>{result.score}</TableCell>
-                        <TableCell>
-                          <span className={
-                            skillLevel === 'Beginner' ? 'text-green-400' :
-                            skillLevel === 'Intermediate' ? 'text-yellow-400' : 'text-red-400'
-                          }>
-                            {skillLevel}
-                          </span>
-                        </TableCell>
-                      </TableRow>
-                    );
-                  })}
-                </TableBody>
-              </Table>
-            </div>
-          </div>
-        ))}
+      <div className="bg-slate-800/50 rounded-lg overflow-hidden">
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead className="text-base font-medium">Quiz</TableHead>
+              <TableHead className="text-base font-medium">Category</TableHead>
+              <TableHead className="text-base font-medium">Score</TableHead>
+              <TableHead className="text-base font-medium">Level</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {quizResults.map(result => {
+              const skillLevel = calculateDifficultyLevel(result.score);
+              const categoryName = result.quiz?.category?.name || 'Unknown';
+              
+              return (
+                <TableRow key={result.id}>
+                  <TableCell className="text-base font-medium text-white">
+                    {result.quiz?.title || 'Unnamed Quiz'}
+                  </TableCell>
+                  <TableCell className="text-base">
+                    {categoryName}
+                  </TableCell>
+                  <TableCell className="text-base">
+                    {result.score}
+                  </TableCell>
+                  <TableCell>
+                    <span className={`text-base font-semibold ${
+                      skillLevel === 'Beginner' ? 'text-green-400' :
+                      skillLevel === 'Intermediate' ? 'text-yellow-400' : 'text-red-400'
+                    }`}>
+                      {skillLevel}
+                    </span>
+                  </TableCell>
+                </TableRow>
+              );
+            })}
+          </TableBody>
+        </Table>
       </div>
     </div>
   );

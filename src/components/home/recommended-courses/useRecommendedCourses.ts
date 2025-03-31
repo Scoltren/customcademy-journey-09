@@ -71,34 +71,28 @@ export const useRecommendedCourses = (userId: string, userInterests: number[]) =
         return;
       }
       
-      // Sort courses with priority given to those matching user's skill level
-      const sortedCourses = [...data].sort((a, b) => {
-        const aCategoryId = a.category_id;
-        const bCategoryId = b.category_id;
-        
-        if (aCategoryId && bCategoryId) {
-          const aUserSkillLevel = userSkillLevels[aCategoryId];
-          const bUserSkillLevel = userSkillLevels[bCategoryId];
+      // Filter and prioritize courses that match both category and difficulty level
+      const matchingCourses: Course[] = [];
+      const otherCourses: Course[] = [];
+      
+      data.forEach(course => {
+        const categoryId = course.category_id;
+        if (categoryId && userSkillLevels[categoryId]) {
+          const userLevel = userSkillLevels[categoryId];
           
-          // First priority: exact match on both category and difficulty level
-          const aExactMatch = a.difficulty_level && a.difficulty_level.toLowerCase() === aUserSkillLevel?.toLowerCase();
-          const bExactMatch = b.difficulty_level && b.difficulty_level.toLowerCase() === bUserSkillLevel?.toLowerCase();
-          
-          if (aExactMatch && !bExactMatch) return -1;
-          if (!aExactMatch && bExactMatch) return 1;
-          
-          // Second priority: match on category only
-          if (aUserSkillLevel && !bUserSkillLevel) return -1;
-          if (!aUserSkillLevel && bUserSkillLevel) return 1;
+          // Check for exact difficulty level match
+          if (course.difficulty_level && course.difficulty_level === userLevel) {
+            matchingCourses.push(course);
+          } else {
+            otherCourses.push(course);
+          }
+        } else {
+          otherCourses.push(course);
         }
-        
-        // Third priority: higher rated courses
-        if (a.overall_rating && b.overall_rating) {
-          return b.overall_rating - a.overall_rating;
-        }
-        
-        return 0;
       });
+      
+      // Combine the arrays - exact matches first, then others
+      const sortedCourses = [...matchingCourses, ...otherCourses];
       
       // Format courses to match expected structure
       const formattedCourses = sortedCourses.map(course => ({
