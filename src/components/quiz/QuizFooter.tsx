@@ -45,7 +45,14 @@ const QuizFooter: React.FC<QuizFooterProps> = ({
             className="bg-blue-600 hover:bg-blue-700 text-white"
             disabled={selectedAnswerIds.length === 0 || isSaving}
           >
-            Submit Answer
+            {isSaving ? (
+              <>
+                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                Processing...
+              </>
+            ) : (
+              "Submit Answer"
+            )}
           </Button>
         ) : (
           <Button
@@ -56,7 +63,7 @@ const QuizFooter: React.FC<QuizFooterProps> = ({
             {isSaving ? (
               <>
                 <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                Saving...
+                {isLastQuestion ? "Loading Next Quiz..." : "Loading..."}
               </>
             ) : (
               nextButtonText

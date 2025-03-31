@@ -39,6 +39,16 @@ export const useQuizState = (quizIds: number[]) => {
     });
   }, []);
   
+  // Shuffle array using Fisher-Yates algorithm
+  const shuffleArray = useCallback((array: any[]) => {
+    const shuffled = [...array];
+    for (let i = shuffled.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+    }
+    return shuffled;
+  }, []);
+  
   // Load the answers for a specific question
   const loadAnswersForQuestion = useCallback(async (questionId: number) => {
     try {
@@ -48,10 +58,14 @@ export const useQuizState = (quizIds: number[]) => {
         .eq('question_id', questionId);
       
       if (error) throw error;
-      setCurrentAnswers(answers || []);
+      
+      // Randomize the order of answers before setting them
+      const randomizedAnswers = answers ? shuffleArray(answers) : [];
+      
+      setCurrentAnswers(randomizedAnswers);
       setSelectedAnswerIds([]);
       
-      console.log(`Loaded ${answers?.length || 0} answers for question ID ${questionId}`);
+      console.log(`Loaded ${randomizedAnswers.length || 0} answers for question ID ${questionId}`);
       
       return answers;
     } catch (error) {
@@ -59,7 +73,7 @@ export const useQuizState = (quizIds: number[]) => {
       toast.error("Failed to load question answers");
       return [];
     }
-  }, []);
+  }, [shuffleArray]);
   
   // Handle selecting an answer
   const handleSelectAnswer = useCallback((answerId: number) => {

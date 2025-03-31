@@ -45,6 +45,7 @@ const CategoryQuiz = () => {
   // If no quiz IDs were provided, redirect to home
   useEffect(() => {
     if (!quizIds.length || !categories.length) {
+      console.log("No quiz IDs or categories provided, redirecting to home");
       navigate('/');
     }
   }, [quizIds, categories, navigate]);
@@ -52,10 +53,22 @@ const CategoryQuiz = () => {
   // Handle when all quizzes are completed
   useEffect(() => {
     if (isCompleted) {
+      console.log("All quizzes completed, redirecting to home");
       toast.success("All quizzes completed! Your results have been saved.");
       navigate('/');
     }
   }, [isCompleted, navigate]);
+  
+  // Debug current quiz state
+  useEffect(() => {
+    console.log("Current quiz state:", {
+      currentQuizIndex: quizState.currentQuizIndex,
+      totalQuizzes: quizIds.length,
+      currentQuestionIndex: quizState.currentQuestionIndex,
+      totalQuestions: quizState.questions.length,
+      score: quizState.score
+    });
+  }, [quizState, quizIds.length]);
   
   // Handle submitting an answer
   const handleSubmitAnswer = () => {
@@ -63,6 +76,8 @@ const CategoryQuiz = () => {
     const correctlySelected = currentAnswers
       .filter(a => selectedAnswerIds.includes(a.id) && a.points > 0)
       .length;
+    
+    console.log(`Submitting answer: ${correctlySelected} correct answers selected`);
     
     // Update the score
     if (correctlySelected > 0) {
@@ -77,7 +92,14 @@ const CategoryQuiz = () => {
     setIsSaving(true);
     setShowFeedback(false);
     
-    // Small delay to show saving state
+    console.log("Moving to next question/quiz", {
+      currentQuizIndex: quizState.currentQuizIndex,
+      currentQuestionIndex: quizState.currentQuestionIndex,
+      isLastQuestion: quizState.currentQuestionIndex === quizState.questions.length - 1,
+      isLastQuiz: quizState.currentQuizIndex === quizIds.length - 1
+    });
+    
+    // Call handleNextQuestion with a small delay to show saving state
     setTimeout(() => {
       handleNextQuestion();
       setIsSaving(false);
@@ -93,6 +115,7 @@ const CategoryQuiz = () => {
   }
   
   if (!quizState.questions.length && !isCompleted) {
+    console.log("No questions available for the current quiz");
     return (
       <div className="flex items-center justify-center min-h-screen bg-gradient-to-b from-blue-950 to-slate-950 p-4">
         <QuizNotAvailable />

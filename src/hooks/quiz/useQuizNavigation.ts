@@ -162,6 +162,11 @@ export const useQuizNavigation = (
         
         logNavigation(`Moving to next quiz: ${nextQuizIndex + 1}/${quizIds.length}`);
         
+        // Reset current question and answers
+        setCurrentQuestion(null);
+        setCurrentAnswers([]);
+        setSelectedAnswerIds([]);
+        
         // Check if the next index is valid before proceeding
         if (nextQuizIndex >= quizIds.length) {
           logNavigation("All quizzes completed");
@@ -169,6 +174,7 @@ export const useQuizNavigation = (
           return;
         }
         
+        // Update quiz state with next quiz index
         setQuizState(prev => ({
           ...prev,
           currentQuizIndex: nextQuizIndex,
@@ -177,15 +183,10 @@ export const useQuizNavigation = (
           score: 0 // Reset score for the next quiz
         }));
         
-        // Reset current question and answers
-        setCurrentQuestion(null);
-        setCurrentAnswers([]);
-        setSelectedAnswerIds([]);
-        
         // Force reload of quiz data with a slight delay to ensure state updates
         setTimeout(() => {
           loadQuizData();
-        }, 200);
+        }, 300);
       }
     } catch (error) {
       console.error("Error in handleNextQuestion:", error);
