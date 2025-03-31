@@ -1,4 +1,3 @@
-
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
@@ -408,6 +407,42 @@ export class CourseCreationService {
     } catch (error) {
       console.error('Chapter deletion failed:', error);
       toast.error(error instanceof Error ? error.message : 'Failed to delete chapter');
+      throw error;
+    }
+  }
+
+  /**
+   * Deletes a course and all its chapters
+   * @param courseId The ID of the course to delete
+   */
+  static async deleteCourse(courseId: number) {
+    try {
+      // First, delete all chapters associated with the course
+      const { error: chaptersError } = await supabase.from('chapters')
+        .delete()
+        .eq('course_id', courseId);
+      
+      if (chaptersError) {
+        console.error('Error deleting course chapters:', chaptersError);
+        toast.error(`Failed to delete course chapters: ${chaptersError.message}`);
+        throw chaptersError;
+      }
+      
+      // Then delete the course itself
+      const { error } = await supabase.from('courses')
+        .delete()
+        .eq('id', courseId);
+      
+      if (error) {
+        console.error('Error deleting course:', error);
+        toast.error(`Failed to delete course: ${error.message}`);
+        throw error;
+      }
+      
+      toast.success('Course deleted successfully');
+    } catch (error) {
+      console.error('Course deletion failed:', error);
+      toast.error(error instanceof Error ? error.message : 'Failed to delete course');
       throw error;
     }
   }

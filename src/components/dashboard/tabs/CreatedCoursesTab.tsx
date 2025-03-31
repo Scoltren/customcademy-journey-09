@@ -12,16 +12,31 @@ import {
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardFooter } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { 
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle
+} from '@/components/ui/alert-dialog';
 import { useCreatedCourses } from '@/hooks/useCreatedCourses';
+import { CourseCreationService } from '@/services/CourseCreationService';
 import { Course } from '@/types/course';
 import CourseEditForm from '../created-courses/CourseEditForm';
 import ChapterManagement from '../created-courses/ChapterManagement';
+import { toast } from 'sonner';
 
 const CreatedCoursesTab = () => {
   const navigate = useNavigate();
   const { createdCourses, isLoading, refetchCourses } = useCreatedCourses();
   const [activeCourse, setActiveCourse] = useState<Course | null>(null);
   const [activeTab, setActiveTab] = useState<string>('details');
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [courseToDelete, setCourseToDelete] = useState<Course | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   const handleCreateNew = () => {
     navigate('/create-course');
@@ -35,6 +50,35 @@ const CreatedCoursesTab = () => {
   const handleBack = () => {
     setActiveCourse(null);
     refetchCourses();
+  };
+
+  const handleDeleteClick = (course: Course, e: React.MouseEvent) => {
+    e.stopPropagation();
+    setCourseToDelete(course);
+    setIsDeleteDialogOpen(true);
+  };
+
+  const handleDeleteConfirm = async () => {
+    if (!courseToDelete) return;
+    
+    setIsDeleting(true);
+    try {
+      await CourseCreationService.deleteCourse(courseToDelete.id);
+      setIsDeleteDialogOpen(false);
+      setCourseToDelete(null);
+      refetchCourses();
+      toast.success(`Course "${courseToDelete.title}" has been deleted`);
+    } catch (error) {
+      console.error('Failed to delete course:', error);
+      toast.error('Failed to delete course. Please try again.');
+    } finally {
+      setIsDeleting(false);
+    }
+  };
+
+  const handleDeleteCancel = () => {
+    setIsDeleteDialogOpen(false);
+    setCourseToDelete(null);
   };
 
   if (isLoading) {
@@ -127,15 +171,26 @@ const CreatedCoursesTab = () => {
                 </p>
               </CardContent>
               <CardFooter className="p-6 pt-0 flex justify-between">
-                <Button 
-                  variant="outline" 
-                  size="sm" 
-                  onClick={() => handleEditCourse(course)}
-                  className="flex items-center gap-2"
-                >
-                  <Edit size={14} />
-                  Edit Course
-                </Button>
+                <div className="flex gap-2">
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    onClick={() => handleEditCourse(course)}
+                    className="flex items-center gap-2"
+                  >
+                    <Edit size={14} />
+                    Edit
+                  </Button>
+                  <Button 
+                    variant="destructive" 
+                    size="sm" 
+                    onClick={(e) => handleDeleteClick(course, e)}
+                    className="flex items-center gap-2"
+                  >
+                    <Trash2 size={14} />
+                    Delete
+                  </Button>
+                </div>
                 <Button 
                   variant="ghost" 
                   size="sm"
@@ -148,6 +203,36 @@ const CreatedCoursesTab = () => {
           ))}
         </div>
       )}
+
+      {/* Delete Confirmation Dialog */}
+      <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Are you sure you want to delete this course?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This action cannot be undone. This will permanently delete the course 
+              "{courseToDelete?.title}" and remove all of its data, including all chapters and content.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={handleDeleteCancel} disabled={isDeleting}>Cancel</AlertDialogCancel>
+            <AlertDialogAction 
+              onClick={handleDeleteConfirm} 
+              disabled={isDeleting}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              {isDeleting ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Deleting...
+                </>
+              ) : (
+                'Delete Course'
+              )}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };
