@@ -56,10 +56,14 @@ export const CourseDetails = ({ form }: CourseDetailsProps) => {
     // Check if the category has a quiz_id which indicates it has a quiz
     if (selectedCategory && selectedCategory.quiz_id !== null) {
       setCategoryHasQuiz(true);
+      // If previously set to null, set it to beginner
+      if (!form.getValues('difficulty_level')) {
+        form.setValue('difficulty_level', 'beginner');
+      }
     } else {
       setCategoryHasQuiz(false);
-      // Reset difficulty level if category doesn't have a quiz
-      form.setValue('difficulty_level', 'beginner');
+      // Reset difficulty level to null if category doesn't have a quiz
+      form.setValue('difficulty_level', null);
     }
   }, [categoryId, categories, form]);
   
@@ -75,6 +79,7 @@ export const CourseDetails = ({ form }: CourseDetailsProps) => {
               onValueChange={field.onChange} 
               defaultValue={field.value}
               disabled={!categoryHasQuiz}
+              value={field.value || undefined}
             >
               <FormControl>
                 <SelectTrigger>

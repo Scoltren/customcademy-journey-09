@@ -7,7 +7,7 @@ interface FilteredCoursesDisplayProps {
   filteredCourses: Course[];
   loading: boolean;
   resetFilters: () => void;
-  validateDifficultyLevel: (level: string | null) => 'Beginner' | 'Intermediate' | 'Advanced';
+  validateDifficultyLevel: (level: string | null) => 'Beginner' | 'Intermediate' | 'Advanced' | null;
 }
 
 const FilteredCoursesDisplay: React.FC<FilteredCoursesDisplayProps> = ({ 

@@ -12,11 +12,16 @@ interface CourseGridProps {
 }
 
 const CourseGrid: React.FC<CourseGridProps> = ({ courses, isUserLoggedIn, hasUserInterests }) => {
-  const validateDifficultyLevel = (level: string | null): 'Beginner' | 'Intermediate' | 'Advanced' => {
-    if (level === 'Beginner' || level === 'Intermediate' || level === 'Advanced') {
-      return level;
+  const validateDifficultyLevel = (level: string | null): 'Beginner' | 'Intermediate' | 'Advanced' | null => {
+    if (level === null) return null;
+    
+    // Ensure first letter is capitalized
+    const formattedLevel = level.charAt(0).toUpperCase() + level.slice(1).toLowerCase();
+    
+    if (formattedLevel === 'Beginner' || formattedLevel === 'Intermediate' || formattedLevel === 'Advanced') {
+      return formattedLevel as 'Beginner' | 'Intermediate' | 'Advanced';
     }
-    return 'Beginner'; // Default fallback
+    return null; // Return null if not a valid level
   };
 
   const renderNoInterestsMessage = () => (

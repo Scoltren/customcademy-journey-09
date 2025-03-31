@@ -72,14 +72,16 @@ const CourseCard: React.FC<{ course: CourseProps; className?: string }> = ({
           <Badge className="bg-blue-900 hover:bg-blue-800 text-white border-0 font-medium text-sm">
             {category}
           </Badge>
-          <Badge className={cn(
-            "border text-sm",
-            level === 'Beginner' ? 'bg-green-600/80 hover:bg-green-600 text-white border-0' :
-            level === 'Intermediate' ? 'bg-orange-500/80 hover:bg-orange-500 text-white border-0' :
-            'bg-red-600/80 hover:bg-red-600 text-white border-0'
-          )}>
-            {level}
-          </Badge>
+          {level && (
+            <Badge className={cn(
+              "border text-sm",
+              level === 'Beginner' ? 'bg-green-600/80 hover:bg-green-600 text-white border-0' :
+              level === 'Intermediate' ? 'bg-orange-500/80 hover:bg-orange-500 text-white border-0' :
+              'bg-red-600/80 hover:bg-red-600 text-white border-0'
+            )}>
+              {level}
+            </Badge>
+          )}
         </div>
         
         <h3 className="text-base md:text-lg font-bold mb-2 line-clamp-1 text-white group-hover:text-blue-light transition-colors duration-300">
