@@ -14,16 +14,14 @@ export const useAnswerHandler = () => {
     selectedAnswerIds: number[], 
     setSelectedAnswerIds: (ids: number[]) => void
   ) => (answerId: number) => {
-    setSelectedAnswerIds(prev => {
-      // Toggle the selected answer
-      const updated = prev.includes(answerId)
-        ? prev.filter(id => id !== answerId)
-        : [...prev, answerId];
-        
-      console.log(`Selected answer IDs updated: ${updated.join(', ') || 'none'}`);
-      
-      return updated;
-    });
+    // Toggle the selected answer
+    const updated = selectedAnswerIds.includes(answerId)
+      ? selectedAnswerIds.filter(id => id !== answerId)
+      : [...selectedAnswerIds, answerId];
+    
+    setSelectedAnswerIds(updated);
+    
+    console.log(`Selected answer IDs updated: ${updated.join(', ') || 'none'}`);
   }, []);
   
   // Load the answers for a specific question
