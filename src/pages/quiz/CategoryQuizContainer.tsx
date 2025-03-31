@@ -24,7 +24,9 @@ const CategoryQuizContainer = () => {
     if (quizIds.length !== categories.length) {
       console.error("Mismatch between quizIds and categories arrays!", {
         quizIdsLength: quizIds.length,
-        categoriesLength: categories.length
+        categoriesLength: categories.length,
+        quizIds: quizIds,
+        categories: categories.map(c => c?.name || 'unknown')
       });
     }
   }, [quizIds, categories]);
@@ -94,7 +96,7 @@ const CategoryQuizContainer = () => {
     }
   }, [isCompleted, navigate]);
   
-  // Debug current quiz state
+  // Debug current quiz state on state changes
   useEffect(() => {
     logQuizState();
   }, [quizState, quizIds.length, currentCategory, isCompleted, logQuizState]);

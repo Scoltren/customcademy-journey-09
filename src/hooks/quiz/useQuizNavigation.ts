@@ -23,7 +23,8 @@ export const useQuizNavigation = (
       currentQuizIndex: quizState.currentQuizIndex,
       currentQuestionIndex: quizState.currentQuestionIndex,
       totalQuestions: quizState.questions.length,
-      totalQuizzes: quizIds.length
+      totalQuizzes: quizIds.length,
+      currentQuizId: quizIds[quizState.currentQuizIndex]
     });
     
     try {
@@ -51,6 +52,8 @@ export const useQuizNavigation = (
         const currentQuizId = quizIds[quizState.currentQuizIndex];
         const currentCategory = categories[quizState.currentQuizIndex];
         
+        console.log(`Saving quiz ${currentQuizId} results with score ${quizState.score}, category: ${currentCategory?.name}`);
+        
         await saveQuizResults(
           currentQuizId, 
           quizState.score, 
@@ -60,7 +63,7 @@ export const useQuizNavigation = (
         // Move to the next quiz
         const nextQuizIndex = quizState.currentQuizIndex + 1;
         
-        console.log(`Current quiz finished. Moving to next quiz index: ${nextQuizIndex}`);
+        console.log(`Current quiz finished. Moving to next quiz index: ${nextQuizIndex}, next quiz ID: ${quizIds[nextQuizIndex]}`);
         
         // Check if there are more quizzes
         if (nextQuizIndex >= quizIds.length) {
@@ -85,19 +88,25 @@ export const useQuizNavigation = (
         
         setQuizState(updatedQuizState);
         
-        console.log("Updated quiz state:", {
-          nextQuizIndex,
-          updatedState: updatedQuizState
+        console.log("Updated quiz state for next quiz:", {
+          currentQuizIndex: updatedQuizState.currentQuizIndex,
+          nextQuizId: quizIds[nextQuizIndex]
         });
         
         // Load the next quiz data with a slight delay to allow state to update
         setTimeout(() => {
+          console.log("Loading next quiz data for:", {
+            quizIndex: nextQuizIndex,
+            quizId: quizIds[nextQuizIndex],
+            category: categories[nextQuizIndex]?.name
+          });
+          
           loadQuizData(quizIds, categories)
             .catch(error => {
               console.error("Error loading next quiz:", error);
               toast.error("Failed to load next quiz");
             });
-        }, 300);
+        }, 500); // Increased timeout to ensure state updates properly
       }
     } catch (error) {
       console.error("Error in handleNextQuestion:", error);

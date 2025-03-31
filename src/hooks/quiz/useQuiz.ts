@@ -65,7 +65,10 @@ export const useQuiz = (user: any, quizIds: number[], categories: any[]) => {
   useEffect(() => {
     if (quizIds.length > 0 && !initialLoadRef.current && !isCompleted) {
       initialLoadRef.current = true;
-      console.log("Initial quiz load triggered");
+      console.log("Initial quiz load triggered", {
+        quizIds: quizIds.map(id => id),
+        categories: categories.map(c => c?.name || 'unknown')
+      });
       loadQuizData(quizIds, categories);
     }
   }, [quizIds, categories, isCompleted, loadQuizData]);
@@ -91,7 +94,7 @@ export const useQuiz = (user: any, quizIds: number[], categories: any[]) => {
   const logQuizState = useCallback(() => {
     console.log("Current Quiz State:", {
       quizIds: quizIds.map(id => id),
-      categories: categories.map(c => c.name),
+      categories: categories.map(c => c?.name || 'unknown'),
       currentQuizIndex: quizState.currentQuizIndex,
       currentQuestionIndex: quizState.currentQuestionIndex,
       score: quizState.score,
