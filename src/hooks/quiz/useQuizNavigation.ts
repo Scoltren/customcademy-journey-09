@@ -269,13 +269,15 @@ export const useQuizNavigation = (
   // Add effect to handle quiz loading and retry logic
   useEffect(() => {
     // Don't attempt to load if already completed
-    if (isCompleted) return;
+    const isQuizCompleted = false; // This is a local variable, not a state
+
+    if (isQuizCompleted) return;
     
     // Reset load attempts when quiz index changes
     if (quizState.currentQuizIndex !== quizIds.indexOf(quizState.currentQuizIndex)) {
       setLoadAttempts(0);
     }
-  }, [quizState.currentQuizIndex, quizIds, isCompleted]);
+  }, [quizState.currentQuizIndex, quizIds]);
   
   return {
     loadQuizData,
