@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Loader2 } from 'lucide-react';
 import { 
@@ -10,6 +9,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { calculateDifficultyLevel } from '@/hooks/quiz/quizResultsService';
 
 interface QuizResult {
   id: number;
@@ -85,12 +85,7 @@ const QuizResultsTab: React.FC<QuizResultsTabProps> = ({ quizResults, isLoading 
                 <TableBody>
                   {results.map(result => {
                     // Calculate skill level based on score
-                    let skillLevel = 'Beginner';
-                    if (result.score >= 8) {
-                      skillLevel = 'Advanced';
-                    } else if (result.score >= 5) {
-                      skillLevel = 'Intermediate';
-                    }
+                    const skillLevel = calculateDifficultyLevel(result.score);
                     
                     const categoryName = result.quiz?.category?.name || 'Unknown';
                     

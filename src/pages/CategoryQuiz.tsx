@@ -1,13 +1,11 @@
-
 import React, { useEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/contexts/AuthContext";
-import { supabase } from "@/integrations/supabase/client";
-import { toast } from "sonner";
 import { Loader2 } from "lucide-react";
-import { useQuiz } from "@/hooks/useQuiz";
+import { toast } from "sonner";
+import { useQuiz } from "@/hooks/quiz/useQuiz";
 
 const CategoryQuiz = () => {
   const location = useLocation();
@@ -29,10 +27,11 @@ const CategoryQuiz = () => {
     selectedAnswerIds, 
     handleSelectAnswer, 
     handleNextQuestion, 
-    isCompleted
+    isCompleted,
+    updateScore
   } = useQuiz(user, quizIds, categories);
   
-  // If no quiz IDs were provided, redirect to courses
+  // If no quiz IDs were provided, redirect to home
   useEffect(() => {
     if (!quizIds.length || !categories.length) {
       navigate('/');
@@ -56,8 +55,7 @@ const CategoryQuiz = () => {
     
     // Update the score
     if (correctlySelected > 0) {
-      // Update just the score in the quizState
-      quizState.score += correctlySelected;
+      updateScore(correctlySelected);
     }
     
     setShowFeedback(true);
