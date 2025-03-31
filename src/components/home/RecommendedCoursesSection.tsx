@@ -21,16 +21,26 @@ const RecommendedCoursesSection: React.FC<RecommendedCoursesSectionProps> = ({
     userSkillLevels
   } = useRecommendedCourses(userId, userInterests);
 
-  // Get courses that exactly match user skill levels
-  const exactMatchCourses = recommendedCourses.filter(course => {
+  // Get all courses that should be displayed
+  // Include exact matches AND courses from categories with null difficulty levels
+  const coursesToDisplay = recommendedCourses.filter(course => {
+    // Include courses that exactly match user skill levels
     if (course.category_id && userSkillLevels[course.category_id]) {
-      return course.difficulty_level === userSkillLevels[course.category_id];
+      if (course.difficulty_level === userSkillLevels[course.category_id]) {
+        return true;
+      }
     }
+    
+    // Include all courses from categories with null difficulty level
+    if (course.category_id && userSkillLevels[course.category_id] === null) {
+      return true;
+    }
+    
     return false;
   });
 
-  // Determine which courses to display - if we have exact matches, show those only
-  const coursesToDisplay = exactMatchCourses.length > 0 ? exactMatchCourses : recommendedCourses;
+  // If we don't have any filtered courses, show all recommended courses
+  const finalCoursesToDisplay = coursesToDisplay.length > 0 ? coursesToDisplay : recommendedCourses;
 
   return (
     <div className="mb-12">
@@ -38,9 +48,9 @@ const RecommendedCoursesSection: React.FC<RecommendedCoursesSectionProps> = ({
       
       {loadingCourses ? (
         <LoadingState />
-      ) : coursesToDisplay.length > 0 ? (
+      ) : finalCoursesToDisplay.length > 0 ? (
         <CourseGridDisplay 
-          courses={coursesToDisplay} 
+          courses={finalCoursesToDisplay} 
           chapterCounts={chapterCounts}
           userSkillLevels={userSkillLevels}
         />

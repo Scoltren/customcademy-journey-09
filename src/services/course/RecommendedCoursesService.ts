@@ -70,16 +70,20 @@ export const fetchRecommendedCourses = async (userId: string): Promise<CourseWit
         const bSkillLevel = skillLevels[bCategoryId];
         
         // For NULL difficulty levels, include all courses for that category
-        // without considering difficulty level matching
+        // without considering difficulty matching (but place after exact matches)
         if (aSkillLevel === null && bSkillLevel === null) return 0;
-        if (aSkillLevel === null) return -1; // Prioritize categories with null difficulty
-        if (bSkillLevel === null) return 1;
         
-        const aIsExactMatch = a.difficulty_level === aSkillLevel;
-        const bIsExactMatch = b.difficulty_level === bSkillLevel;
+        // Prioritize exact matches over null difficulty categories
+        const aIsExactMatch = a.difficulty_level === aSkillLevel && aSkillLevel !== null;
+        const bIsExactMatch = b.difficulty_level === bSkillLevel && bSkillLevel !== null;
         
         if (aIsExactMatch && !bIsExactMatch) return -1;
         if (!aIsExactMatch && bIsExactMatch) return 1;
+        
+        // If neither has an exact match, prioritize categories with null difficulty
+        // to ensure these courses are included in results
+        if (aSkillLevel === null && bSkillLevel !== null) return -1;
+        if (aSkillLevel !== null && bSkillLevel === null) return 1;
       }
       
       // If only one matches category, prioritize that one
