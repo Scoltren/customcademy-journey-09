@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useRef } from 'react';
 import { User, Edit, Upload, ArrowLeftRight } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
@@ -106,7 +105,6 @@ const ProfileTab = ({ userInterests, handleEditInterests }: ProfileTabProps) => 
     }
   };
   
-  // Function to determine the text color based on difficulty level
   const getDifficultyColor = (level: string | undefined) => {
     switch(level) {
       case 'Beginner':
@@ -187,13 +185,7 @@ const ProfileTab = ({ userInterests, handleEditInterests }: ProfileTabProps) => 
               )}
             </div>
             
-            <div className="space-y-4">
-              {!isEditing && profileData.bio && (
-                <div className="mb-4">
-                  <p className="text-slate-300 italic">{profileData.bio}</p>
-                </div>
-              )}
-              
+            <div className="space-y-4">              
               <div>
                 <label className="block text-slate-400 mb-2">Username</label>
                 {isEditing ? (
@@ -244,7 +236,6 @@ const ProfileTab = ({ userInterests, handleEditInterests }: ProfileTabProps) => 
         </div>
       </div>
       
-      {/* Your Interests Section */}
       <div className="glass-card p-6">
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-xl font-bold text-white">Your Interests</h2>

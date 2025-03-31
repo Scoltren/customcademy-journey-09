@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { 
@@ -16,6 +15,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
 import UserInterests from './UserInterests';
 import LearningStats from './LearningStats';
+import { supabase } from '@/integrations/supabase/client';
 
 interface SidebarProps {
   activeTab: string;
@@ -34,6 +34,30 @@ const DashboardSidebar = ({
 }: SidebarProps) => {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
+  const [userBio, setUserBio] = React.useState<string>('');
+  
+  React.useEffect(() => {
+    // Fetch user bio from database
+    const fetchUserBio = async () => {
+      try {
+        const { data, error } = await supabase
+          .from('users')
+          .select('bio')
+          .eq('auth_user_id', user?.id)
+          .single();
+        
+        if (data && data.bio) {
+          setUserBio(data.bio);
+        }
+      } catch (error) {
+        console.error('Error fetching user bio:', error);
+      }
+    };
+    
+    if (user) {
+      fetchUserBio();
+    }
+  }, [user]);
   
   const navItems = [
     { id: 'my-learning', label: 'My Learning', icon: BookOpen },
@@ -64,7 +88,12 @@ const DashboardSidebar = ({
           </div>
           <h2 className="text-xl font-bold text-white">{user?.user_metadata?.username || user?.email}</h2>
           <p className="text-slate-400 text-sm">{user?.email}</p>
-          <p className="text-slate-500 text-xs mt-1">
+          {userBio && (
+            <p className="text-slate-400 text-sm mt-2 text-center italic">
+              "{userBio}"
+            </p>
+          )}
+          <p className="text-slate-500 text-xs mt-2">
             Member since {new Date(user?.created_at || Date.now()).toLocaleDateString()}
           </p>
         </div>

@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { 
@@ -139,7 +140,7 @@ const CreatedCoursesTab = () => {
           </Button>
         </div>
       ) : (
-        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+        <div className="grid gap-6 md:grid-cols-1 lg:grid-cols-2">
           {createdCourses.map((course) => (
             <Card key={course.id} className="overflow-hidden bg-slate-800 border-slate-700">
               <div className="aspect-video w-full overflow-hidden bg-slate-900">
@@ -152,14 +153,14 @@ const CreatedCoursesTab = () => {
                 )}
               </div>
               <CardContent className="p-6">
-                <h3 className="text-xl font-bold mb-2 line-clamp-1">{course.title}</h3>
-                <p className="text-slate-400 text-sm mb-2">
+                <h3 className="text-xl font-bold mb-3 line-clamp-1">{course.title}</h3>
+                <p className="text-slate-400 text-sm mb-3">
                   Category: {course.categories?.name || 'Uncategorized'} 
                 </p>
-                <p className="text-slate-400 text-sm mb-2">
+                <p className="text-slate-400 text-sm mb-3">
                   Price: ${course.price?.toFixed(2) || '0.00'}
                 </p>
-                <p className="text-slate-300 line-clamp-2 text-sm">
+                <p className="text-slate-300 line-clamp-3 text-sm">
                   {course.description || 'No description provided.'}
                 </p>
               </CardContent>

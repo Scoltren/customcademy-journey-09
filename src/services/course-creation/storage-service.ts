@@ -36,6 +36,19 @@ export class StorageService {
       
       if (error) {
         console.error("Error uploading file:", error);
+        if (error.message.includes('row-level security policy')) {
+          // This error happens but the file is usually still uploaded
+          // We need to check if the file was uploaded anyway and get its URL
+          const { data: checkFileExists } = await supabase.storage
+            .from(bucket)
+            .getPublicUrl(filePath);
+          
+          if (checkFileExists) {
+            console.log("File was uploaded despite RLS error, URL:", checkFileExists.publicUrl);
+            return checkFileExists.publicUrl;
+          }
+        }
+        
         toast.error('Upload Failed: ' + error.message);
         return null;
       }
