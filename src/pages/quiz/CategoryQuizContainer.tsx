@@ -1,5 +1,5 @@
 
-import React, { useEffect, useState, useCallback } from "react";
+import React, { useEffect, useState, useCallback, useRef } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
@@ -35,6 +35,7 @@ const CategoryQuizContainer = () => {
   const [isSaving, setIsSaving] = useState(false);
   const [loadTimeout, setLoadTimeout] = useState<NodeJS.Timeout | null>(null);
   const [isNavigating, setIsNavigating] = useState(false);
+  const [loadAttempts, setLoadAttempts] = useState(0);
   
   const { 
     quizState, 

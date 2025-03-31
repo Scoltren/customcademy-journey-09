@@ -35,6 +35,7 @@ export const useQuizDataLoader = (stateManager: QuizStateManager) => {
       return;
     }
     
+    // Always use the currentQuizIndex from state - critical for proper quiz progression
     const currentQuizIndex = quizState.currentQuizIndex;
     
     if (currentQuizIndex >= quizIds.length) {
