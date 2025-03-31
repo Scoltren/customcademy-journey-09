@@ -25,7 +25,7 @@ export const useQuizState = (quizIds: number[]) => {
   const [currentCategory, setCurrentCategory] = useState<any>(null);
   const [isCompleted, setIsCompleted] = useState(false);
   
-  // Custom state setter with logging
+  // Custom state setter with enhanced logging
   const updateQuizState = useCallback((newState: QuizState | ((prev: QuizState) => QuizState)) => {
     setQuizState(prev => {
       const updated = typeof newState === 'function' ? newState(prev) : newState;
