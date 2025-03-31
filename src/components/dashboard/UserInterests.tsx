@@ -12,13 +12,27 @@ const UserInterests = ({ userInterests, handleEditInterests }: UserInterestsProp
   const getDifficultyColor = (level: string | undefined) => {
     switch(level) {
       case 'Beginner':
-        return 'text-green-400';
+        return 'text-green-500';
       case 'Intermediate':
-        return 'text-yellow-400';
+        return 'text-yellow-500';
       case 'Advanced':
-        return 'text-red-400';
+        return 'text-red-500';
       default:
         return 'text-xs opacity-70';
+    }
+  };
+
+  // Function to get the appropriate background color for interest tags
+  const getTagBackgroundColor = (level: string | undefined) => {
+    switch(level) {
+      case 'Beginner':
+        return 'bg-green-500/10 border-green-500/20';
+      case 'Intermediate':
+        return 'bg-yellow-500/10 border-yellow-500/20';
+      case 'Advanced':
+        return 'bg-red-500/10 border-red-500/20';
+      default:
+        return 'bg-blue/10 border-blue/20';
     }
   };
 
@@ -32,11 +46,11 @@ const UserInterests = ({ userInterests, handleEditInterests }: UserInterestsProp
             {userInterests.map((interest) => (
               <div 
                 key={interest.category_id} 
-                className="py-1 px-3 rounded-full bg-blue/10 text-blue-light border border-blue/20 text-sm"
+                className={`py-1 px-3 rounded-full text-blue-light border ${getTagBackgroundColor(interest.difficulty_level)} text-sm`}
               >
                 <span>{interest.category?.name || 'Unknown'}</span>
                 {interest.difficulty_level ? (
-                  <span className={`ml-1 ${getDifficultyColor(interest.difficulty_level)}`}>
+                  <span className={`ml-1 font-medium ${getDifficultyColor(interest.difficulty_level)}`}>
                     • {interest.difficulty_level}
                   </span>
                 ) : (
