@@ -1,5 +1,4 @@
-
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import CourseCard from '@/components/CourseCard';
@@ -18,10 +17,12 @@ interface Course {
   difficulty_level: string | null;
   price: number | null;
   overall_rating: number | null;
+  course_time: number | null;
   category_id: number | null;
   categories: {
     name: string;
   } | null;
+  chapters_count?: number;
 }
 
 // Define the category type
@@ -30,20 +31,61 @@ interface Category {
   name: string;
 }
 
-// Function to fetch courses from Supabase
+// Function to fetch courses with chapter counts from Supabase
 const fetchCourses = async (): Promise<Course[]> => {
-  const { data, error } = await supabase
+  // First fetch the courses with category information
+  const { data: coursesData, error: coursesError } = await supabase
     .from('courses')
     .select(`
       *,
       categories(name)
     `);
   
-  if (error) {
-    throw error;
+  if (coursesError) {
+    throw coursesError;
   }
   
-  return data || [];
+  if (!coursesData || coursesData.length === 0) {
+    return [];
+  }
+  
+  // Get all course IDs to fetch chapter counts
+  const courseIds = coursesData.map(course => course.id);
+  
+  // Fetch chapters for all courses
+  const { data: chaptersData, error: chaptersError } = await supabase
+    .from('chapters')
+    .select('course_id')
+    .in('course_id', courseIds);
+  
+  if (chaptersError) {
+    console.error("Error fetching chapter counts:", chaptersError);
+    // Return courses without chapter counts if there's an error
+    return coursesData;
+  }
+  
+  // Count chapters per course
+  const chapterCounts: { [key: number]: number } = {};
+  
+  if (chaptersData) {
+    chaptersData.forEach(chapter => {
+      if (chapter.course_id) {
+        if (!chapterCounts[chapter.course_id]) {
+          chapterCounts[chapter.course_id] = 1;
+        } else {
+          chapterCounts[chapter.course_id]++;
+        }
+      }
+    });
+  }
+  
+  // Add chapter counts to courses
+  const coursesWithChapterCounts = coursesData.map(course => ({
+    ...course,
+    chapters_count: chapterCounts[course.id] || 0
+  }));
+  
+  return coursesWithChapterCounts;
 };
 
 // Function to fetch categories from Supabase
@@ -321,10 +363,11 @@ const Courses = () => {
                         image: course.thumbnail || 'https://images.unsplash.com/photo-1498050108023-c5249f4df085',
                         category: course.categories?.name || 'Development',
                         level: validateDifficultyLevel(course.difficulty_level),
-                        duration: '30 hours',
-                        students: 1000,
-                        rating: course.overall_rating || 4.5,
-                        price: course.price || 0
+                        duration: course.course_time ? `${course.course_time} hours` : '30 hours',
+                        students: 0,
+                        rating: course.overall_rating || 0,
+                        price: course.price || 0,
+                        chapterCount: course.chapters_count || 0
                       }}
                     />
                   ))}

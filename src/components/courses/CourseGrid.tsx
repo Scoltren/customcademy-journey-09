@@ -61,7 +61,7 @@ const CourseGrid: React.FC<CourseGridProps> = ({ courses, isUserLoggedIn, hasUse
               description: course.description || 'No description available',
               instructor: course.instructor || 'Instructor', 
               image: course.thumbnail || 'https://images.unsplash.com/photo-1498050108023-c5249f4df085',
-              category: course.categories?.name || 'Development',
+              category: course.categories?.name || course.category_name || 'Development',
               level: validateDifficultyLevel(course.difficulty_level),
               duration: durationText,
               students: 0, // Not showing this anymore as requested
