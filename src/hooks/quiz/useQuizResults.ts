@@ -15,10 +15,9 @@ export const useQuizResults = (user: any) => {
   ): Promise<boolean> => {
     if (!user) return false;
     
-    // Check if this quiz is already saved
+    // Check if this quiz is already saved in this session
     if (savedQuizIds.includes(quizId)) {
-      console.log(`Quiz ${quizId} results already saved, skipping.`);
-      return true;
+      console.log(`Quiz ${quizId} results already saved in this session, updating instead.`);
     }
     
     try {
@@ -34,6 +33,8 @@ export const useQuizResults = (user: any) => {
       if (deleteError) {
         console.error("Error deleting previous quiz results:", deleteError);
         // Continue with insert anyway
+      } else {
+        console.log(`Successfully deleted old results for quiz ${quizId}`);
       }
       
       // Save the new quiz result
@@ -48,7 +49,9 @@ export const useQuizResults = (user: any) => {
       if (resultError) throw resultError;
       
       // Mark this quiz as saved to prevent duplicates
-      setSavedQuizIds(prev => [...prev, quizId]);
+      if (!savedQuizIds.includes(quizId)) {
+        setSavedQuizIds(prev => [...prev, quizId]);
+      }
       
       // If we have a category, update the user's interest for this category
       if (categoryId) {

@@ -1,5 +1,5 @@
 
-import React, { useEffect, useState, useCallback, useRef } from "react";
+import React, { useEffect, useState, useCallback } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
@@ -51,7 +51,7 @@ const CategoryQuizContainer = () => {
     logQuizState
   } = useQuiz(user, quizIds, categories);
   
-  // Debug current category and quiz ID on every render
+  // Debug current category and quiz ID whenever they change
   useEffect(() => {
     if (currentCategory) {
       console.log(`CONTAINER - Currently showing quiz for category: ${currentCategory.name} (ID: ${currentCategory.id})`);
@@ -143,7 +143,8 @@ const CategoryQuizContainer = () => {
       currentQuestionIndex: quizState.currentQuestionIndex,
       isLastQuestion: quizState.currentQuestionIndex === quizState.questions.length - 1,
       isLastQuiz: quizState.currentQuizIndex === quizIds.length - 1,
-      totalQuizzes: quizIds.length
+      totalQuizzes: quizIds.length,
+      quizIds: quizIds
     });
     
     // Call handleNextQuestion with a small delay to show saving state
@@ -154,7 +155,7 @@ const CategoryQuizContainer = () => {
         setIsNavigating(false);
       }, 500);
     }, 300);
-  }, [quizState, quizIds.length, handleNextQuestion, isNavigating]);
+  }, [quizState, quizIds, handleNextQuestion, isNavigating]);
 
   // Compute derived props for the view component
   const isLastQuestion = quizState.currentQuestionIndex === quizState.questions.length - 1;

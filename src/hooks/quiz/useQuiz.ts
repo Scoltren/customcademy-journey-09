@@ -61,13 +61,14 @@ export const useQuiz = (user: any, quizIds: number[], categories: any[]) => {
     saveQuizResults
   );
   
-  // Load quiz data on first render
+  // Load quiz data on first render or when quizIds change
   useEffect(() => {
     if (quizIds.length > 0 && !initialLoadRef.current && !isCompleted) {
       initialLoadRef.current = true;
       console.log("Initial quiz load triggered", {
         quizIds: quizIds.map(id => id),
-        categories: categories.map(c => c?.name || 'unknown')
+        categories: categories.map(c => c?.name || 'unknown'),
+        initialLoadRef: initialLoadRef.current
       });
       
       // Reset to first quiz index when initially loading
@@ -81,6 +82,7 @@ export const useQuiz = (user: any, quizIds: number[], categories: any[]) => {
       
       // Load quiz data with a slight delay to ensure state is set
       setTimeout(() => {
+        console.log("Loading initial quiz data with quizIds:", quizIds);
         loadQuizData(quizIds, categories);
       }, 100);
     }
@@ -88,15 +90,28 @@ export const useQuiz = (user: any, quizIds: number[], categories: any[]) => {
   
   // Reset initial load ref when quiz IDs change to force reload
   useEffect(() => {
-    initialLoadRef.current = false;
-    
-    // Reset completion state when quiz IDs change
-    setIsCompleted(false);
-    
-    console.log("Quiz IDs changed, reset load state", { 
-      quizIds: quizIds.map(id => id)
-    });
-  }, [quizIds, setIsCompleted]);
+    // Only reset if we have new quiz IDs and they're different from before
+    if (quizIds.length > 0) {
+      initialLoadRef.current = false;
+      
+      // Reset completion state when quiz IDs change
+      setIsCompleted(false);
+      
+      // Reset quiz state to start from the beginning
+      setQuizState(prev => ({
+        ...prev,
+        currentQuizIndex: 0,
+        currentQuestionIndex: 0,
+        questions: [],
+        score: 0
+      }));
+      
+      console.log("Quiz IDs changed, reset load state", { 
+        quizIds: quizIds.map(id => id),
+        initialLoadRef: initialLoadRef.current
+      });
+    }
+  }, [quizIds, setIsCompleted, setQuizState]);
   
   // Create a wrapped next question handler
   const handleNextQuestionWrapper = useCallback(() => {
@@ -130,7 +145,8 @@ export const useQuiz = (user: any, quizIds: number[], categories: any[]) => {
       score: quizState.score,
       totalQuestions: quizState.questions.length,
       isCompleted,
-      isLoading
+      isLoading,
+      initialLoadRef: initialLoadRef.current
     });
   }, [quizState, quizIds, categories, isCompleted, isLoading]);
 
