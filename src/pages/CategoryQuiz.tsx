@@ -1,113 +1,31 @@
 
-import React, { useState, useEffect } from "react";
-import { useLocation, useNavigate } from "react-router-dom";
-import { useAuth } from "../contexts/AuthContext";
+import React from "react";
+import { useNavigate } from "react-router-dom";
 import { Card } from "@/components/ui/card";
-import { QuizHeader } from "@/components/quiz/QuizHeader";
-import { QuizContent } from "@/components/quiz/QuizContent";
-import { QuizFooter } from "@/components/quiz/QuizFooter";
-import { useQuiz } from "@/hooks/useQuiz";
-import { Category } from "@/types/quiz";
-import { toast } from "sonner";
+import { Button } from "@/components/ui/button";
+import { ArrowLeft } from "lucide-react";
 
 const CategoryQuiz = () => {
-  const location = useLocation();
   const navigate = useNavigate();
-  const { user } = useAuth();
-  const { quizIds = [], categories = [] } = location.state || {};
-  const [showFeedback, setShowFeedback] = useState(false);
-  const [quizCompleted, setQuizCompleted] = useState(false);
-
-  const {
-    quizState,
-    isLoading,
-    currentCategory,
-    currentQuestion,
-    currentAnswers,
-    selectedAnswerIds,
-    handleSelectAnswer,
-    handleNextQuestion,
-    saveQuizResults
-  } = useQuiz(user, quizIds, categories);
-
-  // Handle saving results when the quiz is completed
-  useEffect(() => {
-    const saveResultsIfCompleted = async () => {
-      if (quizCompleted) {
-        try {
-          console.log("Saving quiz results...");
-          await saveQuizResults();
-          setQuizCompleted(false);
-          
-          toast.success("Quiz completed! Your results have been saved.");
-        } catch (error) {
-          console.error("Error saving quiz results:", error);
-          toast.error("Failed to save your quiz results");
-        }
-      }
-    };
-    
-    saveResultsIfCompleted();
-  }, [quizCompleted, saveQuizResults]);
-
-  const handleSubmitAnswer = () => {
-    setShowFeedback(true);
-  };
-
-  const handleNextQuestionClick = () => {
-    // If this is the last question and we're showing feedback,
-    // mark the quiz as completed before moving to the next question/quiz
-    if (quizState.currentQuestionIndex === quizState.questions.length - 1 && showFeedback) {
-      setQuizCompleted(true);
-    }
-    
-    setShowFeedback(false);
-    handleNextQuestion();
-    
-    // If we've completed all quizzes, navigate back to courses
-    if (quizState.currentQuizIndex >= quizIds.length) {
-      navigate('/courses');
-    }
-  };
-
-  if (isLoading) {
-    return (
-      <div className="flex items-center justify-center min-h-screen bg-gradient-to-b from-blue-950 to-slate-950 p-4">
-        <div className="text-white text-xl">Loading quiz...</div>
-      </div>
-    );
-  }
 
   return (
     <div className="flex items-center justify-center min-h-screen bg-gradient-to-b from-blue-950 to-slate-950 p-4">
       <div className="w-full max-w-3xl">
-        <Card className="backdrop-blur-sm bg-slate-950 border-slate-800 shadow-xl transition-all duration-300">
-          <QuizHeader
-            quizIndex={quizState.currentQuizIndex}
-            totalQuizzes={quizIds.length}
-            questionIndex={quizState.currentQuestionIndex}
-            totalQuestions={quizState.questions.length}
-            currentCategory={currentCategory}
-            currentQuestion={currentQuestion}
-          />
-          
-          <QuizContent
-            currentAnswers={currentAnswers}
-            selectedAnswerIds={selectedAnswerIds}
-            currentQuestion={currentQuestion}
-            onSelectAnswer={handleSelectAnswer}
-            showFeedback={showFeedback}
-          />
-          
-          <QuizFooter
-            currentQuestion={currentQuestion}
-            hasSelectedAnswers={selectedAnswerIds.length > 0}
-            isLastQuestion={quizState.currentQuestionIndex === quizState.questions.length - 1}
-            isLastQuiz={quizState.currentQuizIndex === quizIds.length - 1}
-            onNext={handleNextQuestionClick}
-            onSubmit={handleSubmitAnswer}
-            showFeedback={showFeedback}
-          />
+        <Card className="backdrop-blur-sm bg-slate-950 border-slate-800 shadow-xl transition-all duration-300 p-8">
+          <div className="text-center space-y-6">
+            <h2 className="text-2xl font-bold text-white">Quiz Feature Unavailable</h2>
+            <p className="text-gray-300">
+              The quiz feature has been temporarily removed from this platform.
+              We're working on improving the learning experience and will bring back enhanced quiz functionality soon.
+            </p>
+            <Button 
+              onClick={() => navigate('/courses')} 
+              className="flex items-center gap-2 mt-4 mx-auto"
+            >
+              <ArrowLeft size={16} />
+              Return to Courses
+            </Button>
+          </div>
         </Card>
       </div>
     </div>
