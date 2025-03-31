@@ -69,9 +69,22 @@ export const useQuiz = (user: any, quizIds: number[], categories: any[]) => {
         quizIds: quizIds.map(id => id),
         categories: categories.map(c => c?.name || 'unknown')
       });
-      loadQuizData(quizIds, categories);
+      
+      // Reset to first quiz index when initially loading
+      setQuizState(prev => ({
+        ...prev,
+        currentQuizIndex: 0,
+        currentQuestionIndex: 0,
+        questions: [],
+        score: 0
+      }));
+      
+      // Load quiz data with a slight delay to ensure state is set
+      setTimeout(() => {
+        loadQuizData(quizIds, categories);
+      }, 100);
     }
-  }, [quizIds, categories, isCompleted, loadQuizData]);
+  }, [quizIds, categories, isCompleted, loadQuizData, setQuizState]);
   
   // Create a wrapped next question handler
   const handleNextQuestionWrapper = useCallback(() => {
@@ -80,6 +93,11 @@ export const useQuiz = (user: any, quizIds: number[], categories: any[]) => {
   
   // Create a wrapped save results function
   const saveQuizResultsWrapper = useCallback(async () => {
+    if (quizState.currentQuizIndex >= quizIds.length) {
+      console.error("Cannot save results - quiz index out of bounds");
+      return false;
+    }
+    
     const currentQuizId = quizIds[quizState.currentQuizIndex];
     const currentCategoryId = categories[quizState.currentQuizIndex]?.id;
     

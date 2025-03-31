@@ -77,32 +77,23 @@ export const useQuizNavigation = (
         setCurrentAnswers([]);
         setSelectedAnswerIds([]);
         
-        // Update quiz state FIRST, then load data in a separate step
+        // Update quiz state with the next quiz index
         console.log(`NAVIGATION - Updating state to quiz index ${nextQuizIndex} before loading data`);
         
-        // Create a copy of the updated state to ensure we're using the correct values
-        const updatedState = {
+        // Update the state BEFORE we try to load data
+        setQuizState(prev => ({
+          ...prev,
           currentQuizIndex: nextQuizIndex,
           currentQuestionIndex: 0,
           questions: [],
           score: 0
-        };
-        
-        // Update the state
-        setQuizState(prev => ({
-          ...prev,
-          ...updatedState
         }));
         
-        // Load the next quiz with a slight delay to ensure state updates
+        // Give the state update time to complete before loading the next quiz
         setTimeout(() => {
-          console.log("NAVIGATION - Now loading quiz data for:", {
-            nextQuizIndex: updatedState.currentQuizIndex,
-            quizId: quizIds[updatedState.currentQuizIndex],
-            categoryName: categories[updatedState.currentQuizIndex]?.name
-          });
+          console.log("NAVIGATION - Now loading quiz data with index:", nextQuizIndex);
           
-          // Pass the specific next quiz ID and category instead of the full arrays
+          // Load the next quiz data
           loadQuizData(quizIds, categories)
             .catch(error => {
               console.error("NAVIGATION - Error loading next quiz:", error);
