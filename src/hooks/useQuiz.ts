@@ -1,5 +1,5 @@
 
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 
@@ -16,6 +16,7 @@ export const useQuiz = (user: any, quizIds: number[], categories: any[]) => {
   const [currentAnswers, setCurrentAnswers] = useState<any[]>([]);
   const [selectedAnswerIds, setSelectedAnswerIds] = useState<number[]>([]);
   const [currentCategory, setCurrentCategory] = useState<any>(null);
+  const [savedQuizIds, setSavedQuizIds] = useState<number[]>([]);
   
   // Load the current quiz questions and first question's answers
   const loadQuizData = useCallback(async () => {
@@ -130,11 +131,11 @@ export const useQuiz = (user: any, quizIds: number[], categories: any[]) => {
   }, [quizState, quizIds, loadQuizData]);
   
   // Initialize quiz on first load
-  useState(() => {
+  useEffect(() => {
     if (quizIds.length > 0) {
       loadQuizData();
     }
-  });
+  }, [quizIds, loadQuizData]);
   
   // Handle selecting an answer
   const handleSelectAnswer = useCallback((answerId: number) => {
@@ -146,14 +147,33 @@ export const useQuiz = (user: any, quizIds: number[], categories: any[]) => {
     });
   }, []);
   
-  // Save quiz results
+  // Calculate difficulty level based on score
+  const calculateDifficultyLevel = useCallback((score: number): string => {
+    // Assuming quiz has around 10 questions
+    if (score >= 8) {
+      return 'advanced';
+    } else if (score >= 5) {
+      return 'intermediate';
+    } else {
+      return 'beginner';
+    }
+  }, []);
+  
+  // Save quiz results and update difficulty level
   const saveQuizResults = useCallback(async () => {
     if (!user || !quizIds.length) return;
     
     try {
       const currentQuizId = quizIds[quizState.currentQuizIndex];
       
-      const { error } = await supabase
+      // Check if we've already saved this quiz result to prevent duplicates
+      if (savedQuizIds.includes(currentQuizId)) {
+        console.log(`Quiz ${currentQuizId} results already saved, skipping.`);
+        return;
+      }
+      
+      // Save the quiz result
+      const { error: resultError } = await supabase
         .from('user_quiz_results')
         .insert({
           user_id: user.id,
@@ -161,14 +181,57 @@ export const useQuiz = (user: any, quizIds: number[], categories: any[]) => {
           score: quizState.score
         });
       
-      if (error) throw error;
+      if (resultError) throw resultError;
+      
+      // Mark this quiz as saved to prevent duplicates
+      setSavedQuizIds(prev => [...prev, currentQuizId]);
+      
+      // Get the current category
+      const currentCategoryId = categories[quizState.currentQuizIndex]?.id;
+      
+      if (currentCategoryId) {
+        // Calculate difficulty level based on score
+        const difficultyLevel = calculateDifficultyLevel(quizState.score);
+        
+        // Check if user already has this category in their interests
+        const { data: existingInterest, error: interestQueryError } = await supabase
+          .from('user_interest_categories')
+          .select('*')
+          .eq('user_id', user.id)
+          .eq('category_id', currentCategoryId)
+          .maybeSingle();
+        
+        if (interestQueryError) throw interestQueryError;
+        
+        if (existingInterest) {
+          // Update existing interest with new difficulty level
+          const { error: updateError } = await supabase
+            .from('user_interest_categories')
+            .update({ difficulty_level: difficultyLevel })
+            .eq('user_id', user.id)
+            .eq('category_id', currentCategoryId);
+          
+          if (updateError) throw updateError;
+        } else {
+          // Insert new interest with difficulty level
+          const { error: insertError } = await supabase
+            .from('user_interest_categories')
+            .insert({
+              user_id: user.id,
+              category_id: currentCategoryId,
+              difficulty_level: difficultyLevel
+            });
+          
+          if (insertError) throw insertError;
+        }
+      }
       
       return true;
     } catch (error) {
       console.error("Error saving quiz results:", error);
       throw error;
     }
-  }, [user, quizIds, quizState.currentQuizIndex, quizState.score]);
+  }, [user, quizIds, quizState.currentQuizIndex, quizState.score, categories, savedQuizIds, calculateDifficultyLevel]);
   
   return {
     quizState,
