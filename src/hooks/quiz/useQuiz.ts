@@ -26,27 +26,12 @@ export const useQuiz = (user: any, quizIds: number[], categories: any[]) => {
     setSelectedAnswerIds
   } = quizStateManager;
   
-  // Initialize quiz navigation with logging
-  const logNavigation = useCallback((message: string, data?: any) => {
-    console.log(`[Quiz Navigation] ${message}`, data || '');
-  }, []);
-  
-  const logCurrentState = useCallback((state: any, quizIds: number[], categories: any[], savedQuizIds: number[]) => {
-    console.log('[Quiz State]', {
-      currentQuizIndex: state.currentQuizIndex,
-      currentQuestionIndex: state.currentQuestionIndex,
-      quizIds,
-      categories,
-      savedQuizIds
-    });
-  }, []);
-  
   // Initialize quiz navigation with the state manager
   const {
     loadQuizData,
     handleNextQuestion,
     saveCurrentQuizResults
-  } = useQuizNavigation(user, quizIds, categories, quizStateManager, logNavigation, logCurrentState);
+  } = useQuizNavigation(user, quizIds, categories, quizStateManager);
   
   // Return all the necessary functions and state
   return {
