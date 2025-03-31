@@ -73,9 +73,9 @@ const ProfileTab = ({ userInterests, handleEditInterests }: ProfileTabProps) => 
       
       // Upload profile picture if selected
       if (profilePicture) {
-        console.log("Attempting to upload profile picture:", profilePicture.name);
+        console.log("Uploading profile picture:", profilePicture.name, profilePicture.type, profilePicture.size);
         avatar_url = await StorageService.uploadFile(profilePicture, 'avatars', 'profile-pictures');
-        console.log("Received avatar URL:", avatar_url);
+        console.log("Profile picture upload result:", avatar_url);
       }
       
       // Update user record in the database
@@ -149,7 +149,15 @@ const ProfileTab = ({ userInterests, handleEditInterests }: ProfileTabProps) => 
               <div className="w-32 h-32 rounded-full overflow-hidden mb-4 bg-gray-700 flex items-center justify-center">
                 {profileData.avatar_url ? (
                   <Avatar className="w-full h-full">
-                    <AvatarImage src={profileData.avatar_url} alt="Profile picture" />
+                    <AvatarImage 
+                      src={profileData.avatar_url} 
+                      alt="Profile picture" 
+                      className="w-full h-full object-cover"
+                      onError={(e) => {
+                        console.error("Error loading profile picture:", e);
+                        (e.target as HTMLImageElement).src = '';
+                      }}
+                    />
                     <AvatarFallback>
                       <User size={48} className="text-gray-400" />
                     </AvatarFallback>

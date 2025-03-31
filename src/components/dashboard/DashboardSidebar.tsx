@@ -52,6 +52,7 @@ const DashboardSidebar = ({
         if (data) {
           setUserBio(data.bio || '');
           setProfilePicture(data.profile_picture);
+          console.log("Fetched profile picture URL:", data.profile_picture);
         }
       } catch (error) {
         console.error('Error fetching user profile:', error);
@@ -88,7 +89,15 @@ const DashboardSidebar = ({
           <div className="w-20 h-20 rounded-full overflow-hidden mb-4 bg-gray-700">
             {profilePicture ? (
               <Avatar className="w-full h-full">
-                <AvatarImage src={profilePicture} alt="Profile picture" className="w-full h-full object-cover" />
+                <AvatarImage 
+                  src={profilePicture} 
+                  alt="Profile picture" 
+                  className="w-full h-full object-cover" 
+                  onError={(e) => {
+                    console.error("Error loading profile picture:", e);
+                    (e.target as HTMLImageElement).src = '';
+                  }}
+                />
                 <AvatarFallback>
                   <User size={32} className="text-gray-400" />
                 </AvatarFallback>

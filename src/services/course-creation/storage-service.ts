@@ -23,7 +23,7 @@ export class StorageService {
       const fileName = `${Date.now()}-${Math.random().toString(36).substring(2, 15)}.${fileExtension}`;
       const filePath = path ? `${path}/${fileName}` : fileName;
       
-      console.log(`Uploading file to ${bucket}/${filePath}`);
+      console.log(`Uploading file to ${bucket}/${filePath}`, file);
       
       // Upload the file
       const { data, error } = await supabase.storage
@@ -31,24 +31,11 @@ export class StorageService {
         .upload(filePath, file, {
           contentType: file.type,
           cacheControl: '3600',
-          upsert: true // Changed from false to true to overwrite existing files if needed
+          upsert: true
         });
       
       if (error) {
         console.error("Error uploading file:", error);
-        if (error.message.includes('row-level security policy')) {
-          // This error happens but the file is usually still uploaded
-          // We need to check if the file was uploaded anyway and get its URL
-          const { data: checkFileExists } = await supabase.storage
-            .from(bucket)
-            .getPublicUrl(filePath);
-          
-          if (checkFileExists?.publicUrl) {
-            console.log("File was uploaded despite RLS error, URL:", checkFileExists.publicUrl);
-            return checkFileExists.publicUrl;
-          }
-        }
-        
         toast.error('Upload Failed: ' + error.message);
         return null;
       }
