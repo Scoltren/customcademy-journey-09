@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { 
@@ -16,6 +17,7 @@ import { toast } from 'sonner';
 import UserInterests from './UserInterests';
 import LearningStats from './LearningStats';
 import { supabase } from '@/integrations/supabase/client';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 
 interface SidebarProps {
   activeTab: string;
@@ -35,27 +37,29 @@ const DashboardSidebar = ({
   const { user, logout } = useAuth();
   const navigate = useNavigate();
   const [userBio, setUserBio] = React.useState<string>('');
+  const [profilePicture, setProfilePicture] = React.useState<string | null>(null);
   
   React.useEffect(() => {
-    // Fetch user bio from database
-    const fetchUserBio = async () => {
+    // Fetch user bio and profile picture from database
+    const fetchUserProfile = async () => {
       try {
         const { data, error } = await supabase
           .from('users')
-          .select('bio')
+          .select('bio, profile_picture')
           .eq('auth_user_id', user?.id)
           .single();
         
-        if (data && data.bio) {
-          setUserBio(data.bio);
+        if (data) {
+          setUserBio(data.bio || '');
+          setProfilePicture(data.profile_picture);
         }
       } catch (error) {
-        console.error('Error fetching user bio:', error);
+        console.error('Error fetching user profile:', error);
       }
     };
     
     if (user) {
-      fetchUserBio();
+      fetchUserProfile();
     }
   }, [user]);
   
@@ -82,9 +86,18 @@ const DashboardSidebar = ({
       <div className="glass-card p-6 mb-6">
         <div className="flex flex-col items-center mb-6">
           <div className="w-20 h-20 rounded-full overflow-hidden mb-4 bg-gray-700">
-            <div className="w-full h-full flex items-center justify-center">
-              <User size={32} className="text-gray-400" />
-            </div>
+            {profilePicture ? (
+              <Avatar className="w-full h-full">
+                <AvatarImage src={profilePicture} alt="Profile picture" className="w-full h-full object-cover" />
+                <AvatarFallback>
+                  <User size={32} className="text-gray-400" />
+                </AvatarFallback>
+              </Avatar>
+            ) : (
+              <div className="w-full h-full flex items-center justify-center">
+                <User size={32} className="text-gray-400" />
+              </div>
+            )}
           </div>
           <h2 className="text-xl font-bold text-white">{user?.user_metadata?.username || user?.email}</h2>
           <p className="text-slate-400 text-sm">{user?.email}</p>

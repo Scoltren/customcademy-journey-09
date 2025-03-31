@@ -1,5 +1,6 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { User, Edit, Upload, ArrowLeftRight } from 'lucide-react';
+
+import React, { useState, useEffect } from 'react';
+import { User, Edit, ArrowLeftRight } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
@@ -72,7 +73,9 @@ const ProfileTab = ({ userInterests, handleEditInterests }: ProfileTabProps) => 
       
       // Upload profile picture if selected
       if (profilePicture) {
+        console.log("Attempting to upload profile picture:", profilePicture.name);
         avatar_url = await StorageService.uploadFile(profilePicture, 'avatars', 'profile-pictures');
+        console.log("Received avatar URL:", avatar_url);
       }
       
       // Update user record in the database
@@ -93,6 +96,12 @@ const ProfileTab = ({ userInterests, handleEditInterests }: ProfileTabProps) => 
       });
       
       if (authError) throw authError;
+      
+      // Update local state with new avatar url
+      setProfileData(prev => ({
+        ...prev,
+        avatar_url: avatar_url
+      }));
       
       toast.success('Profile updated successfully');
       setIsEditing(false);
@@ -129,7 +138,10 @@ const ProfileTab = ({ userInterests, handleEditInterests }: ProfileTabProps) => 
               <div className="mb-4 w-full">
                 <FileUploader
                   accept="image/*"
-                  onChange={setProfilePicture}
+                  onChange={(file) => {
+                    console.log("File selected:", file?.name);
+                    setProfilePicture(file);
+                  }}
                   maxSize={5 * 1024 * 1024} // 5MB max
                 />
               </div>

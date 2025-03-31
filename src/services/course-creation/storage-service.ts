@@ -31,7 +31,7 @@ export class StorageService {
         .upload(filePath, file, {
           contentType: file.type,
           cacheControl: '3600',
-          upsert: false
+          upsert: true // Changed from false to true to overwrite existing files if needed
         });
       
       if (error) {
@@ -43,7 +43,7 @@ export class StorageService {
             .from(bucket)
             .getPublicUrl(filePath);
           
-          if (checkFileExists) {
+          if (checkFileExists?.publicUrl) {
             console.log("File was uploaded despite RLS error, URL:", checkFileExists.publicUrl);
             return checkFileExists.publicUrl;
           }
