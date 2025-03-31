@@ -17,10 +17,12 @@ export const useQuiz = (user: any, quizIds: number[], categories: any[]) => {
   const [selectedAnswerIds, setSelectedAnswerIds] = useState<number[]>([]);
   const [currentCategory, setCurrentCategory] = useState<any>(null);
   const [savedQuizIds, setSavedQuizIds] = useState<number[]>([]);
+  const [isCompleted, setIsCompleted] = useState(false);
   
   // Load the current quiz questions and first question's answers
   const loadQuizData = useCallback(async () => {
     if (!quizIds.length || quizState.currentQuizIndex >= quizIds.length) {
+      setIsCompleted(true);
       return;
     }
     
@@ -42,6 +44,12 @@ export const useQuiz = (user: any, quizIds: number[], categories: any[]) => {
       
       if (!questions || !questions.length) {
         toast.error("No questions available for this quiz");
+        // Move to the next quiz if this one has no questions
+        setQuizState(prev => ({
+          ...prev,
+          currentQuizIndex: prev.currentQuizIndex + 1
+        }));
+        loadQuizData();
         return;
       }
       
@@ -103,6 +111,9 @@ export const useQuiz = (user: any, quizIds: number[], categories: any[]) => {
         toast.error("Failed to load question answers");
       }
     } else {
+      // Current quiz is finished, save results first
+      await saveQuizResults();
+      
       // Move to the next quiz
       const nextQuizIndex = quizState.currentQuizIndex + 1;
       
@@ -110,7 +121,8 @@ export const useQuiz = (user: any, quizIds: number[], categories: any[]) => {
         ...prev,
         currentQuizIndex: nextQuizIndex,
         currentQuestionIndex: 0,
-        questions: []
+        questions: [],
+        score: 0 // Reset score for the next quiz
       }));
       
       // If there are more quizzes, load the next one
@@ -126,6 +138,9 @@ export const useQuiz = (user: any, quizIds: number[], categories: any[]) => {
         setTimeout(() => {
           loadQuizData();
         }, 100);
+      } else {
+        // All quizzes completed
+        setIsCompleted(true);
       }
     }
   }, [quizState, quizIds, loadQuizData]);
@@ -151,11 +166,11 @@ export const useQuiz = (user: any, quizIds: number[], categories: any[]) => {
   const calculateDifficultyLevel = useCallback((score: number): string => {
     // Assuming quiz has around 10 questions
     if (score >= 8) {
-      return 'advanced';
+      return 'Advanced';
     } else if (score >= 5) {
-      return 'intermediate';
+      return 'Intermediate';
     } else {
-      return 'beginner';
+      return 'Beginner';
     }
   }, []);
   
@@ -192,6 +207,8 @@ export const useQuiz = (user: any, quizIds: number[], categories: any[]) => {
       if (currentCategoryId) {
         // Calculate difficulty level based on score
         const difficultyLevel = calculateDifficultyLevel(quizState.score);
+        
+        console.log(`Updating user interest for category ${currentCategoryId} with difficulty level: ${difficultyLevel}`);
         
         // Check if user already has this category in their interests
         const { data: existingInterest, error: interestQueryError } = await supabase
@@ -242,6 +259,7 @@ export const useQuiz = (user: any, quizIds: number[], categories: any[]) => {
     selectedAnswerIds,
     handleSelectAnswer,
     handleNextQuestion,
-    saveQuizResults
+    saveQuizResults,
+    isCompleted
   };
 };

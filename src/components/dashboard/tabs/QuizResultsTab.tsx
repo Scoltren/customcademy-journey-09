@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { Loader2, BookOpen, Book } from 'lucide-react';
+import { Loader2 } from 'lucide-react';
 import { 
   Table,
   TableBody,
@@ -23,9 +23,6 @@ interface QuizResult {
       name: string;
     }
   }
-  // Additional fields for the join
-  origin?: 'category' | 'course';
-  origin_name?: string;
 }
 
 interface QuizResultsTabProps {
@@ -80,7 +77,7 @@ const QuizResultsTab: React.FC<QuizResultsTabProps> = ({ quizResults, isLoading 
                 <TableHeader>
                   <TableRow>
                     <TableHead>Quiz</TableHead>
-                    <TableHead>Origin</TableHead>
+                    <TableHead>Category</TableHead>
                     <TableHead>Score</TableHead>
                     <TableHead>Level</TableHead>
                   </TableRow>
@@ -95,23 +92,12 @@ const QuizResultsTab: React.FC<QuizResultsTabProps> = ({ quizResults, isLoading 
                       skillLevel = 'Intermediate';
                     }
                     
-                    // Determine if quiz is from a course or category
-                    const originIcon = result.origin === 'course' ? 
-                      <BookOpen className="h-4 w-4 mr-1" /> : 
-                      <Book className="h-4 w-4 mr-1" />;
-                    
-                    const originText = result.origin_name || 
-                      (result.quiz?.category?.name ? `Category: ${result.quiz.category.name}` : 'Unknown');
+                    const categoryName = result.quiz?.category?.name || 'Unknown';
                     
                     return (
                       <TableRow key={result.id}>
                         <TableCell>{result.quiz?.title || `Quiz #${result.quiz_id}`}</TableCell>
-                        <TableCell>
-                          <div className="flex items-center">
-                            {originIcon}
-                            <span>{originText}</span>
-                          </div>
-                        </TableCell>
+                        <TableCell>{categoryName}</TableCell>
                         <TableCell>{result.score}</TableCell>
                         <TableCell>
                           <span className={

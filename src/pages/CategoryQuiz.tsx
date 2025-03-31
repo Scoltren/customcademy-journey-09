@@ -18,7 +18,6 @@ const CategoryQuiz = () => {
   const { quizIds = [], categories = [] } = location.state || {};
   
   const [showFeedback, setShowFeedback] = useState(false);
-  const [quizCompleted, setQuizCompleted] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   
   const { 
@@ -30,36 +29,23 @@ const CategoryQuiz = () => {
     selectedAnswerIds, 
     handleSelectAnswer, 
     handleNextQuestion, 
-    saveQuizResults 
+    isCompleted
   } = useQuiz(user, quizIds, categories);
   
   // If no quiz IDs were provided, redirect to courses
   useEffect(() => {
     if (!quizIds.length || !categories.length) {
-      navigate('/courses');
+      navigate('/');
     }
   }, [quizIds, categories, navigate]);
   
-  // Handle saving results when quiz is completed
+  // Handle when all quizzes are completed
   useEffect(() => {
-    const saveResultsIfCompleted = async () => {
-      if (quizCompleted && !isSaving) {
-        try {
-          setIsSaving(true);
-          await saveQuizResults();
-          toast.success("Quiz completed! Your results have been saved.");
-        } catch (error) {
-          console.error("Error saving quiz results:", error);
-          toast.error("Failed to save your quiz results");
-        } finally {
-          setQuizCompleted(false);
-          setIsSaving(false);
-        }
-      }
-    };
-    
-    saveResultsIfCompleted();
-  }, [quizCompleted, saveQuizResults, isSaving]);
+    if (isCompleted) {
+      toast.success("All quizzes completed! Your results have been saved.");
+      navigate('/');
+    }
+  }, [isCompleted, navigate]);
   
   // Handle submitting an answer
   const handleSubmitAnswer = () => {
@@ -79,19 +65,8 @@ const CategoryQuiz = () => {
   
   // Handle moving to the next question
   const handleNextQuestionClick = () => {
-    // If this is the last question and we're showing feedback,
-    // mark the quiz as completed before moving to the next question/quiz
-    if (quizState.currentQuestionIndex === quizState.questions.length - 1 && showFeedback) {
-      setQuizCompleted(true);
-    }
-    
     setShowFeedback(false);
     handleNextQuestion();
-    
-    // If we've completed all quizzes, navigate back to courses
-    if (quizState.currentQuizIndex >= quizIds.length) {
-      navigate('/courses');
-    }
   };
   
   if (isLoading) {
@@ -105,7 +80,7 @@ const CategoryQuiz = () => {
     );
   }
   
-  if (!quizState.questions.length) {
+  if (!quizState.questions.length && !isCompleted) {
     return (
       <div className="flex items-center justify-center min-h-screen bg-gradient-to-b from-blue-950 to-slate-950 p-4">
         <div className="w-full max-w-3xl">
@@ -120,10 +95,10 @@ const CategoryQuiz = () => {
             </CardContent>
             <CardFooter className="flex justify-center pb-6">
               <Button
-                onClick={() => navigate('/courses')}
+                onClick={() => navigate('/')}
                 className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2"
               >
-                Return to Courses
+                Return Home
               </Button>
             </CardFooter>
           </Card>

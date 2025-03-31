@@ -30,6 +30,7 @@ export const useRecommendedCourses = (userId: string, userInterests: number[]) =
           }
         });
         
+        console.log("User skill levels:", skillLevels);
         setUserSkillLevels(skillLevels);
       } catch (error) {
         console.error('Error fetching user skill levels:', error);
@@ -56,94 +57,74 @@ export const useRecommendedCourses = (userId: string, userInterests: number[]) =
         return;
       }
 
-      // Fetch courses based on user interests and skill levels
-      let query = supabase
+      // Fetch courses based on user interests
+      const { data, error } = await supabase
         .from('courses')
         .select('*, categories(name)')
         .in('category_id', categoryIds);
-        
-      // Apply skill level filter if we have skill levels
-      if (Object.keys(userSkillLevels).length > 0) {
-        // This query will prioritize courses that match the user's skill level
-        // but still include other courses as fallback
-        const { data, error } = await query;
-        
-        if (error) throw error;
-        
-        if (data && data.length > 0) {
-          // Sort courses to prioritize those matching user's skill level for each category
-          data.sort((a, b) => {
-            const aCategoryId = a.category_id;
-            const bCategoryId = b.category_id;
-            
-            // Exact match: Same category AND same difficulty level
-            const aExactMatch = a.difficulty_level === userSkillLevels[aCategoryId];
-            const bExactMatch = b.difficulty_level === userSkillLevels[bCategoryId];
-            
-            if (aExactMatch && !bExactMatch) return -1;
-            if (!aExactMatch && bExactMatch) return 1;
-            
-            // Partial match: Same category only
-            if (aCategoryId && !bCategoryId) return -1;
-            if (!aCategoryId && bCategoryId) return 1;
-            
-            return 0;
-          });
-        }
-        
-        // Format courses to match expected structure
-        const formattedCourses = data?.map(course => ({
-          id: course.id,
-          title: course.title,
-          description: course.description,
-          thumbnail: course.thumbnail,
-          price: course.price,
-          overall_rating: course.overall_rating,
-          difficulty_level: course.difficulty_level,
-          category_id: course.category_id,
-          category_name: course.categories?.name || 'Uncategorized',
-          creator_id: course.creator_id,
-          created_at: course.created_at,
-          media: course.media,
-          course_time: course.course_time
-        }));
-        
-        setRecommendedCourses(formattedCourses as Course[]);
-        
-        // Fetch chapter counts
-        if (formattedCourses && formattedCourses.length > 0) {
-          fetchChapterCounts(formattedCourses.map(course => course.id));
-        }
-      } else {
-        // If no skill levels, just fetch based on categories
-        const { data, error } = await query.limit(8);
-        
-        if (error) throw error;
-        
-        // Format courses to match expected structure
-        const formattedCourses = data?.map(course => ({
-          id: course.id,
-          title: course.title,
-          description: course.description,
-          thumbnail: course.thumbnail,
-          price: course.price,
-          overall_rating: course.overall_rating,
-          difficulty_level: course.difficulty_level,
-          category_id: course.category_id,
-          category_name: course.categories?.name || 'Uncategorized',
-          creator_id: course.creator_id,
-          created_at: course.created_at,
-          media: course.media,
-          course_time: course.course_time
-        }));
-        
-        setRecommendedCourses(formattedCourses as Course[]);
-        
-        // Fetch chapter counts
-        if (formattedCourses && formattedCourses.length > 0) {
-          fetchChapterCounts(formattedCourses.map(course => course.id));
-        }
+      
+      if (error) throw error;
+      
+      if (!data || data.length === 0) {
+        setRecommendedCourses([]);
+        setLoadingCourses(false);
+        return;
       }
+      
+      // Sort courses with priority given to those matching user's skill level
+      const sortedCourses = [...data].sort((a, b) => {
+        const aCategoryId = a.category_id;
+        const bCategoryId = b.category_id;
+        
+        if (aCategoryId && bCategoryId) {
+          const aUserSkillLevel = userSkillLevels[aCategoryId];
+          const bUserSkillLevel = userSkillLevels[bCategoryId];
+          
+          // First priority: exact match on both category and difficulty level
+          const aExactMatch = a.difficulty_level && a.difficulty_level.toLowerCase() === aUserSkillLevel?.toLowerCase();
+          const bExactMatch = b.difficulty_level && b.difficulty_level.toLowerCase() === bUserSkillLevel?.toLowerCase();
+          
+          if (aExactMatch && !bExactMatch) return -1;
+          if (!aExactMatch && bExactMatch) return 1;
+          
+          // Second priority: match on category only
+          if (aUserSkillLevel && !bUserSkillLevel) return -1;
+          if (!aUserSkillLevel && bUserSkillLevel) return 1;
+        }
+        
+        // Third priority: higher rated courses
+        if (a.overall_rating && b.overall_rating) {
+          return b.overall_rating - a.overall_rating;
+        }
+        
+        return 0;
+      });
+      
+      // Format courses to match expected structure
+      const formattedCourses = sortedCourses.map(course => ({
+        id: course.id,
+        title: course.title,
+        description: course.description,
+        thumbnail: course.thumbnail,
+        price: course.price,
+        overall_rating: course.overall_rating,
+        difficulty_level: course.difficulty_level,
+        category_id: course.category_id,
+        category_name: course.categories?.name || 'Uncategorized',
+        categories: course.categories,
+        creator_id: course.creator_id,
+        created_at: course.created_at,
+        media: course.media,
+        course_time: course.course_time
+      }));
+      
+      setRecommendedCourses(formattedCourses);
+      
+      // Fetch chapter counts
+      if (formattedCourses.length > 0) {
+        fetchChapterCounts(formattedCourses.map(course => course.id));
+      }
+      
     } catch (error: any) {
       console.error('Error fetching recommended courses:', error.message);
       toast.error('Failed to load recommended courses');

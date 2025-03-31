@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
@@ -50,6 +49,8 @@ export const useDashboardData = (userId: string | undefined) => {
         .eq('user_id', userId);
       
       if (interestsError) throw interestsError;
+      
+      console.log("Fetched user interests:", interests);
       
       // Transform the data to match UserInterest type
       const transformedInterests: UserInterest[] = interests?.map(interest => ({
@@ -136,33 +137,8 @@ export const useDashboardData = (userId: string | undefined) => {
       
       if (quizzesError) throw quizzesError;
       
-      // Process quiz results to determine their origin (category or course)
-      if (quizzes && quizzes.length > 0) {
-        const processedResults = await Promise.all(quizzes.map(async (quiz) => {
-          // Check if the quiz is part of a course chapter
-          const { data: courseChapter } = await supabase
-            .from('chapters')
-            .select('*, course:course_id(title)')
-            .eq('quiz_id', quiz.quiz_id)
-            .maybeSingle();
-          
-          if (courseChapter) {
-            return {
-              ...quiz,
-              origin: 'course' as const,
-              origin_name: courseChapter.course?.title ? `Course: ${courseChapter.course.title}` : 'Course'
-            };
-          } else {
-            // The quiz is part of a category (not a course)
-            return {
-              ...quiz,
-              origin: 'category' as const,
-              origin_name: quiz.quiz?.category?.name ? `Category: ${quiz.quiz.category.name}` : 'Category'
-            };
-          }
-        }));
-        
-        setQuizResults(processedResults);
+      if (quizzes) {
+        setQuizResults(quizzes);
       } else {
         setQuizResults([]);
       }
