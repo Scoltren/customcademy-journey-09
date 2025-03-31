@@ -55,10 +55,9 @@ const CategoryQuizContainer = () => {
   useEffect(() => {
     if (currentCategory) {
       console.log(`CONTAINER - Currently showing quiz for category: ${currentCategory.name} (ID: ${currentCategory.id})`);
-      console.log(`CONTAINER - Current quiz index: ${quizState.currentQuizIndex}, total quizzes: ${quizIds.length}`);
-      console.log(`CONTAINER - Current quiz ID: ${quizIds[quizState.currentQuizIndex]}`);
+      console.log(`CONTAINER - Current quiz ID: ${quizIds[0]}`); // Always use the first quiz in the array
     }
-  }, [currentCategory, quizState.currentQuizIndex, quizIds]);
+  }, [currentCategory, quizIds]);
   
   // Set a maximum loading time to prevent infinite loading
   useEffect(() => {
@@ -139,11 +138,9 @@ const CategoryQuizContainer = () => {
     setShowFeedback(false);
     
     console.log("CONTAINER - Moving to next question/quiz", {
-      currentQuizIndex: quizState.currentQuizIndex,
       currentQuestionIndex: quizState.currentQuestionIndex,
       isLastQuestion: quizState.currentQuestionIndex === quizState.questions.length - 1,
-      isLastQuiz: quizState.currentQuizIndex === quizIds.length - 1,
-      totalQuizzes: quizIds.length,
+      remainingQuizzes: quizIds.length,
       quizIds: quizIds
     });
     
@@ -159,14 +156,14 @@ const CategoryQuizContainer = () => {
 
   // Compute derived props for the view component
   const isLastQuestion = quizState.currentQuestionIndex === quizState.questions.length - 1;
-  const isLastQuiz = quizState.currentQuizIndex === quizIds.length - 1;
+  const isLastQuiz = quizIds.length <= 1;
   
   return (
     <CategoryQuizView
       isLoading={isLoading}
       isCompleted={isCompleted}
       hasQuestions={quizState.questions.length > 0}
-      currentQuizIndex={quizState.currentQuizIndex}
+      currentQuizIndex={0} // Always 0 in the new approach
       totalQuizzes={quizIds.length}
       currentQuestionIndex={quizState.currentQuestionIndex}
       totalQuestions={quizState.questions.length}

@@ -1,14 +1,18 @@
 
-import { useCallback, useEffect, useRef } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { useQuizState } from './useQuizState';
 import { useCurrentAnswers } from './answers/useCurrentAnswers';
 import { useQuizResults } from './useQuizResults';
 import { useQuizDataLoader } from './useQuizDataLoader';
 import { useQuizNavigation } from './useQuizNavigation';
 
-export const useQuiz = (user: any, quizIds: number[], categories: any[]) => {
+export const useQuiz = (user: any, initialQuizIds: number[], initialCategories: any[]) => {
   // Track initial load
   const initialLoadRef = useRef(false);
+  
+  // Create state to manage the dynamic quiz and category arrays
+  const [quizIds, setQuizIds] = useState<number[]>(initialQuizIds);
+  const [categories, setCategories] = useState<any[]>(initialCategories);
   
   // Initialize quiz state
   const {
@@ -71,14 +75,13 @@ export const useQuiz = (user: any, quizIds: number[], categories: any[]) => {
         initialLoadRef: initialLoadRef.current
       });
       
-      // Reset to first quiz index when initially loading
-      setQuizState(prev => ({
-        ...prev,
+      // Reset state for a fresh start
+      setQuizState({
         currentQuizIndex: 0,
         currentQuestionIndex: 0,
         questions: [],
         score: 0
-      }));
+      });
       
       // Load quiz data with a slight delay to ensure state is set
       setTimeout(() => {
@@ -88,52 +91,67 @@ export const useQuiz = (user: any, quizIds: number[], categories: any[]) => {
     }
   }, [quizIds, categories, isCompleted, loadQuizData, setQuizState]);
   
-  // Reset initial load ref when quiz IDs change to force reload
+  // Reset initial load ref when we receive new quiz IDs
   useEffect(() => {
-    // Only reset if we have new quiz IDs and they're different from before
-    if (quizIds.length > 0) {
+    if (initialQuizIds.length > 0) {
+      // Update our quiz state with new quiz IDs
+      setQuizIds(initialQuizIds);
+      setCategories(initialCategories);
+      
+      // Reset the load state
       initialLoadRef.current = false;
       
-      // Reset completion state when quiz IDs change
+      // Reset completion state
       setIsCompleted(false);
       
       // Reset quiz state to start from the beginning
-      setQuizState(prev => ({
-        ...prev,
+      setQuizState({
         currentQuizIndex: 0,
         currentQuestionIndex: 0,
         questions: [],
         score: 0
-      }));
+      });
       
-      console.log("Quiz IDs changed, reset load state", { 
-        quizIds: quizIds.map(id => id),
+      console.log("Quiz IDs updated from props:", { 
+        initialQuizIds: initialQuizIds.map(id => id),
         initialLoadRef: initialLoadRef.current
       });
     }
-  }, [quizIds, setIsCompleted, setQuizState]);
+  }, [initialQuizIds, initialCategories, setIsCompleted, setQuizState]);
   
   // Create a wrapped next question handler
   const handleNextQuestionWrapper = useCallback(() => {
-    return handleNextQuestion(user, quizIds, categories);
-  }, [handleNextQuestion, user, quizIds, categories]);
+    // After handling the next question, the quizIds array will be updated
+    handleNextQuestion(user, quizIds, categories).then(() => {
+      // If moving to the next quiz, update our local arrays
+      if (quizState.currentQuestionIndex === quizState.questions.length - 1) {
+        // Remove the completed quiz from the local arrays
+        setQuizIds(prev => prev.slice(1));
+        setCategories(prev => prev.slice(1));
+        
+        console.log("Updated quiz IDs after navigation:", {
+          newQuizIds: quizIds.slice(1).map(id => id)
+        });
+      }
+    });
+  }, [handleNextQuestion, user, quizIds, categories, quizState, setQuizIds, setCategories]);
   
   // Create a wrapped save results function
   const saveQuizResultsWrapper = useCallback(async () => {
-    if (quizState.currentQuizIndex >= quizIds.length) {
-      console.error("Cannot save results - quiz index out of bounds");
+    if (quizIds.length === 0) {
+      console.error("Cannot save results - no quizzes available");
       return false;
     }
     
-    const currentQuizId = quizIds[quizState.currentQuizIndex];
-    const currentCategoryId = categories[quizState.currentQuizIndex]?.id;
+    const currentQuizId = quizIds[0]; // Always use the first quiz in the array
+    const currentCategoryId = categories[0]?.id;
     
     return await saveQuizResults(
       currentQuizId,
       quizState.score,
       currentCategoryId
     );
-  }, [saveQuizResults, quizIds, categories, quizState]);
+  }, [saveQuizResults, quizIds, categories, quizState.score]);
   
   // Debug logging
   const logQuizState = useCallback(() => {
