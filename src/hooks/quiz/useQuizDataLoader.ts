@@ -49,10 +49,14 @@ export const useQuizDataLoader = (stateManager: QuizStateManager) => {
       const currentQuizId = quizIds[currentQuizIndex];
       
       console.log(`Loading quiz ${currentQuizIndex + 1}/${quizIds.length}: Quiz ID ${currentQuizId}`);
+      console.log(`Current quiz state:`, quizState);
       
       // Set current category
       const currentCategory = categories[currentQuizIndex] || null;
       setCurrentCategory(currentCategory);
+      
+      // Log what we're about to fetch to help with debugging
+      console.log(`Fetching questions for quiz ID: ${currentQuizId}, category: ${currentCategory?.name}`);
       
       // Fetch questions for the current quiz
       const { data: questions, error: questionsError } = await supabase
@@ -60,7 +64,10 @@ export const useQuizDataLoader = (stateManager: QuizStateManager) => {
         .select('*')
         .eq('quiz_id', currentQuizId);
       
-      if (questionsError) throw questionsError;
+      if (questionsError) {
+        console.error("Error fetching questions:", questionsError);
+        throw questionsError;
+      }
       
       if (!questions || !questions.length) {
         toast.error("No questions available for this quiz");
@@ -109,7 +116,7 @@ export const useQuizDataLoader = (stateManager: QuizStateManager) => {
       setIsLoading(false);
     }
   }, [
-    quizState.currentQuizIndex, 
+    quizState, 
     setQuizState, 
     setIsLoading, 
     setCurrentQuestion, 

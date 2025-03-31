@@ -19,7 +19,7 @@ export const useQuizNavigation = (
 
   // Handle moving to the next question or quiz
   const handleNextQuestion = useCallback(async (user: any, quizIds: number[], categories: any[]) => {
-    console.log("Current state:", {
+    console.log("Current state before navigation:", {
       currentQuizIndex: quizState.currentQuizIndex,
       currentQuestionIndex: quizState.currentQuestionIndex,
       totalQuestions: quizState.questions.length,
@@ -74,17 +74,29 @@ export const useQuizNavigation = (
         setCurrentAnswers([]);
         setSelectedAnswerIds([]);
         
-        setQuizState(prev => ({
-          ...prev,
+        // Important: Make sure to update the quiz index BEFORE loading data for the next quiz
+        const updatedQuizState = {
+          ...quizState,
           currentQuizIndex: nextQuizIndex,
           currentQuestionIndex: 0,
           questions: [],
           score: 0 // Reset score for the next quiz
-        }));
+        };
         
-        // Load the next quiz data
+        setQuizState(updatedQuizState);
+        
+        console.log("Updated quiz state:", {
+          nextQuizIndex,
+          updatedState: updatedQuizState
+        });
+        
+        // Load the next quiz data with a slight delay to allow state to update
         setTimeout(() => {
-          loadQuizData(quizIds, categories);
+          loadQuizData(quizIds, categories)
+            .catch(error => {
+              console.error("Error loading next quiz:", error);
+              toast.error("Failed to load next quiz");
+            });
         }, 300);
       }
     } catch (error) {
