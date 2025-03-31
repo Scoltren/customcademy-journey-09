@@ -8,7 +8,8 @@ import {
   LogOut,
   Clock, 
   BarChart,
-  Edit
+  Edit,
+  PenTool
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/contexts/AuthContext';
@@ -37,6 +38,7 @@ const DashboardSidebar = ({
   const navItems = [
     { id: 'my-learning', label: 'My Learning', icon: BookOpen },
     { id: 'quiz-results', label: 'Quiz Results', icon: BarChart },
+    { id: 'created-courses', label: 'Created Courses', icon: PenTool },
     { id: 'profile', label: 'Profile', icon: User },
     { id: 'settings', label: 'Settings', icon: Settings }
   ];

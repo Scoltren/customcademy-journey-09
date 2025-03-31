@@ -9,6 +9,7 @@ import MyLearningTab from '@/components/dashboard/tabs/MyLearningTab';
 import QuizResultsTab from '@/components/dashboard/tabs/QuizResultsTab';
 import ProfileTab from '@/components/dashboard/tabs/ProfileTab';
 import SettingsTab from '@/components/dashboard/tabs/SettingsTab';
+import CreatedCoursesTab from '@/components/dashboard/tabs/CreatedCoursesTab';
 import { useDashboardData } from '@/hooks/useDashboardData';
 
 const Dashboard = () => {
@@ -68,6 +69,11 @@ const Dashboard = () => {
                   quizResults={quizResults}
                   isLoading={isLoading}
                 />
+              )}
+              
+              {/* Created Courses Tab */}
+              {activeTab === 'created-courses' && (
+                <CreatedCoursesTab />
               )}
               
               {/* Profile Tab */}

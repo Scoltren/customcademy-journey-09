@@ -74,6 +74,7 @@ export type Database = {
           id: number
           progress_when_finished: number | null
           quiz_id: number | null
+          title: string | null
           video_link: string | null
         }
         Insert: {
@@ -82,6 +83,7 @@ export type Database = {
           id?: never
           progress_when_finished?: number | null
           quiz_id?: number | null
+          title?: string | null
           video_link?: string | null
         }
         Update: {
@@ -90,6 +92,7 @@ export type Database = {
           id?: never
           progress_when_finished?: number | null
           quiz_id?: number | null
+          title?: string | null
           video_link?: string | null
         }
         Relationships: [

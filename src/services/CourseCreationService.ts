@@ -175,7 +175,7 @@ export class CourseCreationService {
         course_id: courseId
       });
       
-      // Create chapter record
+      // Create chapter record - now with title field
       const { data, error } = await supabase.from('chapters').insert({
         title: chapterData.title,
         chapter_text: chapterData.chapter_text,
@@ -226,6 +226,189 @@ export class CourseCreationService {
         description: 'Failed to fetch categories. Please try again.',
       });
       return [];
+    }
+  }
+
+  /**
+   * Gets courses created by a user
+   * @param userId The ID of the user
+   * @returns List of courses created by the user
+   */
+  static async getCreatedCourses(userId: string) {
+    try {
+      const { data, error } = await supabase.from('courses')
+        .select('*, categories(name)')
+        .eq('creator_id', userId);
+      
+      if (error) {
+        console.error('Error fetching created courses:', error);
+        toast("Error", {
+          description: 'Failed to fetch your created courses. Please try again.',
+        });
+        return [];
+      }
+      
+      return data;
+    } catch (error) {
+      console.error('Error fetching created courses:', error);
+      toast("Error", {
+        description: 'Failed to fetch your created courses. Please try again.',
+      });
+      return [];
+    }
+  }
+
+  /**
+   * Updates an existing course
+   * @param courseId The ID of the course to update
+   * @param courseData The updated course data
+   * @returns The updated course
+   */
+  static async updateCourse(courseId: number, courseData: Partial<CourseFormData>) {
+    try {
+      // Upload thumbnail if provided
+      let thumbnailUrl = null;
+      if (courseData.thumbnail && courseData.thumbnail instanceof File && courseData.thumbnail.size > 0) {
+        thumbnailUrl = await CourseCreationService.uploadFile(courseData.thumbnail, 'thumbnails');
+      }
+      
+      // Prepare update data
+      const updateData: any = { ...courseData };
+      if (thumbnailUrl) {
+        updateData.thumbnail = thumbnailUrl;
+      }
+      
+      // Remove thumbnail from update data if it's a File object
+      if (updateData.thumbnail instanceof File) {
+        delete updateData.thumbnail;
+      }
+      
+      // Update course record
+      const { data, error } = await supabase.from('courses')
+        .update(updateData)
+        .eq('id', courseId)
+        .select()
+        .single();
+      
+      if (error) {
+        console.error('Error updating course:', error);
+        toast("Error", {
+          description: `Failed to update course: ${error.message}`,
+        });
+        throw error;
+      }
+      
+      toast.success('Course updated successfully');
+      return data;
+    } catch (error) {
+      console.error('Course update failed:', error);
+      toast.error(error instanceof Error ? error.message : 'Failed to update course');
+      throw error;
+    }
+  }
+
+  /**
+   * Gets chapters for a course
+   * @param courseId The ID of the course
+   * @returns List of chapters for the course
+   */
+  static async getCourseChapters(courseId: number) {
+    try {
+      const { data, error } = await supabase.from('chapters')
+        .select('*')
+        .eq('course_id', courseId)
+        .order('id', { ascending: true });
+      
+      if (error) {
+        console.error('Error fetching chapters:', error);
+        toast("Error", {
+          description: 'Failed to fetch chapters. Please try again.',
+        });
+        return [];
+      }
+      
+      return data;
+    } catch (error) {
+      console.error('Error fetching chapters:', error);
+      toast("Error", {
+        description: 'Failed to fetch chapters. Please try again.',
+      });
+      return [];
+    }
+  }
+
+  /**
+   * Updates an existing chapter
+   * @param chapterId The ID of the chapter to update
+   * @param chapterData The updated chapter data
+   * @returns The updated chapter
+   */
+  static async updateChapter(chapterId: number, chapterData: Partial<ChapterFormData>) {
+    try {
+      // Upload video if provided
+      let videoUrl = null;
+      if (chapterData.video_file && chapterData.video_file instanceof File && chapterData.video_file.size > 0) {
+        videoUrl = await CourseCreationService.uploadFile(chapterData.video_file, 'videos');
+      }
+      
+      // Prepare update data
+      const updateData: any = { ...chapterData };
+      if (videoUrl) {
+        updateData.video_link = videoUrl;
+      }
+      
+      // Remove video_file from update data if it's a File object
+      if (updateData.video_file instanceof File) {
+        delete updateData.video_file;
+      }
+      
+      // Update chapter record
+      const { data, error } = await supabase.from('chapters')
+        .update(updateData)
+        .eq('id', chapterId)
+        .select()
+        .single();
+      
+      if (error) {
+        console.error('Error updating chapter:', error);
+        toast("Error", {
+          description: `Failed to update chapter: ${error.message}`,
+        });
+        throw error;
+      }
+      
+      toast.success('Chapter updated successfully');
+      return data;
+    } catch (error) {
+      console.error('Chapter update failed:', error);
+      toast.error(error instanceof Error ? error.message : 'Failed to update chapter');
+      throw error;
+    }
+  }
+
+  /**
+   * Deletes a chapter
+   * @param chapterId The ID of the chapter to delete
+   */
+  static async deleteChapter(chapterId: number) {
+    try {
+      const { error } = await supabase.from('chapters')
+        .delete()
+        .eq('id', chapterId);
+      
+      if (error) {
+        console.error('Error deleting chapter:', error);
+        toast("Error", {
+          description: `Failed to delete chapter: ${error.message}`,
+        });
+        throw error;
+      }
+      
+      toast.success('Chapter deleted successfully');
+    } catch (error) {
+      console.error('Chapter deletion failed:', error);
+      toast.error(error instanceof Error ? error.message : 'Failed to delete chapter');
+      throw error;
     }
   }
 }
