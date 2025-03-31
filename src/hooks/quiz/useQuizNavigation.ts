@@ -1,5 +1,5 @@
 
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useCallback, useEffect, useRef } from 'react';
 import { useQuizLogger } from './navigation/useQuizLogger';
 import { useQuizDataLoader } from './navigation/useQuizDataLoader';
 import { useQuizResultSaver } from './navigation/useQuizResultSaver';
@@ -14,6 +14,7 @@ export const useQuizNavigation = (
   const [savedQuizIds, setSavedQuizIds] = useState<number[]>([]);
   const [isNavigating, setIsNavigating] = useState(false);
   const [loadAttempts, setLoadAttempts] = useState(0);
+  const initialLoadRef = useRef(false);
   
   // Initialize the logger
   const { logNavigation, logCurrentState } = useQuizLogger();
@@ -46,8 +47,14 @@ export const useQuizNavigation = (
       result.then(success => {
         if (success) {
           const currentQuizId = quizIdsParam[quizStateParam.currentQuizIndex];
-          setSavedQuizIds(prev => [...prev, currentQuizId]);
-          logNavigation(`Added quiz ${currentQuizId} to savedQuizIds: [${[...savedQuizIds, currentQuizId].join(', ')}]`);
+          setSavedQuizIds(prev => {
+            // Only add if it's not already in the array
+            if (!prev.includes(currentQuizId)) {
+              logNavigation(`Added quiz ${currentQuizId} to savedQuizIds`);
+              return [...prev, currentQuizId];
+            }
+            return prev;
+          });
         }
       });
       
@@ -57,25 +64,49 @@ export const useQuizNavigation = (
     logCurrentState
   );
   
-  // Wrapper for loadQuizData
-  const loadQuizDataWrapper = useCallback(async () => {
-    try {
-      await loadQuizData(quizIds, categories, savedQuizIds);
-    } catch (error) {
-      // Increment load attempt counter
-      setLoadAttempts(prev => prev + 1);
-      
-      // If we've tried more than 3 times, give up
-      if (loadAttempts >= 3) {
-        quizStateManager.setIsCompleted(true);
-        logNavigation(`Failed to load quiz after ${loadAttempts} attempts, giving up`);
-      }
+  // Wrapper for loadQuizData with protection against infinite loops
+  const loadQuizDataWrapper = useCallback(() => {
+    // Don't load if we're already navigating or completed
+    if (isNavigating || quizStateManager.isCompleted) {
+      logNavigation("Skipping loadQuizData call - navigation in progress or quiz completed");
+      return Promise.resolve();
     }
-  }, [loadQuizData, quizIds, categories, savedQuizIds, loadAttempts, quizStateManager]);
+    
+    setIsNavigating(true);
+    
+    return loadQuizData(quizIds, categories, savedQuizIds)
+      .catch(error => {
+        // Increment load attempt counter
+        setLoadAttempts(prev => {
+          const newCount = prev + 1;
+          if (newCount >= 3) {
+            logNavigation(`Failed to load quiz after ${newCount} attempts, giving up`);
+            quizStateManager.setIsCompleted(true);
+          }
+          return newCount;
+        });
+      })
+      .finally(() => {
+        setIsNavigating(false);
+      });
+  }, [
+    isNavigating, 
+    quizStateManager.isCompleted, 
+    loadQuizData, 
+    quizIds, 
+    categories, 
+    savedQuizIds
+  ]);
   
   // Wrapper for handleNextQuestion
-  const handleNextQuestionWrapper = useCallback(async () => {
-    await navigateToNextQuestion(
+  const handleNextQuestionWrapper = useCallback(() => {
+    // Don't proceed if we're already navigating
+    if (isNavigating) {
+      logNavigation("Skipping handleNextQuestion call - navigation already in progress");
+      return Promise.resolve();
+    }
+    
+    return navigateToNextQuestion(
       user,
       quizIds,
       categories,
@@ -94,37 +125,50 @@ export const useQuizNavigation = (
   ]);
   
   // Wrapper for saveCurrentQuizResults
-  const saveCurrentQuizResultsWrapper = useCallback(async () => {
-    const success = await saveCurrentQuizResults(
+  const saveCurrentQuizResultsWrapper = useCallback(() => {
+    // Don't save if we're already saving or completed
+    if (isNavigating) {
+      logNavigation("Skipping saveQuizResults call - navigation in progress");
+      return Promise.resolve(false);
+    }
+    
+    return saveCurrentQuizResults(
       user, 
       quizIds, 
       categories, 
       quizStateManager.quizState, 
       savedQuizIds
-    );
-    
-    if (success) {
-      // Mark this quiz as saved to prevent duplicates
-      const currentQuizId = quizIds[quizStateManager.quizState.currentQuizIndex];
-      setSavedQuizIds(prev => [...prev, currentQuizId]);
-      logNavigation(`Saved quiz ${currentQuizId} to savedQuizIds: [${[...savedQuizIds, currentQuizId].join(', ')}]`);
-    }
-    
-    return success;
-  }, [user, quizIds, categories, quizStateManager.quizState, savedQuizIds, saveCurrentQuizResults]);
+    ).then(success => {
+      if (success) {
+        // Mark this quiz as saved to prevent duplicates
+        const currentQuizId = quizIds[quizStateManager.quizState.currentQuizIndex];
+        setSavedQuizIds(prev => {
+          if (!prev.includes(currentQuizId)) {
+            return [...prev, currentQuizId];
+          }
+          return prev;
+        });
+      }
+      return success;
+    });
+  }, [
+    isNavigating,
+    user, 
+    quizIds, 
+    categories, 
+    quizStateManager.quizState, 
+    savedQuizIds, 
+    saveCurrentQuizResults
+  ]);
   
-  // Add effect to handle quiz loading and retry logic
+  // Single effect to handle initial quiz loading - prevents multiple loading attempts
   useEffect(() => {
-    // Don't attempt to load if already completed
-    const isQuizCompleted = false; // This is a local variable, not a state
-
-    if (isQuizCompleted) return;
-    
-    // Reset load attempts when quiz index changes
-    if (quizStateManager.quizState.currentQuizIndex !== quizIds.indexOf(quizStateManager.quizState.currentQuizIndex)) {
-      setLoadAttempts(0);
+    if (quizIds.length > 0 && !initialLoadRef.current && !quizStateManager.isCompleted) {
+      initialLoadRef.current = true;
+      logNavigation("Initial quiz load triggered");
+      loadQuizDataWrapper();
     }
-  }, [quizStateManager.quizState.currentQuizIndex, quizIds]);
+  }, [quizIds, quizStateManager.isCompleted, loadQuizDataWrapper]);
   
   return {
     loadQuizData: loadQuizDataWrapper,

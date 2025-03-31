@@ -24,13 +24,6 @@ export const useQuiz = (user: any, quizIds: number[], categories: any[]) => {
     saveCurrentQuizResults
   } = useQuizNavigation(user, quizIds, categories, quizStateManager);
   
-  // Initialize quiz on first load
-  useEffect(() => {
-    if (quizIds.length > 0) {
-      loadQuizData();
-    }
-  }, [quizIds, loadQuizData]);
-  
   return {
     quizState,
     isLoading,

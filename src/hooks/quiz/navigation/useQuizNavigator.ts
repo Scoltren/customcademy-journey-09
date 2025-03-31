@@ -54,6 +54,7 @@ export const useQuizNavigator = (
         }));
         
         setCurrentQuestion(nextQuestion);
+        setSelectedAnswerIds([]);
         
         // Load answers for the next question
         await loadAnswersForQuestion(nextQuestion.id);
@@ -67,17 +68,18 @@ export const useQuizNavigator = (
         
         logNavigation(`Current quiz finished. Moving to next quiz index: ${nextQuizIndex}`);
         
-        // Reset current question and answers
-        setCurrentQuestion(null);
-        setCurrentAnswers([]);
-        setSelectedAnswerIds([]);
-        
         // Check if the next index is valid before proceeding
         if (nextQuizIndex >= quizIds.length) {
           logNavigation(`All quizzes completed. Quiz count: ${quizIds.length}, Next index would be: ${nextQuizIndex}`);
           setIsCompleted(true);
+          setIsNavigating(false);
           return;
         }
+        
+        // Reset current question and answers
+        setCurrentQuestion(null);
+        setCurrentAnswers([]);
+        setSelectedAnswerIds([]);
         
         // Update quiz state with next quiz index
         setQuizState(prev => ({
@@ -89,11 +91,17 @@ export const useQuizNavigator = (
         }));
         
         // Give state time to update before loading next quiz
+        // Use a small timeout to avoid React state update race conditions
         setTimeout(() => {
-          // Fixed: Use a function to set the load attempts to 0 instead of passing the value directly
           setLoadAttempts(() => 0);
-          loadQuizData(quizIds, categories, savedQuizIds);
+          loadQuizData(quizIds, categories, savedQuizIds)
+            .finally(() => {
+              setIsNavigating(false);
+            });
         }, 300);
+        
+        // Return early because loadQuizData will handle setting isNavigating to false
+        return;
       }
     } catch (error) {
       console.error("Error in handleNextQuestion:", error);

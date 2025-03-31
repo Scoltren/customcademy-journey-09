@@ -16,7 +16,8 @@ export const useQuizDataLoader = (
     setCurrentQuestion, 
     setCurrentCategory, 
     setIsCompleted,
-    loadAnswersForQuestion
+    loadAnswersForQuestion,
+    setSelectedAnswerIds
   } = quizStateManager;
   
   // Load the current quiz questions and first question's answers
@@ -85,6 +86,7 @@ export const useQuizDataLoader = (
       }));
       
       setCurrentQuestion(questions[0]);
+      setSelectedAnswerIds([]);
       
       // Load answers for the first question
       await loadAnswersForQuestion(questions[0].id);
@@ -108,6 +110,7 @@ export const useQuizDataLoader = (
     setCurrentCategory, 
     setIsCompleted, 
     loadAnswersForQuestion, 
+    setSelectedAnswerIds,
     logNavigation, 
     logCurrentState
   ]);
