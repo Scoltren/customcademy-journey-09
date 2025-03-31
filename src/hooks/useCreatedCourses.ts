@@ -1,7 +1,7 @@
 
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
-import { CourseCreationService } from '@/services/CourseCreationService';
+import { CourseCreationService } from '@/services/course-creation';
 import { Course } from '@/types/course';
 import { toast } from 'sonner';
 
