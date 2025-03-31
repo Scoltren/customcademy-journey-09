@@ -17,12 +17,18 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { Input } from '@/components/ui/input';
 import { CourseCreationService } from '@/services/CourseCreationService';
 import { CourseFormValues } from '../schema/course-form-schema';
 
 interface CourseDetailsProps {
   form: UseFormReturn<CourseFormValues>;
+}
+
+// Define a proper type for the categories that matches the Supabase schema
+interface Category {
+  id: number;
+  name: string;
+  quiz_id: number | null;
 }
 
 export const CourseDetails = ({ form }: CourseDetailsProps) => {
@@ -44,10 +50,11 @@ export const CourseDetails = ({ form }: CourseDetailsProps) => {
     }
     
     const selectedCategory = categories.find(
-      (cat) => cat.id.toString() === categoryId.toString()
+      (cat: Category) => cat.id.toString() === categoryId.toString()
     );
     
-    if (selectedCategory && selectedCategory.has_quiz) {
+    // Check if the category has a quiz_id which indicates it has a quiz
+    if (selectedCategory && selectedCategory.quiz_id !== null) {
       setCategoryHasQuiz(true);
     } else {
       setCategoryHasQuiz(false);
@@ -106,12 +113,12 @@ export const CourseDetails = ({ form }: CourseDetailsProps) => {
                 {categoriesLoading ? (
                   <SelectItem value="loading" disabled>Loading...</SelectItem>
                 ) : (
-                  categories?.map((category) => (
+                  categories?.map((category: Category) => (
                     <SelectItem 
                       key={category.id} 
                       value={category.id.toString()}
                     >
-                      {category.name} {category.has_quiz ? '(Has Quiz)' : ''}
+                      {category.name} {category.quiz_id !== null ? '(Has Quiz)' : ''}
                     </SelectItem>
                   ))
                 )}

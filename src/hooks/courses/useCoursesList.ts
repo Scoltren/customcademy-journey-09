@@ -3,6 +3,13 @@ import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { Course } from '@/types/course';
 
+// Define the Category type to match the database structure
+export interface Category {
+  id: number;
+  name: string;
+  quiz_id: number | null;
+}
+
 // Function to fetch courses with chapter counts from Supabase
 export const fetchCourses = async (): Promise<Course[]> => {
   // First fetch the courses with category information
@@ -61,7 +68,7 @@ export const fetchCourses = async (): Promise<Course[]> => {
 };
 
 // Function to fetch categories from Supabase
-export const fetchCategories = async (): Promise<{ id: number; name: string }[]> => {
+export const fetchCategories = async (): Promise<Category[]> => {
   const { data, error } = await supabase
     .from('categories')
     .select('*');

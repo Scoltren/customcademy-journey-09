@@ -1,5 +1,13 @@
+
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+
+// Define the Category type to match the database structure
+export interface Category {
+  id: number;
+  name: string;
+  quiz_id: number | null;
+}
 
 // Constants
 const BUCKET_NAME = "course-media";
@@ -206,7 +214,7 @@ export class CourseCreationService {
    * Gets all categories
    * @returns List of categories
    */
-  static async getCategories() {
+  static async getCategories(): Promise<Category[]> {
     try {
       const { data, error } = await supabase.from('categories').select('*');
       
@@ -218,7 +226,7 @@ export class CourseCreationService {
         return [];
       }
       
-      return data;
+      return data || [];
     } catch (error) {
       console.error('Error fetching categories:', error);
       toast("Error", {
