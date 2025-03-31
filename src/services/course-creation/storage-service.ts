@@ -28,6 +28,7 @@ export class StorageService {
       const { data, error } = await supabase.storage
         .from(BUCKET_NAME)
         .upload(filePath, file, {
+          contentType: file.type,
           cacheControl: '3600',
           upsert: false
         });

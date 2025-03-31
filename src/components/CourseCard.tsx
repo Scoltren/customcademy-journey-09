@@ -12,7 +12,7 @@ export interface CourseProps {
   instructor: string;
   image: string;
   category: string;
-  level: 'Beginner' | 'Intermediate' | 'Advanced';
+  level: 'Beginner' | 'Intermediate' | 'Advanced' | null;
   duration: string;
   students: number;
   rating: number;
@@ -29,7 +29,6 @@ const CourseCard: React.FC<{ course: CourseProps; className?: string }> = ({
     id,
     title,
     description,
-    instructor,
     image,
     category,
     level,
@@ -80,6 +79,11 @@ const CourseCard: React.FC<{ course: CourseProps; className?: string }> = ({
               'bg-red-600/80 hover:bg-red-600 text-white border-0'
             )}>
               {level}
+            </Badge>
+          )}
+          {level === null && (
+            <Badge className="bg-gray-600/80 hover:bg-gray-600 text-white border-0 text-sm">
+              No difficulty assigned
             </Badge>
           )}
         </div>

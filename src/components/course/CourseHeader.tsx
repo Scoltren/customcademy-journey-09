@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
-import { Star, Users, Clock, BarChart } from 'lucide-react';
+import { Star, Clock, BarChart } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
 import { Course } from '@/types/course';
@@ -149,16 +149,12 @@ const CourseHeader: React.FC<CourseHeaderProps> = ({ course }) => {
               <span>{course.overall_rating ? course.overall_rating.toFixed(1) : '0.0'} Rating</span>
             </div>
             <div className="flex items-center gap-2">
-              <Users className="text-blue-400" size={18} />
-              <span>1000+ Students</span>
-            </div>
-            <div className="flex items-center gap-2">
               <Clock className="text-green-400" size={18} />
               <span>{course.course_time || 0} Hours</span>
             </div>
             <div className="flex items-center gap-2">
               <BarChart className="text-purple-400" size={18} />
-              <span>{course.difficulty_level || 'Intermediate'}</span>
+              <span>{course.difficulty_level || 'No difficulty assigned to course'}</span>
             </div>
           </div>
           

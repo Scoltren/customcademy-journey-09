@@ -14,11 +14,21 @@ const CourseGridDisplay: React.FC<CourseGridDisplayProps> = ({
   chapterCounts,
   userSkillLevels
 }) => {
-  const validateDifficultyLevel = (level: string | null): 'Beginner' | 'Intermediate' | 'Advanced' => {
+  const validateDifficultyLevel = (level: string | null): 'Beginner' | 'Intermediate' | 'Advanced' | null => {
+    if (level === null) return null;
+    
     if (level === 'Beginner' || level === 'Intermediate' || level === 'Advanced') {
       return level;
     }
-    return 'Beginner'; // Default fallback
+    
+    // Capitalize the first letter if it's lowercase
+    const formattedLevel = level.charAt(0).toUpperCase() + level.slice(1).toLowerCase();
+    
+    if (formattedLevel === 'Beginner' || formattedLevel === 'Intermediate' || formattedLevel === 'Advanced') {
+      return formattedLevel as 'Beginner' | 'Intermediate' | 'Advanced';
+    }
+    
+    return null; // Return null for invalid levels
   };
 
   return (
