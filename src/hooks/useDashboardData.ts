@@ -12,7 +12,6 @@ export interface QuizResult {
   user_id: string;
   quiz?: {
     title: string;
-    category_id: number;
     category?: {
       name: string;
     }
@@ -129,16 +128,31 @@ export const useDashboardData = (userId: string | undefined) => {
         setEnrolledCourses([]);
       }
       
-      // Fetch quiz results with more detailed information
+      // Updated query to match the database schema, removing category_id from quizzes
+      // and using a join through categories table
       const { data: quizzes, error: quizzesError } = await supabase
         .from('user_quiz_results')
-        .select('*, quiz:quiz_id(title, category_id, category:category_id(name))')
+        .select('*, quiz:quiz_id(title, category:categories(name))')
         .eq('user_id', userId);
       
       if (quizzesError) throw quizzesError;
       
       if (quizzes) {
-        setQuizResults(quizzes);
+        // Transform the data to match the expected QuizResult type
+        const transformedQuizzes: QuizResult[] = quizzes.map(quiz => ({
+          id: quiz.id,
+          quiz_id: quiz.quiz_id,
+          score: quiz.score,
+          user_id: quiz.user_id,
+          quiz: {
+            title: quiz.quiz?.title || 'Unknown Quiz',
+            category: {
+              name: quiz.quiz?.category?.name || 'Unknown Category'
+            }
+          }
+        }));
+        
+        setQuizResults(transformedQuizzes);
       } else {
         setQuizResults([]);
       }

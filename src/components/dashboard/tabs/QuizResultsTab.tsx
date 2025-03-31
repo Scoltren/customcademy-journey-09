@@ -18,7 +18,6 @@ interface QuizResult {
   user_id: string;
   quiz?: {
     title: string;
-    category_id: number;
     category?: {
       name: string;
     }
