@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { UseFormReturn } from 'react-hook-form';
 import { useQuery } from '@tanstack/react-query';
 import {
@@ -8,6 +8,7 @@ import {
   FormLabel,
   FormControl,
   FormMessage,
+  FormDescription,
 } from '@/components/ui/form';
 import {
   Select,
@@ -25,10 +26,35 @@ interface CourseDetailsProps {
 }
 
 export const CourseDetails = ({ form }: CourseDetailsProps) => {
+  const [categoryHasQuiz, setCategoryHasQuiz] = useState<boolean>(false);
+  
   const { data: categories, isLoading: categoriesLoading } = useQuery({
     queryKey: ['categories'],
     queryFn: CourseCreationService.getCategories,
   });
+  
+  // Get the current category ID value from the form
+  const categoryId = form.watch('category_id');
+  
+  // Check if the selected category has a quiz attached
+  useEffect(() => {
+    if (!categoryId || !categories) {
+      setCategoryHasQuiz(false);
+      return;
+    }
+    
+    const selectedCategory = categories.find(
+      (cat) => cat.id.toString() === categoryId.toString()
+    );
+    
+    if (selectedCategory && selectedCategory.has_quiz) {
+      setCategoryHasQuiz(true);
+    } else {
+      setCategoryHasQuiz(false);
+      // Reset difficulty level if category doesn't have a quiz
+      form.setValue('difficulty_level', 'beginner');
+    }
+  }, [categoryId, categories, form]);
   
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -38,7 +64,11 @@ export const CourseDetails = ({ form }: CourseDetailsProps) => {
         render={({ field }) => (
           <FormItem>
             <FormLabel>Difficulty Level</FormLabel>
-            <Select onValueChange={field.onChange} defaultValue={field.value}>
+            <Select 
+              onValueChange={field.onChange} 
+              defaultValue={field.value}
+              disabled={!categoryHasQuiz}
+            >
               <FormControl>
                 <SelectTrigger>
                   <SelectValue placeholder="Select difficulty level" />
@@ -50,6 +80,11 @@ export const CourseDetails = ({ form }: CourseDetailsProps) => {
                 <SelectItem value="advanced">Advanced</SelectItem>
               </SelectContent>
             </Select>
+            {!categoryHasQuiz && (
+              <FormDescription className="text-amber-500">
+                Difficulty level selection requires a category with a quiz
+              </FormDescription>
+            )}
             <FormMessage />
           </FormItem>
         )}
@@ -72,8 +107,11 @@ export const CourseDetails = ({ form }: CourseDetailsProps) => {
                   <SelectItem value="loading" disabled>Loading...</SelectItem>
                 ) : (
                   categories?.map((category) => (
-                    <SelectItem key={category.id} value={category.id.toString()}>
-                      {category.name}
+                    <SelectItem 
+                      key={category.id} 
+                      value={category.id.toString()}
+                    >
+                      {category.name} {category.has_quiz ? '(Has Quiz)' : ''}
                     </SelectItem>
                   ))
                 )}
