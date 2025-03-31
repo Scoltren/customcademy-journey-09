@@ -2,7 +2,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
 import { Loader2 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
@@ -39,6 +38,34 @@ const UserInterestsSection: React.FC<UserInterestsSectionProps> = ({ userId }) =
     }
   };
 
+  // Function to determine the text color based on difficulty level
+  const getDifficultyColor = (level: string | undefined) => {
+    switch(level) {
+      case 'Beginner':
+        return 'text-green-500';
+      case 'Intermediate':
+        return 'text-yellow-500';
+      case 'Advanced':
+        return 'text-red-500';
+      default:
+        return 'text-xs opacity-70';
+    }
+  };
+
+  // Function to get the appropriate background color for interest tags
+  const getTagBackgroundColor = (level: string | undefined) => {
+    switch(level) {
+      case 'Beginner':
+        return 'bg-green-500/10 border-green-500/20';
+      case 'Intermediate':
+        return 'bg-yellow-500/10 border-yellow-500/20';
+      case 'Advanced':
+        return 'bg-red-500/10 border-red-500/20';
+      default:
+        return 'bg-blue/10 border-blue/20';
+    }
+  };
+
   return (
     <div className="mb-12">
       <div className="flex justify-between items-center mb-6">
@@ -58,14 +85,21 @@ const UserInterestsSection: React.FC<UserInterestsSectionProps> = ({ userId }) =
       ) : userInterests.length > 0 ? (
         <div className="flex flex-wrap gap-2">
           {userInterests.map((interest) => (
-            <Badge key={interest.category_id} className="text-sm py-1 px-3">
-              {interest.category?.name}
+            <div 
+              key={interest.category_id} 
+              className={`py-1 px-3 rounded-full text-blue-light border ${getTagBackgroundColor(interest.difficulty_level)} text-sm`}
+            >
+              <span>{interest.category?.name}</span>
               {interest.difficulty_level ? (
-                <span className="ml-1 opacity-70">• {interest.difficulty_level}</span>
+                <span className={`ml-1 font-medium ${getDifficultyColor(interest.difficulty_level)}`}>
+                  • {interest.difficulty_level}
+                </span>
               ) : (
-                <span className="ml-1 opacity-70">• No level assigned</span>
+                <span className="ml-1 opacity-70 text-xs">
+                  • No level assigned
+                </span>
               )}
-            </Badge>
+            </div>
           ))}
         </div>
       ) : (

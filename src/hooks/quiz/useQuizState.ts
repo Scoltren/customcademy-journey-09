@@ -25,6 +25,20 @@ export const useQuizState = (quizIds: number[]) => {
   const [currentCategory, setCurrentCategory] = useState<any>(null);
   const [isCompleted, setIsCompleted] = useState(false);
   
+  // Custom state setter with logging
+  const updateQuizState = useCallback((newState: QuizState | ((prev: QuizState) => QuizState)) => {
+    setQuizState(prev => {
+      const updated = typeof newState === 'function' ? newState(prev) : newState;
+      
+      console.log('QuizState updated:', {
+        current: prev,
+        new: updated
+      });
+      
+      return updated;
+    });
+  }, []);
+  
   // Load the answers for a specific question
   const loadAnswersForQuestion = useCallback(async (questionId: number) => {
     try {
@@ -36,6 +50,8 @@ export const useQuizState = (quizIds: number[]) => {
       if (error) throw error;
       setCurrentAnswers(answers || []);
       setSelectedAnswerIds([]);
+      
+      console.log(`Loaded ${answers?.length || 0} answers for question ID ${questionId}`);
       
       return answers;
     } catch (error) {
@@ -49,23 +65,33 @@ export const useQuizState = (quizIds: number[]) => {
   const handleSelectAnswer = useCallback((answerId: number) => {
     setSelectedAnswerIds(prev => {
       // Toggle the selected answer
-      return prev.includes(answerId)
+      const updated = prev.includes(answerId)
         ? prev.filter(id => id !== answerId)
         : [...prev, answerId];
+        
+      console.log(`Selected answer IDs updated: ${updated.join(', ') || 'none'}`);
+      
+      return updated;
     });
   }, []);
   
   // Update quiz score
   const updateScore = useCallback((additionalPoints: number) => {
-    setQuizState(prev => ({
-      ...prev,
-      score: prev.score + additionalPoints
-    }));
+    setQuizState(prev => {
+      const updated = {
+        ...prev,
+        score: prev.score + additionalPoints
+      };
+      
+      console.log(`Score updated: ${prev.score} → ${updated.score} (+${additionalPoints})`);
+      
+      return updated;
+    });
   }, []);
   
   return {
     quizState,
-    setQuizState,
+    setQuizState: updateQuizState,
     isLoading,
     setIsLoading,
     currentQuestion,

@@ -35,6 +35,8 @@ export const useQuizNavigation = (
     
     try {
       const currentQuizId = quizIds[quizState.currentQuizIndex];
+
+      console.log(`Loading quiz ${quizState.currentQuizIndex + 1}/${quizIds.length}: Quiz ID ${currentQuizId}`);
       
       // Set current category
       setCurrentCategory(categories[quizState.currentQuizIndex] || null);
@@ -134,6 +136,15 @@ export const useQuizNavigation = (
       // Move to the next quiz
       const nextQuizIndex = quizState.currentQuizIndex + 1;
       
+      console.log(`Moving to next quiz: ${nextQuizIndex + 1}/${quizIds.length}`);
+      
+      // Check if the next index is valid before proceeding
+      if (nextQuizIndex >= quizIds.length) {
+        console.log("All quizzes completed");
+        setIsCompleted(true);
+        return;
+      }
+      
       setQuizState(prev => ({
         ...prev,
         currentQuizIndex: nextQuizIndex,
@@ -142,23 +153,15 @@ export const useQuizNavigation = (
         score: 0 // Reset score for the next quiz
       }));
       
-      // If there are more quizzes, load the next one
-      if (nextQuizIndex < quizIds.length) {
-        setIsLoading(true);
-        
-        // Reset current question and answers
-        setCurrentQuestion(null);
-        setCurrentAnswers([]);
-        setSelectedAnswerIds([]);
-        
-        // Set a small timeout to allow state updates to propagate
-        setTimeout(() => {
-          loadQuizData();
-        }, 100);
-      } else {
-        // All quizzes completed
-        setIsCompleted(true);
-      }
+      // Reset current question and answers
+      setCurrentQuestion(null);
+      setCurrentAnswers([]);
+      setSelectedAnswerIds([]);
+      
+      // Set a small timeout to allow state updates to propagate
+      setTimeout(() => {
+        loadQuizData();
+      }, 100);
     }
   }, [
     quizState, 
@@ -170,7 +173,6 @@ export const useQuizNavigation = (
     setQuizState, 
     loadAnswersForQuestion, 
     saveCurrentQuizResults, 
-    setIsLoading, 
     setIsCompleted
   ]);
   

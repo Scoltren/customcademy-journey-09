@@ -20,6 +20,12 @@ const CategoryQuiz = () => {
   // Get the quiz IDs and categories from the location state
   const { quizIds = [], categories = [] } = location.state || {};
   
+  // Log received quiz IDs and categories for debugging
+  useEffect(() => {
+    console.log("CategoryQuiz: Received quizIds:", quizIds);
+    console.log("CategoryQuiz: Received categories:", categories);
+  }, [quizIds, categories]);
+  
   const [showFeedback, setShowFeedback] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   
