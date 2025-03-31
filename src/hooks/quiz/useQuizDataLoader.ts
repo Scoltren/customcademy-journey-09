@@ -30,7 +30,7 @@ export const useQuizDataLoader = (stateManager: QuizStateManager) => {
   // Load the current quiz questions and first question's answers
   const loadQuizData = useCallback(async (quizIds: number[], categories: any[]) => {
     if (!quizIds.length) {
-      console.log("No quiz IDs provided");
+      console.log("DATA LOADER - No quiz IDs provided");
       setIsCompleted(true);
       return;
     }
@@ -38,7 +38,7 @@ export const useQuizDataLoader = (stateManager: QuizStateManager) => {
     const currentQuizIndex = quizState.currentQuizIndex;
     
     if (currentQuizIndex >= quizIds.length) {
-      console.log(`Quiz index out of bounds: ${currentQuizIndex} >= ${quizIds.length}`);
+      console.log(`DATA LOADER - Quiz index out of bounds: ${currentQuizIndex} >= ${quizIds.length}`);
       setIsCompleted(true);
       return;
     }
@@ -48,8 +48,8 @@ export const useQuizDataLoader = (stateManager: QuizStateManager) => {
     try {
       const currentQuizId = quizIds[currentQuizIndex];
       
-      console.log(`Loading quiz ${currentQuizIndex + 1}/${quizIds.length}: Quiz ID ${currentQuizId}`);
-      console.log(`Current quiz state:`, {
+      console.log(`DATA LOADER - Loading quiz ${currentQuizIndex + 1}/${quizIds.length}: Quiz ID ${currentQuizId}`);
+      console.log(`DATA LOADER - Current quiz state:`, {
         currentQuizIndex: quizState.currentQuizIndex,
         currentQuestionIndex: quizState.currentQuestionIndex,
         totalQuestions: quizState.questions.length
@@ -60,7 +60,7 @@ export const useQuizDataLoader = (stateManager: QuizStateManager) => {
       setCurrentCategory(currentCategory);
       
       // Log what we're about to fetch to help with debugging
-      console.log(`Fetching questions for quiz ID: ${currentQuizId}, category: ${currentCategory?.name || 'unknown'}`);
+      console.log(`DATA LOADER - Fetching questions for quiz ID: ${currentQuizId}, category: ${currentCategory?.name || 'unknown'}`);
       
       // Fetch questions for the current quiz
       const { data: questions, error: questionsError } = await supabase
@@ -69,19 +69,24 @@ export const useQuizDataLoader = (stateManager: QuizStateManager) => {
         .eq('quiz_id', currentQuizId);
       
       if (questionsError) {
-        console.error("Error fetching questions:", questionsError);
+        console.error("DATA LOADER - Error fetching questions:", questionsError);
         throw questionsError;
       }
       
+      console.log(`DATA LOADER - Fetched questions:`, questions);
+      
       if (!questions || !questions.length) {
         toast.error("No questions available for this quiz");
-        console.log(`No questions found for quiz ID ${currentQuizId}`);
+        console.log(`DATA LOADER - No questions found for quiz ID ${currentQuizId}`);
         
         // Try to move to next quiz
         if (currentQuizIndex < quizIds.length - 1) {
+          const nextQuizIndex = currentQuizIndex + 1;
+          console.log(`DATA LOADER - Moving to next quiz index: ${nextQuizIndex}`);
+          
           setQuizState(prev => ({
             ...prev,
-            currentQuizIndex: prev.currentQuizIndex + 1,
+            currentQuizIndex: nextQuizIndex,
             currentQuestionIndex: 0,
             questions: [],
             score: 0
@@ -97,18 +102,29 @@ export const useQuizDataLoader = (stateManager: QuizStateManager) => {
         }
       }
       
-      console.log(`Loaded ${questions.length} questions for quiz ${currentQuizId}:`, 
+      console.log(`DATA LOADER - Loaded ${questions.length} questions for quiz ${currentQuizId}:`, 
         questions.map(q => ({ id: q.id, text: q.question_text?.substring(0, 30) }))
       );
       
       // Set questions and current question
-      setQuizState(prev => ({
-        ...prev,
-        questions: questions,
-        currentQuestionIndex: 0,
-        score: 0 // Reset score for new quiz
-      }));
+      setQuizState(prev => {
+        const updated = {
+          ...prev,
+          questions: questions,
+          currentQuestionIndex: 0,
+          score: 0 // Reset score for new quiz
+        };
+        
+        console.log("DATA LOADER - Updated quiz state:", {
+          currentQuizIndex: updated.currentQuizIndex,
+          questionCount: updated.questions.length,
+          sameQuiz: prev.currentQuizIndex === updated.currentQuizIndex,
+        });
+        
+        return updated;
+      });
       
+      console.log(`DATA LOADER - Setting current question to:`, questions[0]);
       setCurrentQuestion(questions[0]);
       setSelectedAnswerIds([]);
       
@@ -116,7 +132,7 @@ export const useQuizDataLoader = (stateManager: QuizStateManager) => {
       await loadAnswersForQuestion(questions[0].id);
       
     } catch (error) {
-      console.error("Error loading quiz data:", error);
+      console.error("DATA LOADER - Error loading quiz data:", error);
       toast.error("Failed to load quiz");
       throw error;
     } finally {

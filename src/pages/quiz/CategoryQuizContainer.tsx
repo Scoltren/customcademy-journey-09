@@ -34,6 +34,7 @@ const CategoryQuizContainer = () => {
   const [showFeedback, setShowFeedback] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [loadTimeout, setLoadTimeout] = useState<NodeJS.Timeout | null>(null);
+  const [isNavigating, setIsNavigating] = useState(false);
   
   const { 
     quizState, 
@@ -52,8 +53,8 @@ const CategoryQuizContainer = () => {
   // Debug current category and quiz ID on every render
   useEffect(() => {
     if (currentCategory) {
-      console.log(`Currently showing quiz for category: ${currentCategory.name} (ID: ${currentCategory.id})`);
-      console.log(`Current quiz index: ${quizState.currentQuizIndex}, total quizzes: ${quizIds.length}`);
+      console.log(`CONTAINER - Currently showing quiz for category: ${currentCategory.name} (ID: ${currentCategory.id})`);
+      console.log(`CONTAINER - Current quiz index: ${quizState.currentQuizIndex}, total quizzes: ${quizIds.length}`);
     }
   }, [currentCategory, quizState.currentQuizIndex, quizIds.length]);
   
@@ -62,7 +63,7 @@ const CategoryQuizContainer = () => {
     if (isLoading && !loadTimeout) {
       const timeout = setTimeout(() => {
         if (isLoading) {
-          console.log("Loading timeout reached, redirecting to home");
+          console.log("CONTAINER - Loading timeout reached, redirecting to home");
           toast.error("Quiz loading timed out. Please try again later.");
           navigate('/');
         }
@@ -82,7 +83,7 @@ const CategoryQuizContainer = () => {
   // If no quiz IDs were provided, redirect to home
   useEffect(() => {
     if (!quizIds.length || !categories.length) {
-      console.log("No quiz IDs or categories provided, redirecting to home");
+      console.log("CONTAINER - No quiz IDs or categories provided, redirecting to home");
       navigate('/');
     }
   }, [quizIds, categories, navigate]);
@@ -90,7 +91,7 @@ const CategoryQuizContainer = () => {
   // Handle when all quizzes are completed
   useEffect(() => {
     if (isCompleted) {
-      console.log("All quizzes completed, redirecting to home");
+      console.log("CONTAINER - All quizzes completed, redirecting to home");
       toast.success("All quizzes completed! Your results have been saved.");
       navigate('/');
     }
@@ -98,6 +99,7 @@ const CategoryQuizContainer = () => {
   
   // Debug current quiz state on state changes
   useEffect(() => {
+    console.log("CONTAINER - Logging quiz state");
     logQuizState();
   }, [quizState, quizIds.length, currentCategory, isCompleted, logQuizState]);
   
@@ -109,7 +111,7 @@ const CategoryQuizContainer = () => {
       .filter(a => selectedAnswerIds.includes(a.id) && a.points > 0)
       .length;
     
-    console.log(`Submitting answer:`, {
+    console.log(`CONTAINER - Submitting answer:`, {
       selectedIds: selectedAnswerIds,
       totalCorrectAnswers: correctAnswers.length,
       correctlySelected
@@ -125,10 +127,16 @@ const CategoryQuizContainer = () => {
   
   // Handle moving to the next question
   const handleNextQuestionClick = useCallback(() => {
+    if (isNavigating) {
+      console.log("CONTAINER - Already navigating, ignoring click");
+      return;
+    }
+    
+    setIsNavigating(true);
     setIsSaving(true);
     setShowFeedback(false);
     
-    console.log("Moving to next question/quiz", {
+    console.log("CONTAINER - Moving to next question/quiz", {
       currentQuizIndex: quizState.currentQuizIndex,
       currentQuestionIndex: quizState.currentQuestionIndex,
       isLastQuestion: quizState.currentQuestionIndex === quizState.questions.length - 1,
@@ -139,8 +147,11 @@ const CategoryQuizContainer = () => {
     setTimeout(() => {
       handleNextQuestion();
       setIsSaving(false);
+      setTimeout(() => {
+        setIsNavigating(false);
+      }, 500);
     }, 300);
-  }, [quizState, quizIds.length, handleNextQuestion]);
+  }, [quizState, quizIds.length, handleNextQuestion, isNavigating]);
 
   // Compute derived props for the view component
   const isLastQuestion = quizState.currentQuestionIndex === quizState.questions.length - 1;
