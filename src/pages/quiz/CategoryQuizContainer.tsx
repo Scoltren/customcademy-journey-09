@@ -44,8 +44,7 @@ const CategoryQuizContainer = () => {
     handleNextQuestion, 
     isCompleted,
     updateScore,
-    logNavigation,
-    logCurrentState
+    logQuizState
   } = useQuiz(user, quizIds, categories);
   
   // Debug current category and quiz ID on every render
@@ -97,16 +96,8 @@ const CategoryQuizContainer = () => {
   
   // Debug current quiz state
   useEffect(() => {
-    console.log("Current quiz state:", {
-      currentQuizIndex: quizState.currentQuizIndex,
-      totalQuizzes: quizIds.length,
-      currentQuestionIndex: quizState.currentQuestionIndex,
-      totalQuestions: quizState.questions.length,
-      currentCategory: currentCategory?.name,
-      score: quizState.score,
-      isCompleted
-    });
-  }, [quizState, quizIds.length, currentCategory, isCompleted]);
+    logQuizState();
+  }, [quizState, quizIds.length, currentCategory, isCompleted, logQuizState]);
   
   // Handle submitting an answer
   const handleSubmitAnswer = useCallback(() => {
