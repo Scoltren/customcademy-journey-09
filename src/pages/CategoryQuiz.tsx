@@ -24,6 +24,13 @@ const CategoryQuiz = () => {
   useEffect(() => {
     console.log("CategoryQuiz: Received quizIds:", quizIds);
     console.log("CategoryQuiz: Received categories:", categories);
+    
+    if (quizIds.length !== categories.length) {
+      console.error("Mismatch between quizIds and categories arrays!", {
+        quizIdsLength: quizIds.length,
+        categoriesLength: categories.length
+      });
+    }
   }, [quizIds, categories]);
   
   const [showFeedback, setShowFeedback] = useState(false);
@@ -66,18 +73,25 @@ const CategoryQuiz = () => {
       totalQuizzes: quizIds.length,
       currentQuestionIndex: quizState.currentQuestionIndex,
       totalQuestions: quizState.questions.length,
-      score: quizState.score
+      currentCategory: currentCategory?.name,
+      score: quizState.score,
+      isCompleted
     });
-  }, [quizState, quizIds.length]);
+  }, [quizState, quizIds.length, currentCategory, isCompleted]);
   
   // Handle submitting an answer
   const handleSubmitAnswer = () => {
     // Calculate if any selected answers are correct
+    const correctAnswers = currentAnswers.filter(a => a.points > 0);
     const correctlySelected = currentAnswers
       .filter(a => selectedAnswerIds.includes(a.id) && a.points > 0)
       .length;
     
-    console.log(`Submitting answer: ${correctlySelected} correct answers selected`);
+    console.log(`Submitting answer:`, {
+      selectedIds: selectedAnswerIds,
+      totalCorrectAnswers: correctAnswers.length,
+      correctlySelected
+    });
     
     // Update the score
     if (correctlySelected > 0) {

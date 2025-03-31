@@ -30,10 +30,29 @@ export const useQuizNavigation = (
     console.log(`[QuizNavigation] ${message}`, data ? data : '');
   }, []);
   
+  // Debug function to log the current state
+  const logCurrentState = useCallback(() => {
+    logNavigation('Current State:', {
+      quizIds,
+      currentQuizIndex: quizState.currentQuizIndex,
+      currentQuizId: quizIds[quizState.currentQuizIndex],
+      currentCategory: categories[quizState.currentQuizIndex]?.name,
+      currentQuestionIndex: quizState.currentQuestionIndex,
+      totalQuestions: quizState.questions.length,
+      savedQuizIds
+    });
+  }, [quizState, quizIds, categories, savedQuizIds, logNavigation]);
+  
   // Load the current quiz questions and first question's answers
   const loadQuizData = useCallback(async () => {
-    if (!quizIds.length || quizState.currentQuizIndex >= quizIds.length) {
-      logNavigation(`No more quizzes available, completing quiz flow`);
+    if (!quizIds.length) {
+      logNavigation('No quiz IDs provided');
+      setIsCompleted(true);
+      return;
+    }
+    
+    if (quizState.currentQuizIndex >= quizIds.length) {
+      logNavigation(`Quiz index out of bounds: ${quizState.currentQuizIndex} >= ${quizIds.length}`);
       setIsCompleted(true);
       return;
     }
@@ -42,11 +61,13 @@ export const useQuizNavigation = (
     
     try {
       const currentQuizId = quizIds[quizState.currentQuizIndex];
-
+      
       logNavigation(`Loading quiz ${quizState.currentQuizIndex + 1}/${quizIds.length}: Quiz ID ${currentQuizId}`);
       
       // Set current category
-      setCurrentCategory(categories[quizState.currentQuizIndex] || null);
+      const currentCategory = categories[quizState.currentQuizIndex] || null;
+      setCurrentCategory(currentCategory);
+      logNavigation(`Current category set to:`, currentCategory);
       
       // Fetch questions for the current quiz
       const { data: questions, error: questionsError } = await supabase
@@ -75,7 +96,8 @@ export const useQuizNavigation = (
       setQuizState(prev => ({
         ...prev,
         questions: questions,
-        currentQuestionIndex: 0
+        currentQuestionIndex: 0,
+        score: 0 // Reset score for new quiz
       }));
       
       setCurrentQuestion(questions[0]);
@@ -83,13 +105,15 @@ export const useQuizNavigation = (
       // Load answers for the first question
       await loadAnswersForQuestion(questions[0].id);
       
+      logCurrentState();
+      
     } catch (error) {
       console.error("Error loading quiz data:", error);
       toast.error("Failed to load quiz");
     } finally {
       setIsLoading(false);
     }
-  }, [quizIds, categories, quizState.currentQuizIndex, loadAnswersForQuestion, setCurrentCategory, setCurrentQuestion, setIsCompleted, setIsLoading, setQuizState, logNavigation]);
+  }, [quizIds, categories, quizState.currentQuizIndex, loadAnswersForQuestion, setCurrentCategory, setCurrentQuestion, setIsCompleted, setIsLoading, setQuizState, logNavigation, logCurrentState]);
   
   // Save current quiz results
   const saveCurrentQuizResults = useCallback(async () => {
@@ -119,6 +143,9 @@ export const useQuizNavigation = (
     if (success) {
       // Mark this quiz as saved to prevent duplicates
       setSavedQuizIds(prev => [...prev, currentQuizId]);
+      logNavigation(`Saved quiz ${currentQuizId} to savedQuizIds: [${[...savedQuizIds, currentQuizId].join(', ')}]`);
+    } else {
+      logNavigation(`Failed to save quiz ${currentQuizId} results`);
     }
     
     return success;
@@ -132,6 +159,7 @@ export const useQuizNavigation = (
       return;
     }
     
+    logCurrentState();
     setIsNavigating(true);
     
     try {
@@ -160,7 +188,7 @@ export const useQuizNavigation = (
         // Move to the next quiz
         const nextQuizIndex = quizState.currentQuizIndex + 1;
         
-        logNavigation(`Moving to next quiz: ${nextQuizIndex + 1}/${quizIds.length}`);
+        logNavigation(`Current quiz finished. Moving to next quiz index: ${nextQuizIndex}`);
         
         // Reset current question and answers
         setCurrentQuestion(null);
@@ -169,7 +197,7 @@ export const useQuizNavigation = (
         
         // Check if the next index is valid before proceeding
         if (nextQuizIndex >= quizIds.length) {
-          logNavigation("All quizzes completed");
+          logNavigation(`All quizzes completed. Quiz count: ${quizIds.length}, Next index would be: ${nextQuizIndex}`);
           setIsCompleted(true);
           return;
         }
@@ -185,6 +213,7 @@ export const useQuizNavigation = (
         
         // Force reload of quiz data with a slight delay to ensure state updates
         setTimeout(() => {
+          logNavigation(`Loading next quiz data with index ${nextQuizIndex}`);
           loadQuizData();
         }, 300);
       }
@@ -206,7 +235,8 @@ export const useQuizNavigation = (
     loadAnswersForQuestion, 
     saveCurrentQuizResults, 
     setIsCompleted,
-    logNavigation
+    logNavigation,
+    logCurrentState
   ]);
   
   return {

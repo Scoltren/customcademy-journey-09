@@ -31,8 +31,11 @@ export const useQuizState = (quizIds: number[]) => {
       const updated = typeof newState === 'function' ? newState(prev) : newState;
       
       console.log('QuizState updated:', {
-        current: prev,
-        new: updated
+        currentQuizIndex: `${prev.currentQuizIndex} → ${updated.currentQuizIndex}`,
+        currentQuestionIndex: `${prev.currentQuestionIndex} → ${updated.currentQuestionIndex}`,
+        totalQuestions: prev.questions.length !== updated.questions.length ? 
+          `${prev.questions.length} → ${updated.questions.length}` : updated.questions.length,
+        score: `${prev.score} → ${updated.score}`
       });
       
       return updated;
@@ -52,6 +55,8 @@ export const useQuizState = (quizIds: number[]) => {
   // Load the answers for a specific question
   const loadAnswersForQuestion = useCallback(async (questionId: number) => {
     try {
+      console.log(`Loading answers for question ID ${questionId}`);
+      
       const { data: answers, error } = await supabase
         .from('answers')
         .select('*')

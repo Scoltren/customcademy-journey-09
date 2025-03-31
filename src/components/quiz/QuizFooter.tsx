@@ -26,11 +26,22 @@ const QuizFooter: React.FC<QuizFooterProps> = ({
   onNextQuestion,
 }) => {
   let nextButtonText = "Next Question";
-  if (isLastQuestion && isLastQuiz) {
-    nextButtonText = "Finish Quiz";
-  } else if (isLastQuestion) {
-    nextButtonText = "Next Quiz";
+  
+  if (isLastQuestion) {
+    if (isLastQuiz) {
+      nextButtonText = "Finish Quiz";
+    } else {
+      nextButtonText = "Next Quiz";
+    }
   }
+
+  console.log("QuizFooter rendering with:", {
+    showFeedback,
+    isLastQuestion,
+    isLastQuiz,
+    nextButtonText,
+    selectedAnswerCount: selectedAnswerIds.length
+  });
 
   return (
     <CardFooter className="flex justify-between border-t border-slate-800 pt-4">
