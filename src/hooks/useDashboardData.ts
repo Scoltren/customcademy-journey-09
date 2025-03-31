@@ -41,7 +41,6 @@ export const useDashboardData = (userId: string | undefined) => {
     setIsLoading(true);
     
     try {
-      // Fetch user interests with category names and IDs
       const { data: interests, error: interestsError } = await supabase
         .from('user_interest_categories')
         .select('*, category:categories(id, name)')
@@ -49,9 +48,6 @@ export const useDashboardData = (userId: string | undefined) => {
       
       if (interestsError) throw interestsError;
       
-      console.log("Fetched user interests:", interests);
-      
-      // Transform the data to match UserInterest type
       const transformedInterests: UserInterest[] = interests?.map(interest => ({
         user_id: interest.user_id,
         category_id: interest.category_id,
@@ -64,7 +60,6 @@ export const useDashboardData = (userId: string | undefined) => {
       
       setUserInterests(transformedInterests);
       
-      // Fetch enrolled courses
       const { data: subscriptions, error: subscriptionsError } = await supabase
         .from('subscribed_courses')
         .select('*, course:course_id(id, title, description, thumbnail, difficulty_level, media, course_time, creator_id, overall_rating, price, category_id, created_at)')
@@ -75,7 +70,6 @@ export const useDashboardData = (userId: string | undefined) => {
       if (subscriptions && subscriptions.length > 0) {
         const coursesWithDetails = await Promise.all(
           subscriptions.map(async (sub) => {
-            // Fetch chapters for the course
             const { data: chapters, error: chaptersError } = await supabase
               .from('chapters')
               .select('id, progress_when_finished')
@@ -83,7 +77,6 @@ export const useDashboardData = (userId: string | undefined) => {
             
             if (chaptersError) throw chaptersError;
             
-            // Fetch user progress for this course
             const { data: userProgress, error: progressError } = await supabase
               .from('user_chapter_progress')
               .select('chapter_id, finished')
@@ -92,10 +85,8 @@ export const useDashboardData = (userId: string | undefined) => {
             
             if (progressError) throw progressError;
             
-            // Calculate completed chapters
             const completedChapterCount = userProgress?.filter(p => p.finished).length || 0;
             
-            // Calculate progress based on completed chapters' progress_when_finished values
             let calculatedProgress = 0;
             if (userProgress && chapters) {
               userProgress.forEach(progress => {
@@ -108,10 +99,8 @@ export const useDashboardData = (userId: string | undefined) => {
               });
             }
             
-            // Ensure progress doesn't exceed 100%
             calculatedProgress = Math.min(calculatedProgress, 100);
             
-            // Create a properly typed course object
             const courseWithProgress: EnrolledCourse = {
               ...sub.course as unknown as Course,
               progress: calculatedProgress,
@@ -128,17 +117,25 @@ export const useDashboardData = (userId: string | undefined) => {
         setEnrolledCourses([]);
       }
       
-      // Updated query to match the database schema, removing category_id from quizzes
-      // and using a join through categories table
       const { data: quizzes, error: quizzesError } = await supabase
         .from('user_quiz_results')
-        .select('*, quiz:quiz_id(title, category:categories(name))')
+        .select(`
+          id, 
+          quiz_id, 
+          score, 
+          user_id, 
+          quiz:quizzes!quiz_id (
+            title,
+            categories (
+              name
+            )
+          )
+        `)
         .eq('user_id', userId);
       
       if (quizzesError) throw quizzesError;
       
       if (quizzes) {
-        // Transform the data to match the expected QuizResult type
         const transformedQuizzes: QuizResult[] = quizzes.map(quiz => ({
           id: quiz.id,
           quiz_id: quiz.quiz_id,
@@ -147,7 +144,7 @@ export const useDashboardData = (userId: string | undefined) => {
           quiz: {
             title: quiz.quiz?.title || 'Unknown Quiz',
             category: {
-              name: quiz.quiz?.category?.name || 'Unknown Category'
+              name: quiz.quiz?.categories?.[0]?.name || 'Unknown Category'
             }
           }
         }));
