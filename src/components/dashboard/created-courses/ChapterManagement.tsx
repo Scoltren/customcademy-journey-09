@@ -55,7 +55,12 @@ const ChapterManagement: React.FC<ChapterManagementProps> = ({ courseId }) => {
     setIsLoading(true);
     try {
       const data = await CourseCreationService.getCourseChapters(courseId);
-      setChapters(data);
+      // Ensure all chapters have a title property
+      const chaptersWithTitle = data.map(chapter => ({
+        ...chapter,
+        title: chapter.title || `Chapter ${chapter.id}`
+      }));
+      setChapters(chaptersWithTitle);
     } catch (error) {
       console.error('Error fetching chapters:', error);
       toast.error('Failed to load chapters');

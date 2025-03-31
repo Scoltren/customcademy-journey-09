@@ -46,7 +46,7 @@ export const CourseThumbnail = ({ form, onThumbnailChange, existingThumbnail }: 
                 <FileUploader
                   accept="image/*"
                   maxSize={5 * 1024 * 1024} // 5MB
-                  onFileChange={(file) => {
+                  onChange={(file) => {
                     handleFileChange(file);
                   }}
                 />
