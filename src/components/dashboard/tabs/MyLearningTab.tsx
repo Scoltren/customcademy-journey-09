@@ -78,7 +78,7 @@ const MyLearningTab = ({
                       <div className="flex items-center gap-1">
                         <Clock size={16} className="text-blue-light" />
                         <span className="text-slate-300">
-                          {course.course_time || course.totalChapters} minutes
+                          {course.course_time || course.totalChapters} hours
                         </span>
                       </div>
                     </div>

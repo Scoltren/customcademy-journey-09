@@ -8,6 +8,20 @@ interface UserInterestsProps {
 }
 
 const UserInterests = ({ userInterests, handleEditInterests }: UserInterestsProps) => {
+  // Function to determine the text color based on difficulty level
+  const getDifficultyColor = (level: string | undefined) => {
+    switch(level) {
+      case 'Beginner':
+        return 'text-green-400';
+      case 'Intermediate':
+        return 'text-yellow-400';
+      case 'Advanced':
+        return 'text-red-400';
+      default:
+        return 'text-xs opacity-70';
+    }
+  };
+
   return (
     <div className="mb-4">
       <h3 className="font-bold text-white mb-4">Your Interests</h3>
@@ -22,7 +36,7 @@ const UserInterests = ({ userInterests, handleEditInterests }: UserInterestsProp
               >
                 <span>{interest.category?.name || 'Unknown'}</span>
                 {interest.difficulty_level ? (
-                  <span className="ml-1 text-xs opacity-70">
+                  <span className={`ml-1 ${getDifficultyColor(interest.difficulty_level)}`}>
                     • {interest.difficulty_level}
                   </span>
                 ) : (

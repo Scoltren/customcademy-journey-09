@@ -11,6 +11,20 @@ interface ProfileTabProps {
 const ProfileTab = ({ userInterests, handleEditInterests }: ProfileTabProps) => {
   const { user } = useAuth();
   
+  // Function to determine the text color based on difficulty level
+  const getDifficultyColor = (level: string | undefined) => {
+    switch(level) {
+      case 'Beginner':
+        return 'text-green-400';
+      case 'Intermediate':
+        return 'text-yellow-400';
+      case 'Advanced':
+        return 'text-red-400';
+      default:
+        return 'text-xs opacity-70';
+    }
+  };
+  
   return (
     <div>
       <h1 className="heading-lg mb-6">Profile</h1>
@@ -75,7 +89,7 @@ const ProfileTab = ({ userInterests, handleEditInterests }: ProfileTabProps) => 
               >
                 <span>{interest.category?.name || 'Unknown'}</span>
                 {interest.difficulty_level ? (
-                  <span className="ml-1 text-xs opacity-70">
+                  <span className={`ml-1 ${getDifficultyColor(interest.difficulty_level)}`}>
                     • {interest.difficulty_level}
                   </span>
                 ) : (

@@ -58,10 +58,10 @@ const QuizResultsTab: React.FC<QuizResultsTabProps> = ({ quizResults, isLoading 
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead className="text-base font-medium">Quiz</TableHead>
-              <TableHead className="text-base font-medium">Category</TableHead>
-              <TableHead className="text-base font-medium">Score</TableHead>
-              <TableHead className="text-base font-medium">Level</TableHead>
+              <TableHead className="text-base font-medium pl-3">Quiz</TableHead>
+              <TableHead className="text-base font-medium pl-3">Category</TableHead>
+              <TableHead className="text-base font-medium pl-3">Score</TableHead>
+              <TableHead className="text-base font-medium pl-3">Level</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -71,16 +71,16 @@ const QuizResultsTab: React.FC<QuizResultsTabProps> = ({ quizResults, isLoading 
               
               return (
                 <TableRow key={result.id}>
-                  <TableCell className="text-base font-medium text-white">
+                  <TableCell className="text-base font-medium text-white pl-3">
                     {result.quiz?.title || 'Unnamed Quiz'}
                   </TableCell>
-                  <TableCell className="text-base">
+                  <TableCell className="text-base pl-3">
                     {categoryName}
                   </TableCell>
-                  <TableCell className="text-base">
+                  <TableCell className="text-base pl-3">
                     {result.score}
                   </TableCell>
-                  <TableCell>
+                  <TableCell className="pl-3">
                     <span className={`text-base font-semibold ${
                       skillLevel === 'Beginner' ? 'text-green-400' :
                       skillLevel === 'Intermediate' ? 'text-yellow-400' : 'text-red-400'
