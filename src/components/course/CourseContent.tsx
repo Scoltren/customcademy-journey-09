@@ -10,7 +10,6 @@ import LoadingChapters from './content/LoadingChapters';
 import CourseProgressBar from './content/CourseProgressBar';
 import EnrollmentManager from './content/EnrollmentManager';
 import { useChapterProgress } from '@/hooks/useChapterProgress';
-import { useQuizManagement } from '@/hooks/useQuizManagement';
 
 interface CourseContentProps {
   chapters: Chapter[];
@@ -27,7 +26,6 @@ const CourseContent: React.FC<CourseContentProps> = ({
 }) => {
   const { id } = useParams<{ id: string }>();
   const { user } = useAuth();
-  const { activeQuiz, toggleQuiz } = useQuizManagement();
   const { 
     completedChapters, 
     localProgress, 
@@ -54,9 +52,7 @@ const CourseContent: React.FC<CourseContentProps> = ({
         
         <ChapterList 
           chapters={chapters}
-          activeQuiz={activeQuiz}
           completedChapters={completedChapters}
-          onToggleQuiz={toggleQuiz}
           onMarkAsDone={markChapterAsDone}
         />
       </EnrollmentManager>

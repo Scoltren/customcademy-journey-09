@@ -6,17 +6,13 @@ import ChapterItem from './ChapterItem';
 
 interface ChapterListProps {
   chapters: Chapter[];
-  activeQuiz: number | null;
   completedChapters: number[];
-  onToggleQuiz: (quizId: number | null) => void;
   onMarkAsDone: (chapterId: number, progressValue: number | null) => void;
 }
 
 const ChapterList: React.FC<ChapterListProps> = ({
   chapters,
-  activeQuiz,
   completedChapters,
-  onToggleQuiz,
   onMarkAsDone
 }) => {
   if (!Array.isArray(chapters) || chapters.length === 0) {
@@ -38,9 +34,7 @@ const ChapterList: React.FC<ChapterListProps> = ({
           key={chapter.id}
           chapter={chapter}
           index={index}
-          activeQuiz={activeQuiz}
           completedChapters={completedChapters}
-          onToggleQuiz={onToggleQuiz}
           onMarkAsDone={onMarkAsDone}
         />
       ))}

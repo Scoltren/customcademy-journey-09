@@ -1,25 +1,20 @@
 
 import React from 'react';
-import { Play, CheckCircle, FileCheck } from 'lucide-react';
+import { Play, CheckCircle } from 'lucide-react';
 import { Chapter } from '@/types/course';
 import { Button } from '@/components/ui/button';
-import QuizComponent from '../QuizComponent';
 
 interface ChapterItemProps {
   chapter: Chapter;
   index: number;
-  activeQuiz: number | null;
   completedChapters: number[];
-  onToggleQuiz: (quizId: number | null) => void;
   onMarkAsDone: (chapterId: number, progressValue: number | null) => void;
 }
 
 const ChapterItem: React.FC<ChapterItemProps> = ({
   chapter,
   index,
-  activeQuiz,
   completedChapters,
-  onToggleQuiz,
   onMarkAsDone
 }) => {
   return (
@@ -68,24 +63,7 @@ const ChapterItem: React.FC<ChapterItemProps> = ({
                 </span>
               )}
             </div>
-            
-            {chapter.quiz_id && (
-              <Button 
-                variant="outline" 
-                className="flex items-center gap-2 border-blue-light text-blue-light hover:bg-blue-light/10"
-                onClick={() => onToggleQuiz(chapter.quiz_id as number)}
-              >
-                <FileCheck size={16} />
-                {activeQuiz === chapter.quiz_id ? 'Hide Quiz' : 'Take Quiz'}
-              </Button>
-            )}
           </div>
-          
-          {activeQuiz === chapter.quiz_id && chapter.quiz_id && (
-            <div className="mt-6">
-              <QuizComponent quizId={chapter.quiz_id} />
-            </div>
-          )}
         </div>
       </div>
     </div>
