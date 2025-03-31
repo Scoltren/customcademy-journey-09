@@ -124,11 +124,13 @@ const CourseHeader: React.FC<CourseHeaderProps> = ({ course }) => {
         {/* Course Image */}
         <div className="lg:w-1/2">
           <div className="aspect-video rounded-xl overflow-hidden bg-slate-800">
-            <img 
-              src={course.thumbnail || "https://images.unsplash.com/photo-1498050108023-c5249f4df085"}
-              alt={course.title} 
-              className="w-full h-full object-cover"
-            />
+            {course.thumbnail && (
+              <img 
+                src={course.thumbnail}
+                alt={course.title} 
+                className="w-full h-full object-cover"
+              />
+            )}
           </div>
         </div>
         

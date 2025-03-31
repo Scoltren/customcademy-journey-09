@@ -48,9 +48,7 @@ export class CourseCreationService {
       
       if (bucketError) {
         console.error("Error checking buckets:", bucketError);
-        toast("Failed to check storage buckets", {
-          description: bucketError.message,
-        });
+        toast.error('Failed to check storage buckets: ' + bucketError.message);
         return null;
       }
       
@@ -58,9 +56,25 @@ export class CourseCreationService {
       const bucketExists = buckets.some(b => b.id === BUCKET_NAME);
       
       if (!bucketExists) {
-        console.log(`Bucket ${BUCKET_NAME} does not exist in Supabase storage, skipping upload`);
-        // Since we can't create buckets from the client, we'll skip the upload
-        return null;
+        console.log(`Bucket ${BUCKET_NAME} does not exist in Supabase storage, creating it`);
+        // Try to create the bucket if it doesn't exist
+        try {
+          const { error: createError } = await supabase.storage.createBucket(BUCKET_NAME, {
+            public: true
+          });
+          
+          if (createError) {
+            console.error("Error creating bucket:", createError);
+            toast.error('Failed to create storage bucket. Please contact support.');
+            return null;
+          }
+          
+          console.log(`Bucket ${BUCKET_NAME} created successfully`);
+        } catch (err) {
+          console.error("Error creating bucket:", err);
+          toast.error('Failed to create storage bucket. Please try again later.');
+          return null;
+        }
       }
       
       // Generate a unique file name to avoid collisions
@@ -80,9 +94,7 @@ export class CourseCreationService {
       
       if (error) {
         console.error("Error uploading file:", error);
-        toast("Upload Failed", {
-          description: error.message || "Failed to upload file. Please try again.",
-        });
+        toast.error('Upload Failed: ' + error.message);
         return null;
       }
       
@@ -92,12 +104,11 @@ export class CourseCreationService {
         .getPublicUrl(data.path);
       
       console.log("File uploaded successfully, URL:", publicUrlData.publicUrl);
+      toast.success('File uploaded successfully');
       return publicUrlData.publicUrl;
     } catch (error) {
       console.error("Unexpected error during file upload:", error);
-      toast("Upload Failed", {
-        description: "An unexpected error occurred. Please try again.",
-      });
+      toast.error('Upload Failed: An unexpected error occurred');
       return null;
     }
   }

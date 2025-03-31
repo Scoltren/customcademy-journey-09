@@ -53,12 +53,14 @@ const CourseCard: React.FC<{ course: CourseProps; className?: string }> = ({
         "relative overflow-hidden h-[55%]",
         featured ? "md:w-1/2 md:h-full" : "w-full"
       )}>
-        <div className="w-full h-full overflow-hidden">
-          <img 
-            src={image} 
-            alt={title} 
-            className="w-full h-full object-cover object-center transform group-hover:scale-105 transition-transform duration-500"
-          />
+        <div className="w-full h-full overflow-hidden bg-slate-800">
+          {image && (
+            <img 
+              src={image} 
+              alt={title} 
+              className="w-full h-full object-cover object-center transform group-hover:scale-105 transition-transform duration-500"
+            />
+          )}
         </div>
       </div>
       

@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { 
@@ -90,7 +89,6 @@ const CreatedCoursesTab = () => {
     );
   }
 
-  // Editing a specific course
   if (activeCourse) {
     return (
       <div className="space-y-6">
@@ -119,7 +117,6 @@ const CreatedCoursesTab = () => {
     );
   }
 
-  // Courses list view
   return (
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
@@ -146,16 +143,12 @@ const CreatedCoursesTab = () => {
           {createdCourses.map((course) => (
             <Card key={course.id} className="overflow-hidden bg-slate-800 border-slate-700">
               <div className="aspect-video w-full overflow-hidden bg-slate-900">
-                {course.thumbnail ? (
+                {course.thumbnail && (
                   <img 
                     src={course.thumbnail} 
                     alt={course.title}
                     className="w-full h-full object-cover"
                   />
-                ) : (
-                  <div className="w-full h-full flex items-center justify-center bg-slate-700">
-                    <BookOpen className="h-10 w-10 text-slate-400" />
-                  </div>
                 )}
               </div>
               <CardContent className="p-6">
@@ -204,7 +197,6 @@ const CreatedCoursesTab = () => {
         </div>
       )}
 
-      {/* Delete Confirmation Dialog */}
       <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>
