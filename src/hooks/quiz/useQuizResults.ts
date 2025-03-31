@@ -24,7 +24,19 @@ export const useQuizResults = (user: any) => {
     try {
       console.log(`Saving quiz ${quizId} results with score ${score}`);
       
-      // Save the quiz result
+      // First, delete any existing results for this quiz and user
+      const { error: deleteError } = await supabase
+        .from('user_quiz_results')
+        .delete()
+        .eq('user_id', user.id)
+        .eq('quiz_id', quizId);
+      
+      if (deleteError) {
+        console.error("Error deleting previous quiz results:", deleteError);
+        // Continue with insert anyway
+      }
+      
+      // Save the new quiz result
       const { error: resultError } = await supabase
         .from('user_quiz_results')
         .insert({

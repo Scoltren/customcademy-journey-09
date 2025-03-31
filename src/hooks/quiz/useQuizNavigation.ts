@@ -89,11 +89,11 @@ export const useQuizNavigation = (
           score: 0
         }));
         
-        // Give the state update time to complete before loading the next quiz
+        // Force the component to re-render before loading the next quiz
         setTimeout(() => {
           console.log("NAVIGATION - Now loading quiz data with index:", nextQuizIndex);
           
-          // Load the next quiz data
+          // Load the next quiz data with a new quiz ID
           loadQuizData(quizIds, categories)
             .catch(error => {
               console.error("NAVIGATION - Error loading next quiz:", error);

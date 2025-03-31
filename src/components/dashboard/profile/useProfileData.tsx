@@ -53,6 +53,44 @@ export const useProfileData = () => {
     }
   };
   
+  const deleteOldProfilePicture = async (oldUrl: string | null) => {
+    if (!oldUrl) return;
+    
+    try {
+      // Extract file path from the URL
+      const urlObj = new URL(oldUrl);
+      const pathWithBucket = urlObj.pathname.split('/public/')[1];
+      
+      if (!pathWithBucket) {
+        console.log("Could not extract file path from URL:", oldUrl);
+        return;
+      }
+      
+      // Split into bucket and file path
+      const [bucket, ...pathParts] = pathWithBucket.split('/');
+      const filePath = pathParts.join('/');
+      
+      if (!bucket || !filePath) {
+        console.log("Invalid file path components:", { bucket, filePath });
+        return;
+      }
+      
+      console.log(`Attempting to delete file from bucket: ${bucket}, path: ${filePath}`);
+      
+      const { error } = await supabase.storage
+        .from(bucket)
+        .remove([filePath]);
+      
+      if (error) {
+        console.error("Error deleting old profile picture:", error);
+      } else {
+        console.log("Successfully deleted old profile picture");
+      }
+    } catch (error) {
+      console.error("Error in deleteOldProfilePicture:", error);
+    }
+  };
+  
   const handleSaveProfile = async () => {
     if (!user) return;
     
@@ -63,6 +101,12 @@ export const useProfileData = () => {
       // Upload profile picture if selected
       if (profilePicture) {
         console.log("Uploading profile picture:", profilePicture.name, profilePicture.type, profilePicture.size);
+        
+        // Delete old profile picture before uploading a new one
+        if (profileData.avatar_url) {
+          await deleteOldProfilePicture(profileData.avatar_url);
+        }
+        
         avatar_url = await StorageService.uploadFile(profilePicture, 'avatars', 'profile-pictures');
         console.log("Profile picture upload result:", avatar_url);
       }

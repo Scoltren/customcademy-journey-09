@@ -13,6 +13,7 @@ export interface QuizStateManager {
   setIsCompleted: (isCompleted: boolean) => void;
   loadAnswersForQuestion: (questionId: number) => Promise<any>;
   setSelectedAnswerIds: (ids: number[]) => void;
+  setCurrentAnswers: (answers: any[]) => void;
 }
 
 export const useQuizDataLoader = (stateManager: QuizStateManager) => {
@@ -24,7 +25,8 @@ export const useQuizDataLoader = (stateManager: QuizStateManager) => {
     setCurrentCategory, 
     setIsCompleted,
     loadAnswersForQuestion,
-    setSelectedAnswerIds
+    setSelectedAnswerIds,
+    setCurrentAnswers
   } = stateManager;
 
   // Load the current quiz questions and first question's answers
@@ -67,7 +69,8 @@ export const useQuizDataLoader = (stateManager: QuizStateManager) => {
       const { data: questions, error: questionsError } = await supabase
         .from('questions')
         .select('*')
-        .eq('quiz_id', currentQuizId);
+        .eq('quiz_id', currentQuizId)
+        .order('id');
       
       if (questionsError) {
         console.error("DATA LOADER - Error fetching questions:", questionsError);
@@ -128,6 +131,7 @@ export const useQuizDataLoader = (stateManager: QuizStateManager) => {
       console.log(`DATA LOADER - Setting current question to:`, questions[0]);
       setCurrentQuestion(questions[0]);
       setSelectedAnswerIds([]);
+      setCurrentAnswers([]);
       
       // Load answers for the first question
       await loadAnswersForQuestion(questions[0].id);
@@ -147,7 +151,8 @@ export const useQuizDataLoader = (stateManager: QuizStateManager) => {
     setCurrentCategory, 
     setIsCompleted, 
     loadAnswersForQuestion, 
-    setSelectedAnswerIds
+    setSelectedAnswerIds,
+    setCurrentAnswers
   ]);
 
   return {
