@@ -12,6 +12,8 @@ import QuizFooter from "@/components/quiz/QuizFooter";
 import QuizLoading from "@/components/quiz/QuizLoading";
 import QuizNotAvailable from "@/components/quiz/QuizNotAvailable";
 
+const MAX_LOADING_TIME = 15000; // 15 seconds max loading time
+
 const CategoryQuiz = () => {
   const location = useLocation();
   const navigate = useNavigate();
@@ -35,6 +37,7 @@ const CategoryQuiz = () => {
   
   const [showFeedback, setShowFeedback] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
+  const [loadTimeout, setLoadTimeout] = useState<NodeJS.Timeout | null>(null);
   
   const { 
     quizState, 
@@ -48,6 +51,28 @@ const CategoryQuiz = () => {
     isCompleted,
     updateScore
   } = useQuiz(user, quizIds, categories);
+  
+  // Set a maximum loading time to prevent infinite loading
+  useEffect(() => {
+    if (isLoading && !loadTimeout) {
+      const timeout = setTimeout(() => {
+        if (isLoading) {
+          console.log("Loading timeout reached, redirecting to home");
+          toast.error("Quiz loading timed out. Please try again later.");
+          navigate('/');
+        }
+      }, MAX_LOADING_TIME);
+      
+      setLoadTimeout(timeout);
+    } else if (!isLoading && loadTimeout) {
+      clearTimeout(loadTimeout);
+      setLoadTimeout(null);
+    }
+    
+    return () => {
+      if (loadTimeout) clearTimeout(loadTimeout);
+    };
+  }, [isLoading, loadTimeout, navigate]);
   
   // If no quiz IDs were provided, redirect to home
   useEffect(() => {

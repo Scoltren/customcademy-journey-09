@@ -24,6 +24,7 @@ export const useQuizState = (quizIds: number[]) => {
   const [selectedAnswerIds, setSelectedAnswerIds] = useState<number[]>([]);
   const [currentCategory, setCurrentCategory] = useState<any>(null);
   const [isCompleted, setIsCompleted] = useState(false);
+  const [failedAnswerAttempts, setFailedAnswerAttempts] = useState<Record<number, number>>({});
   
   // Custom state setter with enhanced logging
   const updateQuizState = useCallback((newState: QuizState | ((prev: QuizState) => QuizState)) => {
@@ -57,6 +58,22 @@ export const useQuizState = (quizIds: number[]) => {
     try {
       console.log(`Loading answers for question ID ${questionId}`);
       
+      // Check if we've failed too many times for this question
+      const attempts = failedAnswerAttempts[questionId] || 0;
+      if (attempts >= 3) {
+        console.log(`Too many failed attempts (${attempts}) for question ${questionId}, using dummy answers`);
+        
+        // Create dummy answers to prevent blocking the quiz
+        const dummyAnswers = [
+          { id: -1, question_id: questionId, answer_text: "Answer option 1", points: 1, explanation: "This is a fallback answer" },
+          { id: -2, question_id: questionId, answer_text: "Answer option 2", points: 0, explanation: "This is a fallback answer" }
+        ];
+        
+        setCurrentAnswers(dummyAnswers);
+        setSelectedAnswerIds([]);
+        return dummyAnswers;
+      }
+      
       const { data: answers, error } = await supabase
         .from('answers')
         .select('*')
@@ -64,21 +81,56 @@ export const useQuizState = (quizIds: number[]) => {
       
       if (error) throw error;
       
+      // If we got no answers, create dummy ones
+      if (!answers || answers.length === 0) {
+        console.log(`No answers available for question ${questionId}, using dummy answers`);
+        
+        const dummyAnswers = [
+          { id: -1, question_id: questionId, answer_text: "Answer option 1", points: 1, explanation: "This is a fallback answer" },
+          { id: -2, question_id: questionId, answer_text: "Answer option 2", points: 0, explanation: "This is a fallback answer" }
+        ];
+        
+        setCurrentAnswers(dummyAnswers);
+        setSelectedAnswerIds([]);
+        return dummyAnswers;
+      }
+      
       // Randomize the order of answers before setting them
-      const randomizedAnswers = answers ? shuffleArray(answers) : [];
+      const randomizedAnswers = shuffleArray(answers);
       
       setCurrentAnswers(randomizedAnswers);
       setSelectedAnswerIds([]);
       
       console.log(`Loaded ${randomizedAnswers.length || 0} answers for question ID ${questionId}`);
       
+      // Reset failed attempts counter for this question
+      if (attempts > 0) {
+        setFailedAnswerAttempts(prev => ({...prev, [questionId]: 0}));
+      }
+      
       return answers;
     } catch (error) {
       console.error("Error loading answers:", error);
+      
+      // Track failed attempts for this question
+      setFailedAnswerAttempts(prev => ({
+        ...prev, 
+        [questionId]: (prev[questionId] || 0) + 1
+      }));
+      
+      // Create dummy answers after failure to prevent blocking the quiz
+      const dummyAnswers = [
+        { id: -1, question_id: questionId, answer_text: "Answer option 1", points: 1, explanation: "This is a fallback answer" },
+        { id: -2, question_id: questionId, answer_text: "Answer option 2", points: 0, explanation: "This is a fallback answer" }
+      ];
+      
+      setCurrentAnswers(dummyAnswers);
+      setSelectedAnswerIds([]);
+      
       toast.error("Failed to load question answers");
-      return [];
+      return dummyAnswers;
     }
-  }, [shuffleArray]);
+  }, [shuffleArray, failedAnswerAttempts]);
   
   // Handle selecting an answer
   const handleSelectAnswer = useCallback((answerId: number) => {

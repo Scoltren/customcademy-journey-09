@@ -12,6 +12,7 @@ export const useQuizNavigation = (
 ) => {
   const [savedQuizIds, setSavedQuizIds] = useState<number[]>([]);
   const [isNavigating, setIsNavigating] = useState(false);
+  const [loadAttempts, setLoadAttempts] = useState(0);
   
   const {
     quizState,
@@ -81,12 +82,16 @@ export const useQuizNavigation = (
         toast.error("No questions available for this quiz");
         logNavigation(`No questions found for quiz ${currentQuizId}, moving to next quiz`);
         
-        // Move to the next quiz if this one has no questions
-        setQuizState(prev => ({
-          ...prev,
-          currentQuizIndex: prev.currentQuizIndex + 1
-        }));
-        loadQuizData();
+        // Instead of recursively calling loadQuizData, let's update state and let React effect handle it
+        if (quizState.currentQuizIndex < quizIds.length - 1) {
+          setQuizState(prev => ({
+            ...prev,
+            currentQuizIndex: prev.currentQuizIndex + 1
+          }));
+        } else {
+          setIsCompleted(true);
+        }
+        setIsLoading(false);
         return;
       }
       
@@ -110,10 +115,32 @@ export const useQuizNavigation = (
     } catch (error) {
       console.error("Error loading quiz data:", error);
       toast.error("Failed to load quiz");
+      
+      // Increment load attempt counter
+      setLoadAttempts(prev => prev + 1);
+      
+      // If we've tried more than 3 times, give up and complete the quiz
+      if (loadAttempts >= 3) {
+        setIsCompleted(true);
+        toast.error("Unable to load quiz after multiple attempts");
+      }
     } finally {
       setIsLoading(false);
     }
-  }, [quizIds, categories, quizState.currentQuizIndex, loadAnswersForQuestion, setCurrentCategory, setCurrentQuestion, setIsCompleted, setIsLoading, setQuizState, logNavigation, logCurrentState]);
+  }, [
+    quizIds, 
+    categories, 
+    quizState.currentQuizIndex, 
+    loadAnswersForQuestion, 
+    setCurrentCategory, 
+    setCurrentQuestion, 
+    setIsCompleted, 
+    setIsLoading, 
+    setQuizState, 
+    logNavigation, 
+    logCurrentState,
+    loadAttempts
+  ]);
   
   // Save current quiz results
   const saveCurrentQuizResults = useCallback(async () => {
@@ -211,9 +238,9 @@ export const useQuizNavigation = (
           score: 0 // Reset score for the next quiz
         }));
         
-        // Force reload of quiz data with a slight delay to ensure state updates
+        // Give state time to update before loading next quiz
         setTimeout(() => {
-          logNavigation(`Loading next quiz data with index ${nextQuizIndex}`);
+          setLoadAttempts(0); // Reset load attempts for the new quiz
           loadQuizData();
         }, 300);
       }
@@ -238,6 +265,17 @@ export const useQuizNavigation = (
     logNavigation,
     logCurrentState
   ]);
+  
+  // Add effect to handle quiz loading and retry logic
+  useEffect(() => {
+    // Don't attempt to load if already completed
+    if (isCompleted) return;
+    
+    // Reset load attempts when quiz index changes
+    if (quizState.currentQuizIndex !== quizIds.indexOf(quizState.currentQuizIndex)) {
+      setLoadAttempts(0);
+    }
+  }, [quizState.currentQuizIndex, quizIds, isCompleted]);
   
   return {
     loadQuizData,
