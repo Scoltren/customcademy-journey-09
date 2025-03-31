@@ -56,8 +56,9 @@ const CategoryQuizContainer = () => {
     if (currentCategory) {
       console.log(`CONTAINER - Currently showing quiz for category: ${currentCategory.name} (ID: ${currentCategory.id})`);
       console.log(`CONTAINER - Current quiz index: ${quizState.currentQuizIndex}, total quizzes: ${quizIds.length}`);
+      console.log(`CONTAINER - Current quiz ID: ${quizIds[quizState.currentQuizIndex]}`);
     }
-  }, [currentCategory, quizState.currentQuizIndex, quizIds.length]);
+  }, [currentCategory, quizState.currentQuizIndex, quizIds]);
   
   // Set a maximum loading time to prevent infinite loading
   useEffect(() => {
@@ -141,7 +142,8 @@ const CategoryQuizContainer = () => {
       currentQuizIndex: quizState.currentQuizIndex,
       currentQuestionIndex: quizState.currentQuestionIndex,
       isLastQuestion: quizState.currentQuestionIndex === quizState.questions.length - 1,
-      isLastQuiz: quizState.currentQuizIndex === quizIds.length - 1
+      isLastQuiz: quizState.currentQuizIndex === quizIds.length - 1,
+      totalQuizzes: quizIds.length
     });
     
     // Call handleNextQuestion with a small delay to show saving state

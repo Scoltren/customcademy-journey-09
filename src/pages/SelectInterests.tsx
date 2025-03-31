@@ -117,6 +117,8 @@ const SelectInterests = () => {
           .map(category => category.quiz_id)
           .filter(id => id !== null) as number[];
           
+        console.log("Navigating to quizzes with IDs:", quizIds, "categories:", categoriesWithQuizzes);
+        
         // Navigate to the quiz page with the quiz IDs
         navigate('/category-quiz', { 
           state: { 

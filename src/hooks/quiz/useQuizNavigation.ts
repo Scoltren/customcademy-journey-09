@@ -91,7 +91,7 @@ export const useQuizNavigation = (
         
         // Force the component to re-render before loading the next quiz
         setTimeout(() => {
-          console.log("NAVIGATION - Now loading quiz data with index:", nextQuizIndex);
+          console.log("NAVIGATION - Now loading quiz data with index:", nextQuizIndex, "quizIds:", quizIds, "next quiz ID:", quizIds[nextQuizIndex]);
           
           // Load the next quiz data with a new quiz ID
           loadQuizData(quizIds, categories)

@@ -86,6 +86,18 @@ export const useQuiz = (user: any, quizIds: number[], categories: any[]) => {
     }
   }, [quizIds, categories, isCompleted, loadQuizData, setQuizState]);
   
+  // Reset initial load ref when quiz IDs change to force reload
+  useEffect(() => {
+    initialLoadRef.current = false;
+    
+    // Reset completion state when quiz IDs change
+    setIsCompleted(false);
+    
+    console.log("Quiz IDs changed, reset load state", { 
+      quizIds: quizIds.map(id => id)
+    });
+  }, [quizIds, setIsCompleted]);
+  
   // Create a wrapped next question handler
   const handleNextQuestionWrapper = useCallback(() => {
     return handleNextQuestion(user, quizIds, categories);
