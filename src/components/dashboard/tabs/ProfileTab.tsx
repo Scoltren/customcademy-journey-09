@@ -1,15 +1,110 @@
 
-import React from 'react';
-import { User, Edit } from 'lucide-react';
+import React, { useState, useEffect, useRef } from 'react';
+import { User, Edit, Upload, ArrowLeftRight } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
+import { supabase } from '@/integrations/supabase/client';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
+import { FileUploader } from '@/components/course-creation/FileUploader';
+import { StorageService } from '@/services/course-creation/storage-service';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { toast } from 'sonner';
 
 interface ProfileTabProps {
   userInterests: any[];
   handleEditInterests: () => void;
 }
 
+interface UserProfile {
+  username: string;
+  bio: string;
+  avatar_url: string | null;
+}
+
 const ProfileTab = ({ userInterests, handleEditInterests }: ProfileTabProps) => {
   const { user } = useAuth();
+  const [isEditing, setIsEditing] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [profileData, setProfileData] = useState<UserProfile>({
+    username: user?.user_metadata?.username || '',
+    bio: '',
+    avatar_url: null
+  });
+  const [profilePicture, setProfilePicture] = useState<File | null>(null);
+  
+  useEffect(() => {
+    if (user) {
+      fetchUserProfile();
+    }
+  }, [user]);
+  
+  const fetchUserProfile = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('users')
+        .select('username, bio, profile_picture')
+        .eq('auth_user_id', user?.id)
+        .single();
+      
+      if (error && error.code !== 'PGRST116') {
+        console.error('Error fetching user profile:', error);
+        return;
+      }
+      
+      if (data) {
+        setProfileData({
+          username: data.username || user?.user_metadata?.username || '',
+          bio: data.bio || '',
+          avatar_url: data.profile_picture || null
+        });
+      }
+    } catch (error) {
+      console.error('Error in fetchUserProfile:', error);
+    }
+  };
+  
+  const handleSaveProfile = async () => {
+    if (!user) return;
+    
+    setLoading(true);
+    try {
+      let avatar_url = profileData.avatar_url;
+      
+      // Upload profile picture if selected
+      if (profilePicture) {
+        avatar_url = await StorageService.uploadFile(profilePicture, 'avatars', 'profile-pictures');
+      }
+      
+      // Update user record in the database
+      const { error: dbError } = await supabase
+        .from('users')
+        .update({
+          username: profileData.username,
+          bio: profileData.bio,
+          profile_picture: avatar_url
+        })
+        .eq('auth_user_id', user.id);
+      
+      if (dbError) throw dbError;
+      
+      // Update user metadata in auth
+      const { error: authError } = await supabase.auth.updateUser({
+        data: { username: profileData.username }
+      });
+      
+      if (authError) throw authError;
+      
+      toast.success('Profile updated successfully');
+      setIsEditing(false);
+      setProfilePicture(null);
+    } catch (error: any) {
+      console.error('Error updating profile:', error);
+      toast.error('Failed to update profile: ' + error.message);
+    } finally {
+      setLoading(false);
+    }
+  };
   
   // Function to determine the text color based on difficulty level
   const getDifficultyColor = (level: string | undefined) => {
@@ -32,21 +127,103 @@ const ProfileTab = ({ userInterests, handleEditInterests }: ProfileTabProps) => 
       <div className="glass-card p-6 mb-8">
         <div className="flex flex-col md:flex-row gap-8 items-start">
           <div className="w-full md:w-1/3 flex flex-col items-center">
-            <div className="w-32 h-32 rounded-full overflow-hidden mb-4 bg-gray-700 flex items-center justify-center">
-              <User size={48} className="text-gray-400" />
-            </div>
-            <button className="button-secondary py-2 w-full">Change Photo</button>
+            {isEditing ? (
+              <div className="mb-4 w-full">
+                <FileUploader
+                  accept="image/*"
+                  onChange={setProfilePicture}
+                  maxSize={5 * 1024 * 1024} // 5MB max
+                />
+              </div>
+            ) : (
+              <div className="w-32 h-32 rounded-full overflow-hidden mb-4 bg-gray-700 flex items-center justify-center">
+                {profileData.avatar_url ? (
+                  <Avatar className="w-full h-full">
+                    <AvatarImage src={profileData.avatar_url} alt="Profile picture" />
+                    <AvatarFallback>
+                      <User size={48} className="text-gray-400" />
+                    </AvatarFallback>
+                  </Avatar>
+                ) : (
+                  <User size={48} className="text-gray-400" />
+                )}
+              </div>
+            )}
+            
+            {!isEditing && (
+              <Button 
+                variant="secondary" 
+                className="py-2 w-full"
+                onClick={() => setIsEditing(true)}
+              >
+                <Edit size={16} className="mr-2" />
+                Edit Profile
+              </Button>
+            )}
           </div>
           
           <div className="w-full md:w-2/3">
-            <h2 className="text-xl font-bold text-white mb-4">Profile Information</h2>
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-xl font-bold text-white">Profile Information</h2>
+              {isEditing && (
+                <div className="flex space-x-2">
+                  <Button 
+                    variant="outline"
+                    onClick={() => {
+                      setIsEditing(false);
+                      fetchUserProfile(); // Reset form
+                    }}
+                    disabled={loading}
+                  >
+                    Cancel
+                  </Button>
+                  <Button 
+                    onClick={handleSaveProfile}
+                    disabled={loading}
+                  >
+                    {loading ? 'Saving...' : 'Save Changes'}
+                  </Button>
+                </div>
+              )}
+            </div>
             
             <div className="space-y-4">
+              {!isEditing && profileData.bio && (
+                <div className="mb-4">
+                  <p className="text-slate-300 italic">{profileData.bio}</p>
+                </div>
+              )}
+              
               <div>
                 <label className="block text-slate-400 mb-2">Username</label>
-                <p className="p-3 rounded-lg bg-navy border border-slate-700 text-white">
-                  {user?.user_metadata?.username || 'Not set'}
-                </p>
+                {isEditing ? (
+                  <Input
+                    value={profileData.username}
+                    onChange={(e) => setProfileData({...profileData, username: e.target.value})}
+                    placeholder="Enter your username"
+                    className="bg-navy border border-slate-700 text-white"
+                  />
+                ) : (
+                  <p className="p-3 rounded-lg bg-navy border border-slate-700 text-white">
+                    {profileData.username || 'Not set'}
+                  </p>
+                )}
+              </div>
+              
+              <div>
+                <label className="block text-slate-400 mb-2">Bio</label>
+                {isEditing ? (
+                  <Textarea
+                    value={profileData.bio}
+                    onChange={(e) => setProfileData({...profileData, bio: e.target.value})}
+                    placeholder="Tell us about yourself"
+                    className="bg-navy border border-slate-700 text-white min-h-[100px]"
+                  />
+                ) : (
+                  <p className="p-3 rounded-lg bg-navy border border-slate-700 text-white">
+                    {profileData.bio || 'No bio provided'}
+                  </p>
+                )}
               </div>
               
               <div>

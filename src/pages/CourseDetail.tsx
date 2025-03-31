@@ -1,5 +1,6 @@
 
 import React from 'react';
+import { useNavigate } from 'react-router-dom';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import { useCourseData } from '@/hooks/useCourseData';
@@ -9,9 +10,14 @@ import ReviewsSection from '@/components/course/ReviewsSection';
 import LoadingState from '@/components/course/LoadingState';
 import NotFoundState from '@/components/course/NotFoundState';
 import { toast } from 'sonner';
+import { Button } from '@/components/ui/button';
+import { ArrowLeft } from 'lucide-react';
+import { useAuth } from '@/contexts/AuthContext';
 
 const CourseDetail = () => {
   const { course, chapters, comments, isLoading, courseProgress, refetchProgress } = useCourseData();
+  const navigate = useNavigate();
+  const { user } = useAuth();
 
   // Setup progress refresh interval if refetch function is available
   React.useEffect(() => {
@@ -46,6 +52,21 @@ const CourseDetail = () => {
       <Navbar />
       
       <main className="pt-24 pb-16">
+        {/* Back to Dashboard Button */}
+        {user && (
+          <div className="container mx-auto px-6 mb-4">
+            <Button
+              variant="outline"
+              size="sm"
+              className="flex items-center gap-2"
+              onClick={() => navigate('/dashboard')}
+            >
+              <ArrowLeft size={16} />
+              Back to Dashboard
+            </Button>
+          </div>
+        )}
+        
         {/* Course Header */}
         <div className="container mx-auto px-6 mb-12 course-header">
           <CourseHeader course={course} />
