@@ -1,5 +1,5 @@
 
-import { useCallback, useEffect } from 'react';
+import { useCallback } from 'react';
 import { useQuizState } from './useQuizState';
 import { useQuizNavigation } from './useQuizNavigation';
 import { toast } from 'sonner';
@@ -26,6 +26,22 @@ export const useQuiz = (user: any, quizIds: number[], categories: any[]) => {
     setSelectedAnswerIds
   } = quizStateManager;
   
+  // Logging utilities for debugging
+  const logNavigation = useCallback((message: string, data?: any) => {
+    console.log(`[Quiz Navigation] ${message}`, data || '');
+  }, []);
+  
+  const logCurrentState = useCallback((state: any, quizIdsArray: number[], categoriesArray: any[], savedQuizIdsArray: number[]) => {
+    console.log('[Quiz State]', {
+      currentQuizIndex: state.currentQuizIndex,
+      currentQuizId: quizIdsArray[state.currentQuizIndex],
+      currentQuestionIndex: state.currentQuestionIndex,
+      totalQuestions: state.questions?.length || 0,
+      currentCategory: categoriesArray[state.currentQuizIndex]?.name,
+      totalQuizzes: quizIdsArray.length
+    });
+  }, []);
+  
   // Initialize quiz navigation with the state manager
   const {
     loadQuizData,
@@ -45,6 +61,9 @@ export const useQuiz = (user: any, quizIds: number[], categories: any[]) => {
     handleNextQuestion,
     saveQuizResults: saveCurrentQuizResults,
     isCompleted,
-    updateScore
+    updateScore,
+    // Adding debugging logs for tracking
+    logNavigation,
+    logCurrentState
   };
 };

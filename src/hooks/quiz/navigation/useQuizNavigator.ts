@@ -94,7 +94,17 @@ export const useQuizNavigator = (
         // Use a small timeout to avoid React state update race conditions
         setTimeout(() => {
           setLoadAttempts(() => 0);
+          
+          // Log what quiz we're about to load
+          const nextQuizId = quizIds[nextQuizIndex];
+          const nextCategory = categories[nextQuizIndex];
+          logNavigation(`Loading next quiz ID: ${nextQuizId}, Category: ${nextCategory?.name}`);
+          
           loadQuizData(quizIds, categories, savedQuizIds)
+            .catch(err => {
+              logNavigation(`Error loading next quiz: ${err.message}`);
+              toast.error("Failed to load next quiz");
+            })
             .finally(() => {
               setIsNavigating(false);
             });

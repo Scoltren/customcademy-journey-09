@@ -32,8 +32,11 @@ export const useQuizDataLoader = (
       return;
     }
     
-    if (quizState.currentQuizIndex >= quizIds.length) {
-      logNavigation(`Quiz index out of bounds: ${quizState.currentQuizIndex} >= ${quizIds.length}`);
+    // Get the current quiz index directly from state
+    const currentQuizIndex = quizState.currentQuizIndex;
+    
+    if (currentQuizIndex >= quizIds.length) {
+      logNavigation(`Quiz index out of bounds: ${currentQuizIndex} >= ${quizIds.length}`);
       setIsCompleted(true);
       return;
     }
@@ -41,12 +44,12 @@ export const useQuizDataLoader = (
     setIsLoading(true);
     
     try {
-      const currentQuizId = quizIds[quizState.currentQuizIndex];
+      const currentQuizId = quizIds[currentQuizIndex];
       
-      logNavigation(`Loading quiz ${quizState.currentQuizIndex + 1}/${quizIds.length}: Quiz ID ${currentQuizId}`);
+      logNavigation(`Loading quiz ${currentQuizIndex + 1}/${quizIds.length}: Quiz ID ${currentQuizId}`);
       
       // Set current category
-      const currentCategory = categories[quizState.currentQuizIndex] || null;
+      const currentCategory = categories[currentQuizIndex] || null;
       setCurrentCategory(currentCategory);
       logNavigation(`Current category set to:`, currentCategory);
       
@@ -63,7 +66,7 @@ export const useQuizDataLoader = (
         logNavigation(`No questions found for quiz ${currentQuizId}, moving to next quiz`);
         
         // Instead of recursively calling loadQuizData, let's update state and let React effect handle it
-        if (quizState.currentQuizIndex < quizIds.length - 1) {
+        if (currentQuizIndex < quizIds.length - 1) {
           setQuizState(prev => ({
             ...prev,
             currentQuizIndex: prev.currentQuizIndex + 1

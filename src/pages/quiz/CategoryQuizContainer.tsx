@@ -1,5 +1,5 @@
 
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useCallback } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
@@ -43,8 +43,18 @@ const CategoryQuizContainer = () => {
     handleSelectAnswer, 
     handleNextQuestion, 
     isCompleted,
-    updateScore
+    updateScore,
+    logNavigation,
+    logCurrentState
   } = useQuiz(user, quizIds, categories);
+  
+  // Debug current category and quiz ID on every render
+  useEffect(() => {
+    if (currentCategory) {
+      console.log(`Currently showing quiz for category: ${currentCategory.name} (ID: ${currentCategory.id})`);
+      console.log(`Current quiz index: ${quizState.currentQuizIndex}, total quizzes: ${quizIds.length}`);
+    }
+  }, [currentCategory, quizState.currentQuizIndex, quizIds.length]);
   
   // Set a maximum loading time to prevent infinite loading
   useEffect(() => {
@@ -99,7 +109,7 @@ const CategoryQuizContainer = () => {
   }, [quizState, quizIds.length, currentCategory, isCompleted]);
   
   // Handle submitting an answer
-  const handleSubmitAnswer = () => {
+  const handleSubmitAnswer = useCallback(() => {
     // Calculate if any selected answers are correct
     const correctAnswers = currentAnswers.filter(a => a.points > 0);
     const correctlySelected = currentAnswers
@@ -118,10 +128,10 @@ const CategoryQuizContainer = () => {
     }
     
     setShowFeedback(true);
-  };
+  }, [currentAnswers, selectedAnswerIds, updateScore]);
   
   // Handle moving to the next question
-  const handleNextQuestionClick = () => {
+  const handleNextQuestionClick = useCallback(() => {
     setIsSaving(true);
     setShowFeedback(false);
     
@@ -137,7 +147,7 @@ const CategoryQuizContainer = () => {
       handleNextQuestion();
       setIsSaving(false);
     }, 300);
-  };
+  }, [quizState, quizIds.length, handleNextQuestion]);
 
   // Compute derived props for the view component
   const isLastQuestion = quizState.currentQuestionIndex === quizState.questions.length - 1;
