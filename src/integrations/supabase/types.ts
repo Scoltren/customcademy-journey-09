@@ -289,29 +289,18 @@ export type Database = {
       }
       quizzes: {
         Row: {
-          category_id: number | null
           id: number
           title: string
         }
         Insert: {
-          category_id?: number | null
           id?: number
           title: string
         }
         Update: {
-          category_id?: number | null
           id?: number
           title?: string
         }
-        Relationships: [
-          {
-            foreignKeyName: "quizzes_category_id_fkey"
-            columns: ["category_id"]
-            isOneToOne: false
-            referencedRelation: "categories"
-            referencedColumns: ["id"]
-          },
-        ]
+        Relationships: []
       }
       recommended_courses: {
         Row: {
