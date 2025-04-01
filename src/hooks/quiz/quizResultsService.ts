@@ -1,17 +1,6 @@
 
 import { supabase } from '@/integrations/supabase/client';
-
-// Calculate difficulty level based on score
-export const calculateDifficultyLevel = (score: number): string => {
-  // Assuming quiz has around 10 questions
-  if (score >= 8) {
-    return 'Advanced';
-  } else if (score >= 5) {
-    return 'Intermediate';
-  } else {
-    return 'Beginner';
-  }
-};
+import { calculateDifficultyLevel } from './utils/calculateDifficultyLevel';
 
 // Save quiz results and update difficulty level
 export const saveQuizResults = async (

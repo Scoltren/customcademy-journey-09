@@ -1,7 +1,5 @@
 
-/**
- * Utility to calculate difficulty level based on score
- */
+// Utility function to calculate difficulty level based on quiz score
 export const calculateDifficultyLevel = (score: number): string => {
   // Assuming quiz has around 10 questions
   if (score >= 8) {
