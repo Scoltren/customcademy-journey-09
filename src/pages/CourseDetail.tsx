@@ -13,13 +13,11 @@ import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { ArrowLeft } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
-import { supabase } from '@/integrations/supabase/client';
 
 const CourseDetail = () => {
   const { course, chapters, comments, isLoading, courseProgress, refetchProgress, refetchComments } = useCourseData();
   const navigate = useNavigate();
   const { user } = useAuth();
-  const [hasShownCompletionMessage, setHasShownCompletionMessage] = useState(false);
 
   // Setup progress refresh interval if refetch function is available
   useEffect(() => {
@@ -32,37 +30,14 @@ const CourseDetail = () => {
     }
   }, [refetchProgress]);
 
-  // Show a toast notification when progress reaches 100% for the first time
+  // Show a toast notification when progress reaches 100%
+  // This will show every time the component mounts if progress is 100%
   useEffect(() => {
-    const checkCourseCompletion = async () => {
-      // Only proceed if we have a course and user
-      if (!course || !user) return;
-
-      try {
-        // Check if course is already marked as completed using RPC
-        const { data: completionStatus, error } = await supabase
-          .rpc('get_course_completion_status', {
-            user_id_param: user.id,
-            course_id_param: course.id
-          });
-
-        if (error) {
-          console.error('Error checking course completion:', error);
-          return;
-        }
-
-        // Show completion toast only if course is fully completed and hasn't been shown before
-        if (courseProgress === 100 && (!completionStatus || completionStatus.length === 0) && !hasShownCompletionMessage) {
-          toast.success('Congratulations! You completed the course!');
-          setHasShownCompletionMessage(true);
-        }
-      } catch (error) {
-        console.error('Error checking course completion:', error);
-      }
-    };
-
-    checkCourseCompletion();
-  }, [courseProgress, course, user, hasShownCompletionMessage]);
+    if (user && course && courseProgress === 100) {
+      // Show completion message every time for completed courses
+      toast.success('Congratulations! You completed the course!');
+    }
+  }, [courseProgress, course, user]);
 
   // Render loading state if data is loading
   if (isLoading) {

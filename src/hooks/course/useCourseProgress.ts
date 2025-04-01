@@ -23,18 +23,6 @@ export const useCourseProgress = () => {
       if (isNaN(numericId)) return 0;
 
       try {
-        // Fetch completed courses for the user using raw SQL to avoid type issues
-        const { data: completedCourses, error: completedCoursesError } = await supabase
-          .rpc('get_course_completion_status', {
-            user_id_param: user.id,
-            course_id_param: numericId
-          });
-        
-        if (completedCoursesError) {
-          console.error('Error fetching completed courses:', completedCoursesError);
-          return 0;
-        }
-
         // Fetch all chapters with their progress_when_finished values
         const { data: chaptersData, error: chaptersError } = await supabase
           .from('chapters')
@@ -71,22 +59,6 @@ export const useCourseProgress = () => {
               }
             }
           });
-        }
-        
-        // If total progress is 100, check if course completion is already recorded
-        if (totalProgress >= 100) {
-          // If no record of course completion exists, insert one using raw query
-          if (!completedCourses || completedCourses.length === 0) {
-            const { error: insertError } = await supabase
-              .rpc('insert_course_completion', {
-                user_id_param: user.id,
-                course_id_param: numericId
-              });
-            
-            if (insertError) {
-              console.error('Error inserting course completion:', insertError);
-            }
-          }
         }
         
         console.log('Calculated course progress:', totalProgress);
