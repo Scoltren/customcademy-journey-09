@@ -9,7 +9,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { calculateDifficultyLevel } from '@/hooks/quiz/quizResultsService';
+import { calculateDifficultyLevel } from '@/hooks/quiz/utils/calculateDifficultyLevel';
 
 interface QuizResult {
   id: number;
