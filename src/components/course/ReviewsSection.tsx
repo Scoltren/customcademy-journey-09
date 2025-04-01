@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { Star, MessageSquare, StarHalf } from 'lucide-react';
+import { Star, MessageSquare } from 'lucide-react';
 import { Comment, Course } from '@/types/course';
 import CommentForm from './CommentForm';
 import { useAuth } from '@/contexts/AuthContext';
@@ -20,23 +20,19 @@ const ReviewsSection: React.FC<ReviewsSectionProps> = ({
 }) => {
   const { user } = useAuth();
 
-  // Function to render star ratings with half-star support
+  // Function to render star ratings with only full stars
   const renderRating = (rating: number | undefined) => {
     if (!rating) return null;
     
-    const fullStars = Math.floor(rating);
-    const hasHalfStar = rating % 1 !== 0;
-    const emptyStars = 5 - fullStars - (hasHalfStar ? 1 : 0);
+    // Round to nearest integer for display
+    const roundedRating = Math.round(rating);
+    const emptyStars = 5 - roundedRating;
     
     return (
       <div className="flex items-center">
-        {[...Array(fullStars)].map((_, i) => (
+        {[...Array(roundedRating)].map((_, i) => (
           <Star key={`full-${i}`} className="text-yellow-500 fill-yellow-500" size={16} />
         ))}
-        
-        {hasHalfStar && (
-          <StarHalf key="half" className="text-yellow-500 fill-yellow-500" size={16} />
-        )}
         
         {[...Array(emptyStars)].map((_, i) => (
           <Star key={`empty-${i}`} className="text-gray-400" size={16} />
@@ -52,7 +48,7 @@ const ReviewsSection: React.FC<ReviewsSectionProps> = ({
       <div className="flex items-center justify-between mb-6">
         <h2 className="heading-md">Reviews</h2>
         <div className="flex items-center gap-2">
-          <StarHalf className="text-yellow-500" size={20} />
+          <Star className="text-yellow-500" size={20} />
           <span className="text-lg font-bold">{course?.overall_rating ? course.overall_rating.toFixed(1) : '0.0'} Overall Rating</span>
         </div>
       </div>

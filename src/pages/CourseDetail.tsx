@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
@@ -18,9 +18,11 @@ const CourseDetail = () => {
   const { course, chapters, comments, isLoading, courseProgress, refetchProgress, refetchComments } = useCourseData();
   const navigate = useNavigate();
   const { user } = useAuth();
+  const [hasShownCompletionMessage, setHasShownCompletionMessage] = useState(false);
+  const [previousProgress, setPreviousProgress] = useState(0);
 
   // Setup progress refresh interval if refetch function is available
-  React.useEffect(() => {
+  useEffect(() => {
     if (refetchProgress) {
       const intervalId = setInterval(() => {
         refetchProgress();
@@ -30,12 +32,14 @@ const CourseDetail = () => {
     }
   }, [refetchProgress]);
 
-  // Show a toast notification when progress reaches 100%
-  React.useEffect(() => {
-    if (courseProgress === 100) {
+  // Show a toast notification when progress reaches 100% for the first time
+  useEffect(() => {
+    if (courseProgress === 100 && previousProgress < 100 && !hasShownCompletionMessage) {
       toast.success('Congratulations! You completed the course!');
+      setHasShownCompletionMessage(true);
     }
-  }, [courseProgress]);
+    setPreviousProgress(courseProgress);
+  }, [courseProgress, previousProgress, hasShownCompletionMessage]);
 
   // Render loading state if data is loading
   if (isLoading) {
