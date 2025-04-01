@@ -42,7 +42,9 @@ export const useCourseComments = () => {
       // Transform the data to include the username
       return data.map(comment => ({
         ...comment,
-        username: comment.users?.username || 'Anonymous User'
+        username: comment.users?.username || 'Anonymous User',
+        // Ensure rating is included or defaulted
+        rating: comment.rating || 0
       }));
     },
     enabled: !!id,
@@ -56,7 +58,7 @@ export const useCourseComments = () => {
     created_at: comment.created_at,
     username: comment.username,
     users: comment.users,
-    rating: comment.rating
+    rating: comment.rating || 0 // Provide a default value if rating is undefined
   }));
   
   // Show error messages

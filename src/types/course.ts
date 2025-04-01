@@ -35,7 +35,7 @@ export interface Comment {
   comment_text: string;
   user_id: string | null; // This stays as string to match UUID in auth.users
   created_at: string | null;
-  rating?: number;
+  rating?: number; // Make sure rating field is defined in the interface
   username?: string;
   users?: {
     username: string;
