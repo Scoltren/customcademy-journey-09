@@ -1,7 +1,6 @@
 
 import { Routes, Route } from "react-router-dom";
 import { Toaster } from "./components/ui/sonner";
-import ResponsiveNavbar from "./components/ResponsiveNavbar";
 import Footer from "./components/Footer";
 import Index from "./pages/Index";
 import Login from "./pages/Login";
@@ -16,12 +15,13 @@ import ConfirmEmail from "./pages/ConfirmEmail";
 import CreateCourse from "./pages/CreateCourse";
 import SelectInterests from "./pages/SelectInterests";
 import CategoryQuiz from "./pages/CategoryQuiz";
+import Navbar from "./components/Navbar";
 
 function App() {
   return (
     <div className="flex flex-col min-h-screen">
-      <ResponsiveNavbar />
-      <main className="flex-grow">
+      <Navbar />
+      <main className="flex-grow pt-16">
         <Routes>
           <Route path="/" element={<Index />} />
           <Route path="/login" element={<Login />} />

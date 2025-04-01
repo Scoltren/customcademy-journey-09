@@ -3,9 +3,7 @@ import React from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import Hero from '@/components/Hero';
 import FeaturedCourses from '@/components/FeaturedCourses';
-import Footer from '@/components/Footer';
 import UserDashboard from '@/components/home/UserDashboard';
-import Navbar from '@/components/Navbar';
 import { Loader2 } from 'lucide-react';
 
 /**
@@ -25,8 +23,7 @@ const Index = () => {
 
   return (
     <div className="min-h-screen flex flex-col w-full">
-      <Navbar />
-      <div className="pt-16 w-full"> {/* Add padding to prevent content from being hidden behind fixed navbar */}
+      <div className="w-full"> {/* Removed the pt-16 since we added it to main in App.tsx */}
         {!user ? (
           // Content for non-logged in users
           <>
@@ -38,7 +35,6 @@ const Index = () => {
           <UserDashboard userId={user.id} key={Date.now()} />
         )}
       </div>
-      <Footer />
     </div>
   );
 };

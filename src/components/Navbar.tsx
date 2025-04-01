@@ -30,8 +30,8 @@ const Navbar = () => {
   };
 
   return (
-    <nav className="fixed w-full z-50 bg-navy shadow-md">
-      <div className="w-full mx-auto px-4 sm:px-6 lg:px-8">
+    <nav className="fixed top-0 left-0 right-0 z-50 bg-navy shadow-md">
+      <div className="max-w-full mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between h-16">
           <div className="flex items-center">
             <Link
@@ -59,14 +59,16 @@ const Navbar = () => {
                 <NavigationLinks />
               </div>
               
-              {user ? (
-                <div className="relative z-10 flex items-center space-x-3">
-                  <CreateCourseButton />
-                  <UserMenu user={user} />
-                </div>
-              ) : (
-                <AuthButtons />
-              )}
+              <div className="relative z-10 flex items-center space-x-3">
+                {user ? (
+                  <>
+                    <CreateCourseButton />
+                    <UserMenu user={user} />
+                  </>
+                ) : (
+                  <AuthButtons />
+                )}
+              </div>
             </div>
           )}
         </div>
