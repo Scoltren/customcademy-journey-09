@@ -1,6 +1,9 @@
 
 import { z } from 'zod';
 
+/**
+ * Schema for course creation form validation
+ */
 export const courseFormSchema = z.object({
   title: z.string().min(3, 'Title must be at least 3 characters').max(100, 'Title must be less than 100 characters'),
   description: z.string().min(20, 'Description must be at least 20 characters'),

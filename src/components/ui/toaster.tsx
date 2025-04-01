@@ -1,3 +1,4 @@
+
 import { useToast } from "@/hooks/use-toast"
 import {
   Toast,
@@ -8,6 +9,9 @@ import {
   ToastViewport,
 } from "@/components/ui/toast"
 
+/**
+ * Toast notification component provider
+ */
 export function Toaster() {
   const { toasts } = useToast()
 

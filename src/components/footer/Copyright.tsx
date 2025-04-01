@@ -1,7 +1,11 @@
 
 import React from 'react';
 
+/**
+ * Copyright component displays the copyright information in the footer
+ */
 const Copyright = () => {
+  // Dynamically get the current year
   const currentYear = new Date().getFullYear();
   
   return (

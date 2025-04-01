@@ -2,6 +2,9 @@
 import React from 'react';
 import Logo from './Logo';
 
+/**
+ * CompanyInfo component displays the company logo and description
+ */
 const CompanyInfo = () => {
   return (
     <div>

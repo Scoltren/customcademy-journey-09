@@ -6,6 +6,9 @@ interface SectionHeaderProps {
   description: string;
 }
 
+/**
+ * Section header component for course listings
+ */
 const SectionHeader: React.FC<SectionHeaderProps> = ({ title, description }) => {
   return (
     <div className="text-center mb-12">

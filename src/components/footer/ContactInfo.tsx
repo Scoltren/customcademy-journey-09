@@ -2,6 +2,9 @@
 import React from 'react';
 import { MapPin, Mail, Phone } from 'lucide-react';
 
+/**
+ * ContactInfo component displays contact information in the footer
+ */
 const ContactInfo = () => {
   return (
     <div>

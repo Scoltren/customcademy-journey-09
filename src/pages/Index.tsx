@@ -8,6 +8,10 @@ import UserDashboard from '@/components/home/UserDashboard';
 import Navbar from '@/components/Navbar';
 import { Loader2 } from 'lucide-react';
 
+/**
+ * Main landing page component
+ * Shows either a public landing page or user dashboard based on auth state
+ */
 const Index = () => {
   const { user, isLoading } = useAuth();
 

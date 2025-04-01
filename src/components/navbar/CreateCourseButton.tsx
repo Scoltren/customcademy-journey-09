@@ -3,6 +3,9 @@ import { useNavigate } from "react-router-dom";
 import { PlusCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
+/**
+ * Button component for creating a new course
+ */
 const CreateCourseButton = () => {
   const navigate = useNavigate();
   

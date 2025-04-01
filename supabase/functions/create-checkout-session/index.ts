@@ -25,8 +25,6 @@ serve(async (req) => {
       apiVersion: '2023-10-16',
     });
     
-    console.log(`Creating checkout session for course: ${courseId}, price: ${price}`);
-    
     // Create a checkout session
     const session = await stripe.checkout.sessions.create({
       payment_method_types: ['card'],
@@ -52,9 +50,7 @@ serve(async (req) => {
       },
     });
     
-    // Skip the payment record creation since it's failing due to RLS policies
-    // We'll handle this in the webhook instead
-    
+    // Return the session information
     return new Response(
       JSON.stringify({ 
         sessionId: session.id,
@@ -67,8 +63,7 @@ serve(async (req) => {
     );
     
   } catch (error) {
-    console.error('Error creating checkout session:', error);
-    
+    // Return error response
     return new Response(
       JSON.stringify({ error: error.message }),
       { 

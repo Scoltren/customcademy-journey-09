@@ -19,8 +19,12 @@ import CreateCourse from "./pages/CreateCourse";
 
 import "./App.css";
 
+// Configure QueryClient for API data fetching
 const queryClient = new QueryClient();
 
+/**
+ * Main application component
+ */
 const App = () => {
   return (
     <QueryClientProvider client={queryClient}>

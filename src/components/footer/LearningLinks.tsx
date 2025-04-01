@@ -2,6 +2,9 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 
+/**
+ * LearningLinks component displays learning-related navigation links in the footer
+ */
 const LearningLinks = () => {
   return (
     <div>

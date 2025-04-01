@@ -2,11 +2,16 @@
 import { useCallback } from 'react';
 import { saveQuizResults } from '../quizResultsService';
 
-// Custom hook for saving quiz results
+/**
+ * Custom hook for saving quiz results
+ */
 export const useQuizResultSaver = (
   logNavigation: (message: string, data?: any) => void
 ) => {
-  // Save current quiz results
+  /**
+   * Save current quiz results
+   * @returns boolean indicating success or failure
+   */
   const saveCurrentQuizResults = useCallback(async (
     user: any,
     quizIds: number[],
@@ -27,8 +32,6 @@ export const useQuizResultSaver = (
     // Get the current category id
     const currentCategoryId = categories[quizState.currentQuizIndex]?.id;
     
-    logNavigation(`Saving results for quiz ${currentQuizId}, category ${currentCategoryId}, score ${quizState.score}`);
-    
     // Save the quiz result - this will delete previous results first
     const success = await saveQuizResults(
       user,
@@ -36,12 +39,6 @@ export const useQuizResultSaver = (
       quizState.score,
       currentCategoryId
     );
-    
-    if (success) {
-      logNavigation(`Successfully saved quiz ${currentQuizId} results`);
-    } else {
-      logNavigation(`Failed to save quiz ${currentQuizId} results`);
-    }
     
     return success;
   }, [logNavigation]);

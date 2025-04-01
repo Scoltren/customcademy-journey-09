@@ -1,29 +1,27 @@
 
 import { useCallback } from 'react';
 
-// Custom hook for logging quiz navigation events
+/**
+ * Custom hook for logging quiz navigation events
+ */
 export const useQuizLogger = () => {
-  // Log function to help track quiz navigation
+  /**
+   * Log function to help track quiz navigation
+   */
   const logNavigation = useCallback((message: string, data?: any) => {
-    console.log(`[QuizNavigation] ${message}`, data ? data : '');
+    // No console.log in production
   }, []);
   
-  // Debug function to log the current state
+  /**
+   * Debug function to log the current state
+   */
   const logCurrentState = useCallback((
     quizState: any,
     quizIds: number[],
     categories: any[],
     savedQuizIds: number[]
   ) => {
-    logNavigation('Current State:', {
-      quizIds,
-      currentQuizIndex: quizState.currentQuizIndex,
-      currentQuizId: quizIds[quizState.currentQuizIndex],
-      currentCategory: categories[quizState.currentQuizIndex]?.name,
-      currentQuestionIndex: quizState.currentQuestionIndex,
-      totalQuestions: quizState.questions.length,
-      savedQuizIds
-    });
+    // No console.log in production
   }, [logNavigation]);
   
   return {

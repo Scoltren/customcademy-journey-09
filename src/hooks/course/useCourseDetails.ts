@@ -6,6 +6,9 @@ import { Course } from '@/types/course';
 import { useEffect } from 'react';
 import { toast } from 'sonner';
 
+/**
+ * Hook to fetch course details
+ */
 export const useCourseDetails = () => {
   // Check if we're in a browser environment before using hooks
   if (typeof window === 'undefined') {
@@ -40,7 +43,7 @@ export const useCourseDetails = () => {
         .single();
       
       if (error) throw error;
-      console.log('Course data:', data);
+      
       // Ensure the data matches our Course type
       return data as unknown as Course;
     },
@@ -50,7 +53,6 @@ export const useCourseDetails = () => {
   // Show error messages
   useEffect(() => {
     if (error) {
-      console.error('Error fetching course:', error);
       toast.error('Failed to load course details');
     }
   }, [error]);

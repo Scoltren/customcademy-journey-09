@@ -3,6 +3,8 @@ import { supabase } from '@/integrations/supabase/client';
 
 /**
  * Fetches user interests as category IDs
+ * @param userId The user ID to fetch interests for
+ * @returns Array of category IDs the user is interested in
  */
 export const fetchUserInterests = async (userId: string): Promise<number[]> => {
   const { data, error } = await supabase
@@ -19,6 +21,8 @@ export const fetchUserInterests = async (userId: string): Promise<number[]> => {
 
 /**
  * Fetches user skill levels for each category
+ * @param userId The user ID to fetch skill levels for
+ * @returns Object mapping category IDs to difficulty levels
  */
 export const fetchUserSkillLevels = async (userId: string): Promise<{[key: number]: string}> => {
   const { data, error } = await supabase

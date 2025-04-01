@@ -2,6 +2,9 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 
+/**
+ * Logo component used in footer and other places
+ */
 const Logo = () => {
   return (
     <Link to="/" className="flex items-center gap-2 mb-6">

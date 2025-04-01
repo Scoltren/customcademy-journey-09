@@ -8,6 +8,9 @@ export interface QuizState {
   score: number;
 }
 
+/**
+ * Custom hook to manage quiz state
+ */
 export const useQuizState = () => {
   const [quizState, setQuizState] = useState<QuizState>({
     currentQuizIndex: 0,
@@ -21,14 +24,15 @@ export const useQuizState = () => {
   const [currentCategory, setCurrentCategory] = useState<any>(null);
   const [isCompleted, setIsCompleted] = useState(false);
   
-  // Update quiz score
+  /**
+   * Update quiz score
+   * @param additionalPoints Points to add to current score
+   */
   const updateScore = useCallback((additionalPoints: number) => {
     setQuizState(prev => ({
       ...prev,
       score: prev.score + additionalPoints
     }));
-    
-    console.log(`Score updated by +${additionalPoints} points`);
   }, []);
 
   return {

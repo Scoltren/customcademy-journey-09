@@ -7,6 +7,9 @@ interface SearchInputProps {
   setSearchTerm: (value: string) => void;
 }
 
+/**
+ * Search input component for filtering courses
+ */
 const SearchInput: React.FC<SearchInputProps> = ({ searchTerm, setSearchTerm }) => {
   return (
     <div className="relative flex-grow">

@@ -8,6 +8,9 @@ interface FormLayoutProps {
   children: React.ReactNode;
 }
 
+/**
+ * Reusable layout component for forms in the course creation flow
+ */
 export const FormLayout = ({ title, description, children }: FormLayoutProps) => {
   return (
     <Card>

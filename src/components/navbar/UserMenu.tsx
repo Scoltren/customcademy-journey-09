@@ -9,22 +9,28 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { useAuth } from "../../contexts/AuthContext";
+import { useAuth } from "@/contexts/AuthContext";
 
 interface UserMenuProps {
   user: any;
 }
 
+/**
+ * User menu component for logged-in users
+ */
 const UserMenu = ({ user }: UserMenuProps) => {
   const navigate = useNavigate();
   const { logout } = useAuth();
 
+  /**
+   * Handles user logout
+   */
   const handleLogout = async () => {
     try {
       await logout();
       navigate("/");
     } catch (error) {
-      console.error("Logout error:", error);
+      // Error handled silently
     }
   };
 

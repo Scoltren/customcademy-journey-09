@@ -5,6 +5,9 @@ import LearningLinks from './footer/LearningLinks';
 import ContactInfo from './footer/ContactInfo';
 import Copyright from './footer/Copyright';
 
+/**
+ * Main Footer component that assembles all footer sections
+ */
 const Footer = () => {
   return (
     <footer className="bg-slate-900 text-white pt-16 pb-8 w-full">

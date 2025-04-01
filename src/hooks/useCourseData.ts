@@ -4,6 +4,9 @@ import { useCourseChapters } from './course/useCourseChapters';
 import { useCourseComments } from './course/useCourseComments';
 import { useCourseProgress } from './course/useCourseProgress';
 
+/**
+ * Combined hook that aggregates all course-related data
+ */
 export const useCourseData = () => {
   // Use the individual hooks
   const { course, isLoading: courseLoading, error: courseError } = useCourseDetails();

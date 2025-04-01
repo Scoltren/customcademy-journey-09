@@ -2,6 +2,9 @@
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 
+/**
+ * Authentication buttons component for non-logged-in users
+ */
 const AuthButtons = () => {
   const navigate = useNavigate();
 

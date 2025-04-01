@@ -15,6 +15,9 @@ interface CoursePricingProps {
   form: UseFormReturn<CourseFormValues>;
 }
 
+/**
+ * Component for course pricing form fields
+ */
 export const CoursePricing = ({ form }: CoursePricingProps) => {
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">

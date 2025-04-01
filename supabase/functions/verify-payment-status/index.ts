@@ -57,10 +57,6 @@ serve(async (req) => {
         }),
       });
       
-      if (!paymentResponse.ok) {
-        console.error('Failed to update payment record:', await paymentResponse.text());
-      }
-      
       // Then check if we need to enroll the user in the course
       const enrollmentCheckResponse = await fetch(
         `${supabaseUrl}/rest/v1/subscribed_courses?user_id=eq.${userId}&course_id=eq.${courseId}`,
@@ -76,7 +72,7 @@ serve(async (req) => {
       
       // If user is not enrolled yet, create enrollment
       if (enrollmentData.length === 0) {
-        const enrollResponse = await fetch(`${supabaseUrl}/rest/v1/subscribed_courses`, {
+        await fetch(`${supabaseUrl}/rest/v1/subscribed_courses`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -89,10 +85,6 @@ serve(async (req) => {
             progress: 0,
           }),
         });
-        
-        if (!enrollResponse.ok) {
-          console.error('Failed to enroll user in course:', await enrollResponse.text());
-        }
       }
     }
     
@@ -109,8 +101,6 @@ serve(async (req) => {
     );
     
   } catch (error) {
-    console.error('Error verifying payment status:', error);
-    
     return new Response(
       JSON.stringify({ error: error.message }),
       { 

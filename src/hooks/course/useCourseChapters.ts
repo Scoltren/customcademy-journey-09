@@ -6,6 +6,9 @@ import { Chapter } from '@/types/course';
 import { useEffect } from 'react';
 import { toast } from 'sonner';
 
+/**
+ * Hook to fetch chapters for a course
+ */
 export const useCourseChapters = () => {
   const { id } = useParams<{ id: string }>();
   
@@ -24,8 +27,6 @@ export const useCourseChapters = () => {
         throw new Error('Invalid course ID format');
       }
       
-      console.log('Fetching chapters for course ID:', id);
-      
       const { data, error } = await supabase
         .from('chapters')
         .select('*')
@@ -33,11 +34,9 @@ export const useCourseChapters = () => {
         .order('id', { ascending: true });
       
       if (error) {
-        console.error('Error fetching chapters:', error);
         throw error;
       }
       
-      console.log('Chapters data:', data);
       return data as Chapter[];
     },
     enabled: !!id,
@@ -46,7 +45,6 @@ export const useCourseChapters = () => {
   // Show error messages
   useEffect(() => {
     if (error) {
-      console.error('Error fetching chapters:', error);
       toast.error('Failed to load course chapters');
     }
   }, [error]);

@@ -8,6 +8,9 @@ interface UserDashboardProps {
   userId: string;
 }
 
+/**
+ * Main dashboard component for logged-in users
+ */
 const UserDashboard: React.FC<UserDashboardProps> = ({ userId }) => {
   const [userInterestIds, setUserInterestIds] = useState<number[]>([]);
   
@@ -15,6 +18,9 @@ const UserDashboard: React.FC<UserDashboardProps> = ({ userId }) => {
     fetchUserInterestIds();
   }, [userId]);
 
+  /**
+   * Fetches the user's interests from the database
+   */
   const fetchUserInterestIds = async () => {
     try {
       const { data, error } = await supabase
@@ -25,7 +31,7 @@ const UserDashboard: React.FC<UserDashboardProps> = ({ userId }) => {
       if (error) throw error;
       setUserInterestIds(data?.map(item => item.category_id) || []);
     } catch (error: any) {
-      console.error('Error fetching user interest IDs:', error.message);
+      // Error is handled silently
     }
   };
 

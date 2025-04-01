@@ -7,6 +7,9 @@ interface EmptyStateProps {
   hasInterests: boolean;
 }
 
+/**
+ * Component shown when there are no recommended courses
+ */
 const EmptyState: React.FC<EmptyStateProps> = ({ hasInterests }) => {
   const navigate = useNavigate();
   

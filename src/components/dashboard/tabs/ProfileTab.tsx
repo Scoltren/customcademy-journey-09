@@ -11,6 +11,9 @@ interface ProfileTabProps {
   handleEditInterests: () => void;
 }
 
+/**
+ * Profile tab component for the dashboard
+ */
 const ProfileTab = ({ userInterests, handleEditInterests }: ProfileTabProps) => {
   const {
     profileData, 

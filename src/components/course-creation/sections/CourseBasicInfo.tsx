@@ -16,6 +16,9 @@ interface CourseBasicInfoProps {
   form: UseFormReturn<CourseFormValues>;
 }
 
+/**
+ * Component for basic course information form fields
+ */
 export const CourseBasicInfo = ({ form }: CourseBasicInfoProps) => {
   return (
     <>

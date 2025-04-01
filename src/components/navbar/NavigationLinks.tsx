@@ -6,6 +6,9 @@ import {
   NavigationMenuItem,
 } from "@/components/ui/navigation-menu";
 
+/**
+ * Navigation links component for the main navigation menu
+ */
 const NavigationLinks = () => {
   return (
     <NavigationMenu>
