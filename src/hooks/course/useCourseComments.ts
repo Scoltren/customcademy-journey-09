@@ -31,7 +31,8 @@ export const useCourseComments = () => {
         .select(`
           *,
           users:user_id (
-            username
+            username,
+            profile_picture
           )
         `)
         .eq('course_id', numericId)
@@ -39,10 +40,11 @@ export const useCourseComments = () => {
       
       if (error) throw error;
       
-      // Transform the data to include the username
+      // Transform the data to include the username and profile picture
       return data.map(comment => ({
         ...comment,
         username: comment.users?.username || 'Anonymous User',
+        profile_picture: comment.users?.profile_picture || null,
         // Ensure rating is included or defaulted
         rating: comment.rating || 0
       }));
@@ -57,6 +59,7 @@ export const useCourseComments = () => {
     user_id: comment.user_id,
     created_at: comment.created_at,
     username: comment.username,
+    profile_picture: comment.profile_picture,
     users: comment.users,
     rating: comment.rating || 0, // Ensure rating is always provided
     // Include any other properties from the comment object

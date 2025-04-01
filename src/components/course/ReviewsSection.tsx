@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Star, MessageSquare } from 'lucide-react';
 import { Comment, Course } from '@/types/course';
@@ -44,14 +43,15 @@ const ReviewsSection: React.FC<ReviewsSectionProps> = ({
     );
   };
 
-  // Generate avatar URL for a user
-  const getAvatarUrl = (username: string, userId: string) => {
-    // First try to get a profile picture from Supabase if available
-    if (userId) {
-      // Use UI Avatars as fallback
-      return `https://ui-avatars.com/api/?name=${encodeURIComponent(username)}&background=random&color=fff`;
+  // Generate avatar URL for a user - using profile picture if available
+  const getAvatarUrl = (comment: Comment) => {
+    // If the comment has a profile picture URL from the user record, use it
+    if (comment.profile_picture) {
+      return comment.profile_picture;
     }
-    return `https://ui-avatars.com/api/?name=${encodeURIComponent(username)}&background=random&color=fff`;
+    
+    // Otherwise use UI Avatars as fallback
+    return `https://ui-avatars.com/api/?name=${encodeURIComponent(comment.username || 'User')}&background=random&color=fff`;
   };
 
   return (
@@ -75,7 +75,7 @@ const ReviewsSection: React.FC<ReviewsSectionProps> = ({
                 <div className="flex items-start gap-4">
                   <Avatar className="w-10 h-10 rounded-full overflow-hidden flex-shrink-0">
                     <AvatarImage 
-                      src={getAvatarUrl(comment.username || 'User', comment.user_id || '')}
+                      src={getAvatarUrl(comment)}
                       alt={comment.username || 'User'} 
                     />
                     <AvatarFallback className="bg-slate-700 text-slate-200">

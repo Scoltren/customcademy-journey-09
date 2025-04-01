@@ -37,8 +37,10 @@ export interface Comment {
   created_at: string | null;
   rating?: number; // Rating field in the interface
   username?: string;
+  profile_picture?: string | null; // Added profile_picture field to the Comment interface
   users?: {
     username: string;
+    profile_picture?: string | null;
   };
   parent_comment_id?: number | null;
   type?: string | null;
