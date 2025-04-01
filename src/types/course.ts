@@ -40,6 +40,9 @@ export interface Comment {
   users?: {
     username: string;
   };
+  parent_comment_id?: number | null;
+  type?: string | null;
+  course_id?: number | null;
 }
 
 export interface EnrollmentStatus {

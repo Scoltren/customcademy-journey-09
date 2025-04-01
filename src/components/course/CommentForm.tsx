@@ -108,8 +108,10 @@ const CommentForm: React.FC<CommentFormProps> = ({ onCommentAdded, courseProgres
         
         // Calculate new average rating
         if (ratings && ratings.length > 0) {
-          const sum = ratings.reduce((acc, item) => acc + (item.rating || 0), 0);
-          const average = sum / ratings.length;
+          // Filter out any null or undefined ratings before calculating
+          const validRatings = ratings.filter(item => item.rating !== null && item.rating !== undefined);
+          const sum = validRatings.reduce((acc, item) => acc + (Number(item.rating) || 0), 0);
+          const average = validRatings.length > 0 ? sum / validRatings.length : 0;
           
           // Update the course's overall_rating
           const { error: updateError } = await supabase

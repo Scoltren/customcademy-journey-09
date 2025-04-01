@@ -58,7 +58,11 @@ export const useCourseComments = () => {
     created_at: comment.created_at,
     username: comment.username,
     users: comment.users,
-    rating: comment.rating || 0 // Provide a default value if rating is undefined
+    rating: comment.rating || 0, // Ensure rating is always provided
+    // Include any other properties from the comment object
+    parent_comment_id: comment.parent_comment_id,
+    type: comment.type,
+    course_id: comment.course_id
   }));
   
   // Show error messages
