@@ -6,7 +6,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Form, FormField, FormItem, FormLabel, FormControl } from '@/components/ui/form';
-import { Star } from 'lucide-react';
+import { Star, StarHalf } from 'lucide-react';
 import { useForm } from 'react-hook-form';
 import { toast } from 'sonner';
 
@@ -26,6 +26,7 @@ const CommentForm: React.FC<CommentFormProps> = ({ onCommentAdded, courseProgres
   const [hasCommented, setHasCommented] = useState<boolean>(false);
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
   const [selectedRating, setSelectedRating] = useState<number>(0);
+  const [hoveredRating, setHoveredRating] = useState<number>(0);
   
   const form = useForm<FormValues>({
     defaultValues: {
@@ -72,13 +73,9 @@ const CommentForm: React.FC<CommentFormProps> = ({ onCommentAdded, courseProgres
       return;
     }
     
-    if (values.rating === 0) {
-      toast.error('Please select a rating');
-      return;
-    }
-    
-    if (!values.comment.trim()) {
-      toast.error('Please enter a comment');
+    // Allow comments without ratings or ratings without comments
+    if (!values.comment.trim() && values.rating === 0) {
+      toast.error('Please enter a comment or select a rating');
       return;
     }
     
@@ -91,12 +88,38 @@ const CommentForm: React.FC<CommentFormProps> = ({ onCommentAdded, courseProgres
         .insert({
           user_id: user.id,
           course_id: courseId,
-          comment_text: values.comment,
-          rating: values.rating,
+          comment_text: values.comment.trim() || null,
+          rating: values.rating || null,
           created_at: new Date().toISOString()
         });
       
       if (error) throw error;
+      
+      // If a rating was provided, update the course's overall rating
+      if (values.rating > 0) {
+        // Fetch all ratings for this course
+        const { data: ratings, error: ratingsError } = await supabase
+          .from('comments')
+          .select('rating')
+          .eq('course_id', courseId)
+          .not('rating', 'is', null);
+        
+        if (ratingsError) throw ratingsError;
+        
+        // Calculate new average rating
+        if (ratings && ratings.length > 0) {
+          const sum = ratings.reduce((acc, item) => acc + (item.rating || 0), 0);
+          const average = sum / ratings.length;
+          
+          // Update the course's overall_rating
+          const { error: updateError } = await supabase
+            .from('courses')
+            .update({ overall_rating: parseFloat(average.toFixed(1)) })
+            .eq('id', courseId);
+            
+          if (updateError) throw updateError;
+        }
+      }
       
       toast.success('Your review has been posted!');
       form.reset();
@@ -111,9 +134,44 @@ const CommentForm: React.FC<CommentFormProps> = ({ onCommentAdded, courseProgres
     }
   };
 
-  const handleRatingClick = (rating: number) => {
+  const handleStarClick = (rating: number) => {
     setSelectedRating(rating);
     form.setValue('rating', rating);
+  };
+
+  const renderStars = () => {
+    const stars = [];
+    const maxRating = 5;
+    
+    for (let i = 0.5; i <= maxRating; i += 0.5) {
+      const filled = i <= (hoveredRating || selectedRating);
+      const isHalfStar = i % 1 !== 0;
+      
+      stars.push(
+        <div 
+          key={i} 
+          className="cursor-pointer"
+          onClick={() => handleStarClick(i)}
+          onMouseEnter={() => setHoveredRating(i)}
+          onMouseLeave={() => setHoveredRating(0)}
+        >
+          {isHalfStar ? (
+            <StarHalf 
+              className={`${filled ? 'text-yellow-500' : 'text-gray-400'}`} 
+              size={24} 
+              fill={filled ? "currentColor" : "none"}
+            />
+          ) : (
+            <Star 
+              className={`${filled ? 'text-yellow-500 fill-yellow-500' : 'text-gray-400'}`} 
+              size={24} 
+            />
+          )}
+        </div>
+      );
+    }
+    
+    return stars;
   };
 
   // If course is not completed or user has already commented, don't show the form
@@ -126,19 +184,13 @@ const CommentForm: React.FC<CommentFormProps> = ({ onCommentAdded, courseProgres
       <h3 className="text-xl font-bold mb-4">Write a Review</h3>
       <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-          <div className="flex items-center mb-4">
-            <span className="mr-2">Rating:</span>
+          <div className="mb-4">
+            <FormLabel className="block mb-2">Rating</FormLabel>
             <div className="flex gap-1">
-              {[1, 2, 3, 4, 5].map((rating) => (
-                <Star
-                  key={rating}
-                  className={`cursor-pointer ${
-                    rating <= selectedRating ? 'text-yellow-500 fill-yellow-500' : 'text-gray-400'
-                  }`}
-                  size={24}
-                  onClick={() => handleRatingClick(rating)}
-                />
-              ))}
+              {renderStars()}
+            </div>
+            <div className="mt-1 text-sm text-slate-400">
+              {selectedRating > 0 ? `Selected: ${selectedRating} stars` : 'Click to rate'}
             </div>
           </div>
           
@@ -147,7 +199,7 @@ const CommentForm: React.FC<CommentFormProps> = ({ onCommentAdded, courseProgres
             name="comment"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Your Review</FormLabel>
+                <FormLabel>Your Review (Optional)</FormLabel>
                 <FormControl>
                   <Textarea 
                     placeholder="Share your thoughts about this course..."

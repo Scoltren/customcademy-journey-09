@@ -53,7 +53,7 @@ export const useCourseComments = () => {
   // Convert the commentsData to match our Comment type
   const comments: Comment[] = commentsData.map(comment => ({
     id: comment.id,
-    comment_text: comment.comment_text,
+    comment_text: comment.comment_text || '', // Provide default for null values
     user_id: comment.user_id,
     created_at: comment.created_at,
     username: comment.username,

@@ -32,10 +32,10 @@ export interface Course {
 
 export interface Comment {
   id: number;
-  comment_text: string;
+  comment_text?: string | null; // Make comment_text optional since a user can submit only a rating
   user_id: string | null; // This stays as string to match UUID in auth.users
   created_at: string | null;
-  rating?: number; // Make sure rating field is defined in the interface
+  rating?: number; // Rating field in the interface
   username?: string;
   users?: {
     username: string;

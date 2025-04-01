@@ -20,6 +20,33 @@ const ReviewsSection: React.FC<ReviewsSectionProps> = ({
 }) => {
   const { user } = useAuth();
 
+  // Function to render star ratings with half-star support
+  const renderRating = (rating: number | undefined) => {
+    if (!rating) return null;
+    
+    const fullStars = Math.floor(rating);
+    const hasHalfStar = rating % 1 !== 0;
+    const emptyStars = 5 - fullStars - (hasHalfStar ? 1 : 0);
+    
+    return (
+      <div className="flex items-center">
+        {[...Array(fullStars)].map((_, i) => (
+          <Star key={`full-${i}`} className="text-yellow-500 fill-yellow-500" size={16} />
+        ))}
+        
+        {hasHalfStar && (
+          <StarHalf key="half" className="text-yellow-500 fill-yellow-500" size={16} />
+        )}
+        
+        {[...Array(emptyStars)].map((_, i) => (
+          <Star key={`empty-${i}`} className="text-gray-400" size={16} />
+        ))}
+        
+        <span className="ml-1 text-sm">{rating.toFixed(1)}</span>
+      </div>
+    );
+  };
+
   return (
     <section className="container mx-auto px-6 mb-12">
       <div className="flex items-center justify-between mb-6">
@@ -30,7 +57,7 @@ const ReviewsSection: React.FC<ReviewsSectionProps> = ({
         </div>
       </div>
       
-      {/* Comment form - only shown if user is logged in, has completed the course, and hasn't already commented */}
+      {/* Comment form - only shown if user is logged in and has completed the course */}
       {user && <CommentForm onCommentAdded={onCommentAdded} courseProgress={courseProgress} />}
       
       <div className="glass-card">
@@ -54,14 +81,11 @@ const ReviewsSection: React.FC<ReviewsSectionProps> = ({
                           {comment.created_at ? new Date(comment.created_at).toLocaleDateString() : 'Unknown date'}
                         </div>
                       </div>
-                      {comment.rating && (
-                        <div className="flex items-center">
-                          <Star className="text-yellow-500" size={16} />
-                          <span className="ml-1">{comment.rating}</span>
-                        </div>
-                      )}
+                      {comment.rating && renderRating(comment.rating)}
                     </div>
-                    <p className="text-slate-300">{comment.comment_text}</p>
+                    {comment.comment_text && (
+                      <p className="text-slate-300">{comment.comment_text}</p>
+                    )}
                   </div>
                 </div>
               </div>

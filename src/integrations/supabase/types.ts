@@ -119,6 +119,7 @@ export type Database = {
           created_at: string | null
           id: number
           parent_comment_id: number | null
+          rating: number | null
           type: string | null
           user_id: string | null
         }
@@ -128,6 +129,7 @@ export type Database = {
           created_at?: string | null
           id?: number
           parent_comment_id?: number | null
+          rating?: number | null
           type?: string | null
           user_id?: string | null
         }
@@ -137,6 +139,7 @@ export type Database = {
           created_at?: string | null
           id?: number
           parent_comment_id?: number | null
+          rating?: number | null
           type?: string | null
           user_id?: string | null
         }
