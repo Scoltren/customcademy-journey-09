@@ -60,7 +60,7 @@ export const useQuizNavigator = (
         await loadAnswersForQuestion(nextQuestion.id);
         
       } else {
-        // Current quiz is finished, save results first
+        // Current quiz is finished, save results first (this will delete previous results)
         await saveCurrentQuizResults(user, quizIds, categories, quizState, savedQuizIds);
         
         // Move to the next quiz

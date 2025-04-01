@@ -29,7 +29,7 @@ export const useQuizResultSaver = (
     
     logNavigation(`Saving results for quiz ${currentQuizId}, category ${currentCategoryId}, score ${quizState.score}`);
     
-    // Save the quiz result
+    // Save the quiz result - this will delete previous results first
     const success = await saveQuizResults(
       user,
       currentQuizId,
