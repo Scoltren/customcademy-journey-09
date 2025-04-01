@@ -9,7 +9,6 @@ export const useCourseProgress = () => {
   const { id } = useParams<{ id: string }>();
   const { user } = useAuth();
   
-  // Fetch user chapter progress
   const {
     data: courseProgress = 0,
     isLoading,
@@ -22,6 +21,18 @@ export const useCourseProgress = () => {
       
       const numericId = parseInt(id, 10);
       if (isNaN(numericId)) return 0;
+
+      // Fetch completed courses for the user
+      const { data: completedCourses, error: completedCoursesError } = await supabase
+        .from('course_completions')
+        .select('course_id')
+        .eq('user_id', user.id)
+        .eq('course_id', numericId);
+      
+      if (completedCoursesError) {
+        console.error('Error fetching completed courses:', completedCoursesError);
+        return 0;
+      }
 
       // Fetch all chapters with their progress_when_finished values
       const { data: chaptersData, error: chaptersError } = await supabase
@@ -59,6 +70,24 @@ export const useCourseProgress = () => {
             }
           }
         });
+      }
+      
+      // If total progress is 100, check if course completion is already recorded
+      if (totalProgress >= 100) {
+        // If no record of course completion exists, insert one
+        if (!completedCourses || completedCourses.length === 0) {
+          const { error: insertError } = await supabase
+            .from('course_completions')
+            .insert({
+              user_id: user.id,
+              course_id: numericId,
+              completed_at: new Date().toISOString()
+            });
+          
+          if (insertError) {
+            console.error('Error inserting course completion:', insertError);
+          }
+        }
       }
       
       console.log('Calculated course progress:', totalProgress);

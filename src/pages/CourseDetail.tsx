@@ -13,6 +13,7 @@ import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { ArrowLeft } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
+import { supabase } from '@/integrations/supabase/client';
 
 const CourseDetail = () => {
   const { course, chapters, comments, isLoading, courseProgress, refetchProgress, refetchComments } = useCourseData();
@@ -34,14 +35,32 @@ const CourseDetail = () => {
 
   // Show a toast notification when progress reaches 100% for the first time
   useEffect(() => {
-    // Only show the completion message when progress transitions from <100 to 100
-    if (courseProgress === 100 && previousProgress < 100 && !hasShownCompletionMessage) {
-      toast.success('Congratulations! You completed the course!');
-      setHasShownCompletionMessage(true);
-    }
-    
-    setPreviousProgress(courseProgress);
-  }, [courseProgress, previousProgress, hasShownCompletionMessage]);
+    const checkCourseCompletion = async () => {
+      // Only proceed if we have a course and user
+      if (!course || !user) return;
+
+      // Check if course is already marked as completed
+      const { data: completedCourses, error } = await supabase
+        .from('course_completions')
+        .select('*')
+        .eq('user_id', user.id)
+        .eq('course_id', course.id)
+        .single();
+
+      if (error) {
+        console.error('Error checking course completion:', error);
+        return;
+      }
+
+      // Show completion toast only if course is fully completed and hasn't been shown before
+      if (courseProgress === 100 && !completedCourses && !hasShownCompletionMessage) {
+        toast.success('Congratulations! You completed the course!');
+        setHasShownCompletionMessage(true);
+      }
+    };
+
+    checkCourseCompletion();
+  }, [courseProgress, course, user, hasShownCompletionMessage]);
 
   // Render loading state if data is loading
   if (isLoading) {
