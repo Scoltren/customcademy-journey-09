@@ -34,10 +34,12 @@ const CourseDetail = () => {
 
   // Show a toast notification when progress reaches 100% for the first time
   useEffect(() => {
+    // Only show the completion message when progress transitions from <100 to 100
     if (courseProgress === 100 && previousProgress < 100 && !hasShownCompletionMessage) {
       toast.success('Congratulations! You completed the course!');
       setHasShownCompletionMessage(true);
     }
+    
     setPreviousProgress(courseProgress);
   }, [courseProgress, previousProgress, hasShownCompletionMessage]);
 

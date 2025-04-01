@@ -29,7 +29,7 @@ const ReviewsSection: React.FC<ReviewsSectionProps> = ({
     const emptyStars = 5 - roundedRating;
     
     return (
-      <div className="flex items-center">
+      <div className="flex items-center justify-center">
         {[...Array(roundedRating)].map((_, i) => (
           <Star key={`full-${i}`} className="text-yellow-500 fill-yellow-500" size={16} />
         ))}
