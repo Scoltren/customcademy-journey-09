@@ -13,16 +13,16 @@ const Index = () => {
 
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
+      <div className="flex items-center justify-center min-h-screen w-full">
         <Loader2 className="w-8 h-8 animate-spin" />
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen flex flex-col">
+    <div className="min-h-screen flex flex-col w-full">
       <Navbar />
-      <div className="pt-16"> {/* Add padding to prevent content from being hidden behind fixed navbar */}
+      <div className="pt-16 w-full"> {/* Add padding to prevent content from being hidden behind fixed navbar */}
         {!user ? (
           // Content for non-logged in users
           <>

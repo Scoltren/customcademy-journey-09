@@ -1,14 +1,14 @@
 
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { Facebook, Twitter, Instagram, Linkedin, Mail, Phone, MapPin } from 'lucide-react';
+import { Mail, Phone, MapPin } from 'lucide-react';
 
 const Footer = () => {
   const currentYear = new Date().getFullYear();
   
   return (
-    <footer className="bg-slate-900 text-white pt-16 pb-8">
-      <div className="container mx-auto px-6">
+    <footer className="bg-slate-900 text-white pt-16 pb-8 w-full">
+      <div className="w-full mx-auto px-6">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 mb-12">
           {/* Company Info */}
           <div>
@@ -23,37 +23,6 @@ const Footer = () => {
               Personalized learning experiences tailored to your interests and skill level. 
               Learn at your own pace with CustomCademy's intuitive platform.
             </p>
-            
-            <div className="flex gap-4">
-              <a 
-                href="#" 
-                className="w-10 h-10 rounded-full bg-slate-800 flex items-center justify-center text-slate-400 hover:bg-blue hover:text-white transition-all duration-300"
-                aria-label="Facebook"
-              >
-                <Facebook size={18} />
-              </a>
-              <a 
-                href="#" 
-                className="w-10 h-10 rounded-full bg-slate-800 flex items-center justify-center text-slate-400 hover:bg-blue hover:text-white transition-all duration-300"
-                aria-label="Twitter"
-              >
-                <Twitter size={18} />
-              </a>
-              <a 
-                href="#" 
-                className="w-10 h-10 rounded-full bg-slate-800 flex items-center justify-center text-slate-400 hover:bg-blue hover:text-white transition-all duration-300"
-                aria-label="Instagram"
-              >
-                <Instagram size={18} />
-              </a>
-              <a 
-                href="#" 
-                className="w-10 h-10 rounded-full bg-slate-800 flex items-center justify-center text-slate-400 hover:bg-blue hover:text-white transition-all duration-300"
-                aria-label="LinkedIn"
-              >
-                <Linkedin size={18} />
-              </a>
-            </div>
           </div>
           
           {/* Learning */}
@@ -67,7 +36,7 @@ const Footer = () => {
                 <Link to="/account" className="text-slate-400 hover:text-blue-light transition-colors duration-300">Account Settings</Link>
               </li>
               <li>
-                <Link to="/teach" className="text-slate-400 hover:text-blue-light transition-colors duration-300">Become a Teacher</Link>
+                <Link to="/create-course" className="text-slate-400 hover:text-blue-light transition-colors duration-300">Become a Teacher</Link>
               </li>
             </ul>
           </div>
@@ -96,12 +65,8 @@ const Footer = () => {
           </div>
         </div>
         
-        <div className="border-t border-slate-800 pt-8 text-center md:flex md:justify-between md:items-center text-slate-400">
+        <div className="border-t border-slate-800 pt-8 text-center text-slate-400">
           <p>© {currentYear} CustomCademy. All rights reserved.</p>
-          <div className="mt-4 md:mt-0 space-x-4">
-            <Link to="/terms" className="hover:text-blue-light transition-colors duration-300">Terms of Service</Link>
-            <Link to="/privacy" className="hover:text-blue-light transition-colors duration-300">Privacy Policy</Link>
-          </div>
         </div>
       </div>
     </footer>
