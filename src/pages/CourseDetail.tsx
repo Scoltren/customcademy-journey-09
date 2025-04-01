@@ -20,7 +20,6 @@ const CourseDetail = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
   const [hasShownCompletionMessage, setHasShownCompletionMessage] = useState(false);
-  const [previousProgress, setPreviousProgress] = useState(0);
 
   // Setup progress refresh interval if refetch function is available
   useEffect(() => {
@@ -40,21 +39,20 @@ const CourseDetail = () => {
       if (!course || !user) return;
 
       try {
-        // Check if course is already marked as completed
-        const { data: completedCourses, error } = await supabase
-          .from('course_completions')
-          .select('*')
-          .eq('user_id', user.id)
-          .eq('course_id', course.id)
-          .maybeSingle();
+        // Check if course is already marked as completed using RPC
+        const { data: completionStatus, error } = await supabase
+          .rpc('get_course_completion_status', {
+            user_id_param: user.id,
+            course_id_param: course.id
+          });
 
-        if (error && error.code !== 'PGRST116') { // PGRST116 is "no rows returned"
+        if (error) {
           console.error('Error checking course completion:', error);
           return;
         }
 
         // Show completion toast only if course is fully completed and hasn't been shown before
-        if (courseProgress === 100 && !completedCourses && !hasShownCompletionMessage) {
+        if (courseProgress === 100 && (!completionStatus || completionStatus.length === 0) && !hasShownCompletionMessage) {
           toast.success('Congratulations! You completed the course!');
           setHasShownCompletionMessage(true);
         }

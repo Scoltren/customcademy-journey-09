@@ -23,13 +23,12 @@ export const useCourseProgress = () => {
       if (isNaN(numericId)) return 0;
 
       try {
-        // Fetch completed courses for the user
+        // Fetch completed courses for the user using raw SQL to avoid type issues
         const { data: completedCourses, error: completedCoursesError } = await supabase
-          .from('course_completions')
-          .select('*')
-          .eq('user_id', user.id)
-          .eq('course_id', numericId)
-          .maybeSingle();
+          .rpc('get_course_completion_status', {
+            user_id_param: user.id,
+            course_id_param: numericId
+          });
         
         if (completedCoursesError) {
           console.error('Error fetching completed courses:', completedCoursesError);
@@ -76,14 +75,12 @@ export const useCourseProgress = () => {
         
         // If total progress is 100, check if course completion is already recorded
         if (totalProgress >= 100) {
-          // If no record of course completion exists, insert one
-          if (!completedCourses) {
+          // If no record of course completion exists, insert one using raw query
+          if (!completedCourses || completedCourses.length === 0) {
             const { error: insertError } = await supabase
-              .from('course_completions')
-              .insert({
-                user_id: user.id,
-                course_id: numericId,
-                completed_at: new Date().toISOString()
+              .rpc('insert_course_completion', {
+                user_id_param: user.id,
+                course_id_param: numericId
               });
             
             if (insertError) {
