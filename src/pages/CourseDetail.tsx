@@ -39,23 +39,27 @@ const CourseDetail = () => {
       // Only proceed if we have a course and user
       if (!course || !user) return;
 
-      // Check if course is already marked as completed
-      const { data: completedCourses, error } = await supabase
-        .from('course_completions')
-        .select('*')
-        .eq('user_id', user.id)
-        .eq('course_id', course.id)
-        .single();
+      try {
+        // Check if course is already marked as completed
+        const { data: completedCourses, error } = await supabase
+          .from('course_completions')
+          .select('*')
+          .eq('user_id', user.id)
+          .eq('course_id', course.id)
+          .maybeSingle();
 
-      if (error) {
+        if (error && error.code !== 'PGRST116') { // PGRST116 is "no rows returned"
+          console.error('Error checking course completion:', error);
+          return;
+        }
+
+        // Show completion toast only if course is fully completed and hasn't been shown before
+        if (courseProgress === 100 && !completedCourses && !hasShownCompletionMessage) {
+          toast.success('Congratulations! You completed the course!');
+          setHasShownCompletionMessage(true);
+        }
+      } catch (error) {
         console.error('Error checking course completion:', error);
-        return;
-      }
-
-      // Show completion toast only if course is fully completed and hasn't been shown before
-      if (courseProgress === 100 && !completedCourses && !hasShownCompletionMessage) {
-        toast.success('Congratulations! You completed the course!');
-        setHasShownCompletionMessage(true);
       }
     };
 
