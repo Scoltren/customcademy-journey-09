@@ -15,7 +15,7 @@ import { ArrowLeft } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 
 const CourseDetail = () => {
-  const { course, chapters, comments, isLoading, courseProgress, refetchProgress } = useCourseData();
+  const { course, chapters, comments, isLoading, courseProgress, refetchProgress, refetchComments } = useCourseData();
   const navigate = useNavigate();
   const { user } = useAuth();
 
@@ -81,7 +81,12 @@ const CourseDetail = () => {
         />
         
         {/* Reviews */}
-        <ReviewsSection course={course} comments={comments} />
+        <ReviewsSection 
+          course={course} 
+          comments={comments} 
+          onCommentAdded={refetchComments}
+          courseProgress={courseProgress}
+        />
       </main>
       
       <Footer />

@@ -13,7 +13,8 @@ export const useCourseComments = () => {
   const { 
     data: commentsData = [], 
     isLoading, 
-    error 
+    error,
+    refetch: refetchComments
   } = useQuery({
     queryKey: ['comments', id],
     queryFn: async () => {
@@ -54,7 +55,8 @@ export const useCourseComments = () => {
     user_id: comment.user_id,
     created_at: comment.created_at,
     username: comment.username,
-    users: comment.users
+    users: comment.users,
+    rating: comment.rating
   }));
   
   // Show error messages
@@ -68,6 +70,7 @@ export const useCourseComments = () => {
   return {
     comments,
     isLoading,
-    error
+    error,
+    refetchComments
   };
 };

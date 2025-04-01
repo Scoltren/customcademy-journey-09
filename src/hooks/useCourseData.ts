@@ -8,7 +8,12 @@ export const useCourseData = () => {
   // Use the individual hooks
   const { course, isLoading: courseLoading, error: courseError } = useCourseDetails();
   const { chapters, isLoading: chaptersLoading, error: chaptersError } = useCourseChapters();
-  const { comments, isLoading: commentsLoading, error: commentsError } = useCourseComments();
+  const { 
+    comments, 
+    isLoading: commentsLoading, 
+    error: commentsError,
+    refetchComments 
+  } = useCourseComments();
   const { 
     courseProgress, 
     isLoading: progressLoading, 
@@ -28,6 +33,7 @@ export const useCourseData = () => {
     chaptersError,
     commentsError,
     courseProgress,
-    refetchProgress
+    refetchProgress,
+    refetchComments
   };
 };

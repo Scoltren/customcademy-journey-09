@@ -2,13 +2,24 @@
 import React from 'react';
 import { Star, MessageSquare, StarHalf } from 'lucide-react';
 import { Comment, Course } from '@/types/course';
+import CommentForm from './CommentForm';
+import { useAuth } from '@/contexts/AuthContext';
 
 interface ReviewsSectionProps {
   course: Course;
   comments: Comment[];
+  onCommentAdded: () => void;
+  courseProgress: number;
 }
 
-const ReviewsSection: React.FC<ReviewsSectionProps> = ({ course, comments }) => {
+const ReviewsSection: React.FC<ReviewsSectionProps> = ({ 
+  course, 
+  comments, 
+  onCommentAdded,
+  courseProgress 
+}) => {
+  const { user } = useAuth();
+
   return (
     <section className="container mx-auto px-6 mb-12">
       <div className="flex items-center justify-between mb-6">
@@ -18,6 +29,9 @@ const ReviewsSection: React.FC<ReviewsSectionProps> = ({ course, comments }) => 
           <span className="text-lg font-bold">{course?.overall_rating ? course.overall_rating.toFixed(1) : '0.0'} Overall Rating</span>
         </div>
       </div>
+      
+      {/* Comment form - only shown if user is logged in, has completed the course, and hasn't already commented */}
+      {user && <CommentForm onCommentAdded={onCommentAdded} courseProgress={courseProgress} />}
       
       <div className="glass-card">
         {comments.length > 0 ? (
