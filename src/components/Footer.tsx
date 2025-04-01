@@ -1,73 +1,26 @@
 
 import React from 'react';
-import { Link } from 'react-router-dom';
-import { Mail, Phone, MapPin } from 'lucide-react';
+import CompanyInfo from './footer/CompanyInfo';
+import LearningLinks from './footer/LearningLinks';
+import ContactInfo from './footer/ContactInfo';
+import Copyright from './footer/Copyright';
 
 const Footer = () => {
-  const currentYear = new Date().getFullYear();
-  
   return (
     <footer className="bg-slate-900 text-white pt-16 pb-8 w-full">
       <div className="w-full mx-auto px-6">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 mb-12">
           {/* Company Info */}
-          <div>
-            <Link to="/" className="flex items-center gap-2 mb-6">
-              <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-blue to-sky flex items-center justify-center">
-                <span className="text-white font-bold text-lg">C</span>
-              </div>
-              <span className="text-white font-bold text-xl">CustomCademy</span>
-            </Link>
-            
-            <p className="text-slate-400 mb-6">
-              Personalized learning experiences tailored to your interests and skill level. 
-              Learn at your own pace with CustomCademy's intuitive platform.
-            </p>
-          </div>
+          <CompanyInfo />
           
           {/* Learning */}
-          <div>
-            <h3 className="font-bold text-lg mb-6">Learning</h3>
-            <ul className="space-y-3">
-              <li>
-                <Link to="/dashboard" className="text-slate-400 hover:text-blue-light transition-colors duration-300">My Dashboard</Link>
-              </li>
-              <li>
-                <Link to="/account" className="text-slate-400 hover:text-blue-light transition-colors duration-300">Account Settings</Link>
-              </li>
-              <li>
-                <Link to="/create-course" className="text-slate-400 hover:text-blue-light transition-colors duration-300">Become a Teacher</Link>
-              </li>
-            </ul>
-          </div>
+          <LearningLinks />
           
           {/* Contact Info */}
-          <div>
-            <h3 className="font-bold text-lg mb-6">Contact Info</h3>
-            <ul className="space-y-4">
-              <li className="flex items-start gap-3">
-                <MapPin size={20} className="text-blue-light mt-1 flex-shrink-0" />
-                <span className="text-slate-400">123 Education Street, Learning City, 10001</span>
-              </li>
-              <li className="flex items-center gap-3">
-                <Mail size={20} className="text-blue-light flex-shrink-0" />
-                <a href="mailto:info@customcademy.com" className="text-slate-400 hover:text-blue-light transition-colors duration-300">
-                  info@customcademy.com
-                </a>
-              </li>
-              <li className="flex items-center gap-3">
-                <Phone size={20} className="text-blue-light flex-shrink-0" />
-                <a href="tel:+11234567890" className="text-slate-400 hover:text-blue-light transition-colors duration-300">
-                  +1 (123) 456-7890
-                </a>
-              </li>
-            </ul>
-          </div>
+          <ContactInfo />
         </div>
         
-        <div className="border-t border-slate-800 pt-8 text-center text-slate-400">
-          <p>© {currentYear} CustomCademy. All rights reserved.</p>
-        </div>
+        <Copyright />
       </div>
     </footer>
   );
