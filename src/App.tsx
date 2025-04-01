@@ -2,7 +2,7 @@
 import { Routes, Route } from "react-router-dom";
 import { Toaster } from "./components/ui/sonner";
 import ResponsiveNavbar from "./components/ResponsiveNavbar";
-import { Footer } from "./components/Footer";
+import Footer from "./components/Footer";
 import Index from "./pages/Index";
 import Login from "./pages/Login";
 import Signup from "./pages/Signup";

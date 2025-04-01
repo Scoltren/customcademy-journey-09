@@ -1,10 +1,10 @@
 
 import React from 'react';
-import { NavigationLinks } from './navbar/NavigationLinks';
-import { AuthButtons } from './navbar/AuthButtons';
-import { UserMenu } from './navbar/UserMenu';
-import { MobileMenu } from './navbar/MobileMenu';
-import { CreateCourseButton } from './navbar/CreateCourseButton';
+import NavigationLinks from './navbar/NavigationLinks';
+import AuthButtons from './navbar/AuthButtons';
+import UserMenu from './navbar/UserMenu';
+import MobileMenu from './navbar/MobileMenu';
+import CreateCourseButton from './navbar/CreateCourseButton';
 import { useAuth } from '../contexts/AuthContext';
 
 const ResponsiveNavbar = () => {
@@ -26,7 +26,7 @@ const ResponsiveNavbar = () => {
           {user ? (
             <div className="flex items-center space-x-4">
               <CreateCourseButton />
-              <UserMenu />
+              <UserMenu user={user} />
             </div>
           ) : (
             <AuthButtons />
@@ -34,7 +34,7 @@ const ResponsiveNavbar = () => {
         </div>
 
         <div className="md:hidden">
-          <MobileMenu />
+          <MobileMenu isOpen={false} user={user} onLogout={() => {}} />
         </div>
       </div>
     </header>
