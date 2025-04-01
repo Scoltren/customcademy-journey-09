@@ -8,7 +8,15 @@ import CreateCourseButton from './navbar/CreateCourseButton';
 import { useAuth } from '../contexts/AuthContext';
 
 const ResponsiveNavbar = () => {
-  const { user } = useAuth();
+  const { user, logout } = useAuth();
+
+  const handleLogout = async () => {
+    try {
+      await logout();
+    } catch (error) {
+      console.error('Logout error:', error);
+    }
+  };
 
   return (
     <header className="w-full border-b bg-white">
@@ -34,7 +42,7 @@ const ResponsiveNavbar = () => {
         </div>
 
         <div className="md:hidden">
-          <MobileMenu isOpen={false} user={user} onLogout={() => {}} />
+          <MobileMenu isOpen={false} user={user} onLogout={handleLogout} />
         </div>
       </div>
     </header>
