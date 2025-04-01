@@ -4,6 +4,7 @@ import { Star, MessageSquare } from 'lucide-react';
 import { Comment, Course } from '@/types/course';
 import CommentForm from './CommentForm';
 import { useAuth } from '@/contexts/AuthContext';
+import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 
 interface ReviewsSectionProps {
   course: Course;
@@ -43,6 +44,16 @@ const ReviewsSection: React.FC<ReviewsSectionProps> = ({
     );
   };
 
+  // Generate avatar URL for a user
+  const getAvatarUrl = (username: string, userId: string) => {
+    // First try to get a profile picture from Supabase if available
+    if (userId) {
+      // Use UI Avatars as fallback
+      return `https://ui-avatars.com/api/?name=${encodeURIComponent(username)}&background=random&color=fff`;
+    }
+    return `https://ui-avatars.com/api/?name=${encodeURIComponent(username)}&background=random&color=fff`;
+  };
+
   return (
     <section className="container mx-auto px-6 mb-12">
       <div className="flex items-center justify-between mb-6">
@@ -62,13 +73,15 @@ const ReviewsSection: React.FC<ReviewsSectionProps> = ({
             {comments.map((comment) => (
               <div key={comment.id} className="p-6">
                 <div className="flex items-start gap-4">
-                  <div className="w-10 h-10 rounded-full bg-slate-700 overflow-hidden flex-shrink-0">
-                    <img 
-                      src={`https://ui-avatars.com/api/?name=${comment.username?.replace(' ', '+')}&background=random`}
-                      alt={comment.username} 
-                      className="w-full h-full object-cover"
+                  <Avatar className="w-10 h-10 rounded-full overflow-hidden flex-shrink-0">
+                    <AvatarImage 
+                      src={getAvatarUrl(comment.username || 'User', comment.user_id || '')}
+                      alt={comment.username || 'User'} 
                     />
-                  </div>
+                    <AvatarFallback className="bg-slate-700 text-slate-200">
+                      {(comment.username || 'U').charAt(0).toUpperCase()}
+                    </AvatarFallback>
+                  </Avatar>
                   <div className="flex-1">
                     <div className="flex items-center justify-between mb-2">
                       <div>
