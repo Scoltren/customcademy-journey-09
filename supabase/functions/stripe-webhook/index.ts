@@ -34,6 +34,8 @@ serve(async (req) => {
       return new Response(`Webhook signature verification failed: ${err.message}`, { status: 400 });
     }
     
+    console.log(`Processing webhook event: ${event.type}`);
+    
     // Setup supabase connection
     const supabaseUrl = Deno.env.get('SUPABASE_URL') || '';
     const supabaseKey = Deno.env.get('SUPABASE_ANON_KEY') || '';
@@ -49,9 +51,11 @@ serve(async (req) => {
         const userId = session.metadata?.userId;
         const courseId = session.metadata?.courseId;
         
+        console.log('Processing checkout.session.completed', { userId, courseId, paymentStatus: session.payment_status });
+        
         if (session.payment_status === 'paid' && userId && courseId) {
           // Record the payment in our database
-          await fetch(`${supabaseUrl}/rest/v1/payments`, {
+          const paymentResponse = await fetch(`${supabaseUrl}/rest/v1/payments`, {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',
@@ -68,7 +72,12 @@ serve(async (req) => {
             }),
           });
           
-          // Enroll user in the course if not already enrolled
+          if (!paymentResponse.ok) {
+            console.error('Failed to record payment:', await paymentResponse.text());
+          }
+          
+          // Enroll user in the course
+          console.log('Checking if user is already enrolled');
           const enrollmentCheckResponse = await fetch(
             `${supabaseUrl}/rest/v1/subscribed_courses?user_id=eq.${userId}&course_id=eq.${courseId}`,
             {
@@ -82,12 +91,14 @@ serve(async (req) => {
           const enrollmentData = await enrollmentCheckResponse.json();
           
           if (enrollmentData.length === 0) {
-            await fetch(`${supabaseUrl}/rest/v1/subscribed_courses`, {
+            console.log('User not enrolled yet, creating enrollment');
+            const enrollResponse = await fetch(`${supabaseUrl}/rest/v1/subscribed_courses`, {
               method: 'POST',
               headers: {
                 'Content-Type': 'application/json',
                 'Authorization': `Bearer ${supabaseKey}`,
                 'apikey': supabaseKey,
+                'Prefer': 'return=minimal',
               },
               body: JSON.stringify({
                 user_id: userId,
@@ -95,6 +106,14 @@ serve(async (req) => {
                 progress: 0,
               }),
             });
+            
+            if (!enrollResponse.ok) {
+              console.error('Failed to enroll user:', await enrollResponse.text());
+            } else {
+              console.log('Successfully enrolled user in course');
+            }
+          } else {
+            console.log('User already enrolled in course');
           }
         }
         break;
@@ -108,6 +127,7 @@ serve(async (req) => {
     });
     
   } catch (error) {
+    console.error('Webhook error:', error);
     return new Response(`Webhook error: ${error.message}`, { status: 500 });
   }
 });

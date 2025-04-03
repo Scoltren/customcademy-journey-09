@@ -42,7 +42,7 @@ serve(async (req) => {
         },
       ],
       mode: 'payment',
-      success_url: `${req.headers.get('origin')}/payment/success?session_id={CHECKOUT_SESSION_ID}&course_id=${courseId}`,
+      success_url: `${req.headers.get('origin')}/course/${courseId}`,
       cancel_url: `${req.headers.get('origin')}/course/${courseId}`,
       metadata: {
         userId,

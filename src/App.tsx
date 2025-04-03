@@ -10,7 +10,6 @@ import CourseDetail from "./pages/CourseDetail";
 import Dashboard from "./pages/Dashboard";
 import NotFound from "./pages/NotFound";
 import "./App.css";
-import PaymentSuccess from "./pages/PaymentSuccess";
 import ConfirmEmail from "./pages/ConfirmEmail";
 import CreateCourse from "./pages/CreateCourse";
 import SelectInterests from "./pages/SelectInterests";
@@ -78,7 +77,6 @@ function App() {
               <Footer />
             </>
           } />
-          <Route path="/payment/success" element={<PaymentSuccess />} />
           <Route path="/confirm-email" element={
             <>
               <Navbar />

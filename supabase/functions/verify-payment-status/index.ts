@@ -57,34 +57,8 @@ serve(async (req) => {
         }),
       });
       
-      // Then check if we need to enroll the user in the course
-      const enrollmentCheckResponse = await fetch(
-        `${supabaseUrl}/rest/v1/subscribed_courses?user_id=eq.${userId}&course_id=eq.${courseId}`,
-        {
-          headers: {
-            'Authorization': `Bearer ${supabaseKey}`,
-            'apikey': supabaseKey,
-          },
-        }
-      );
-      
-      const enrollmentData = await enrollmentCheckResponse.json();
-      
-      // If user is not enrolled yet, create enrollment
-      if (enrollmentData.length === 0) {
-        await fetch(`${supabaseUrl}/rest/v1/subscribed_courses`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${supabaseKey}`,
-            'apikey': supabaseKey,
-          },
-          body: JSON.stringify({
-            user_id: userId,
-            course_id: parseInt(courseId),
-            progress: 0,
-          }),
-        });
+      if (!paymentResponse.ok) {
+        console.error('Failed to update payment status:', await paymentResponse.text());
       }
     }
     
