@@ -44,7 +44,7 @@ export class StorageService {
       const bucketExists = buckets.some(b => b.name === bucket);
       
       if (!bucketExists) {
-        console.error(`Bucket '${bucket}' does not exist`);
+        console.error(`Bucket '${bucket}' does not exist. Available buckets:`, buckets.map(b => b.name));
         toast.error(`Upload failed: storage location '${bucket}' not found`);
         return null;
       }
