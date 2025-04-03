@@ -1,4 +1,3 @@
-
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { ChapterFormData } from "./types";
@@ -119,20 +118,23 @@ export class ChapterService {
       let videoUrl = null;
       if (chapterData.video_file && chapterData.video_file instanceof File && chapterData.video_file.size > 0) {
         // Upload to the "videos" folder in the course-media bucket
-        videoUrl = await StorageService.uploadFile(chapterData.video_file, 'videos', 'course-media');
+        videoUrl = await StorageService.uploadFile(chapterData.video_file, "videos", "course-media");
         console.log("Updated video URL:", videoUrl);
       }
       
-      // Prepare update data
-      const updateData: any = { ...chapterData };
+      // Prepare update data - IMPORTANT: Remove video_file field as it doesn't exist in the database
+      const updateData: Record<string, any> = {
+        title: chapterData.title,
+        chapter_text: chapterData.chapter_text,
+        progress_when_finished: chapterData.progress_when_finished
+      };
+      
+      // Only add video_link if we have a new video URL
       if (videoUrl) {
         updateData.video_link = videoUrl;
       }
       
-      // Remove video_file from update data if it's a File object
-      if (updateData.video_file instanceof File) {
-        delete updateData.video_file;
-      }
+      console.log("Updating chapter with data:", updateData);
       
       // Update chapter record
       const { data, error } = await supabase.from('chapters')
