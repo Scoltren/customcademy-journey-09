@@ -23,32 +23,6 @@ export class StorageService {
       const fileName = `${Date.now()}-${Math.random().toString(36).substring(2, 15)}.${fileExtension}`;
       const filePath = path ? `${path}/${fileName}` : fileName;
       
-      // Debugging: Log the bucket name and file details
-      console.log(`Attempting to upload file to bucket: ${bucket}`, {
-        fileName,
-        filePath,
-        fileType: file.type,
-        fileSize: file.size
-      });
-
-      // First, check if the bucket exists
-      const { data: buckets, error: bucketsError } = await supabase.storage.listBuckets();
-      
-      if (bucketsError) {
-        console.error("Error checking storage buckets:", bucketsError);
-        toast.error("Upload failed: couldn't access storage");
-        return null;
-      }
-      
-      // Check if our target bucket exists
-      const bucketExists = buckets.some(b => b.name === bucket);
-      
-      if (!bucketExists) {
-        console.error(`Bucket '${bucket}' does not exist. Available buckets:`, buckets.map(b => b.name));
-        toast.error(`Upload failed: storage location '${bucket}' not found`);
-        return null;
-      }
-      
       // Upload the file
       const { data, error } = await supabase.storage
         .from(bucket)
