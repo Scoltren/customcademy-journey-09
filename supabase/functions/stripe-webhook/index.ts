@@ -11,6 +11,7 @@ serve(async (req) => {
     const signature = req.headers.get('stripe-signature');
     
     if (!signature) {
+      console.error('Webhook error: Missing stripe-signature header');
       return new Response('Webhook signature missing', { status: 400 });
     }
     
@@ -18,6 +19,7 @@ serve(async (req) => {
     const webhookSecret = Deno.env.get('STRIPE_WEBHOOK_SECRET') || '';
     
     if (!webhookSecret) {
+      console.error('Webhook error: STRIPE_WEBHOOK_SECRET not configured');
       return new Response('Webhook secret not configured', { status: 500 });
     }
     
@@ -31,16 +33,18 @@ serve(async (req) => {
     try {
       event = stripe.webhooks.constructEvent(body, signature, webhookSecret);
     } catch (err) {
+      console.error(`Webhook signature verification failed: ${err.message}`);
       return new Response(`Webhook signature verification failed: ${err.message}`, { status: 400 });
     }
     
-    console.log(`Processing webhook event: ${event.type}`);
+    console.log(`Processing webhook event: ${event.type}`, { event_id: event.id });
     
     // Setup supabase connection
     const supabaseUrl = Deno.env.get('SUPABASE_URL') || '';
     const supabaseKey = Deno.env.get('SUPABASE_ANON_KEY') || '';
     
     if (!supabaseUrl || !supabaseKey) {
+      console.error('Webhook error: Missing Supabase configuration');
       return new Response('Server configuration error', { status: 500 });
     }
     
@@ -51,7 +55,12 @@ serve(async (req) => {
         const userId = session.metadata?.userId;
         const courseId = session.metadata?.courseId;
         
-        console.log('Processing checkout.session.completed', { userId, courseId, paymentStatus: session.payment_status });
+        console.log('Processing checkout.session.completed', { 
+          userId, 
+          courseId, 
+          paymentStatus: session.payment_status,
+          sessionId: session.id
+        });
         
         if (session.payment_status === 'paid' && userId && courseId) {
           // Record the payment in our database
@@ -73,7 +82,11 @@ serve(async (req) => {
           });
           
           if (!paymentResponse.ok) {
-            console.error('Failed to record payment:', await paymentResponse.text());
+            const errorText = await paymentResponse.text();
+            console.error('Failed to record payment:', errorText);
+            // Continue processing despite the error
+          } else {
+            console.log('Payment record created successfully');
           }
           
           // Enroll user in the course - ALWAYS create this record regardless of existing enrollment
@@ -94,14 +107,23 @@ serve(async (req) => {
           });
           
           if (!enrollResponse.ok) {
-            console.error('Failed to enroll user:', await enrollResponse.text());
+            const errorText = await enrollResponse.text();
+            console.error('Failed to enroll user:', errorText);
           } else {
             console.log('Successfully enrolled user in course');
           }
+        } else {
+          console.log('Skipping enrollment: conditions not met', {
+            paymentStatus: session.payment_status,
+            hasUserId: !!userId,
+            hasCourseId: !!courseId
+          });
         }
         break;
       }
       // Add handlers for other event types as needed
+      default:
+        console.log(`Unhandled event type: ${event.type}`);
     }
     
     return new Response(JSON.stringify({ received: true }), {
@@ -110,7 +132,7 @@ serve(async (req) => {
     });
     
   } catch (error) {
-    console.error('Webhook error:', error);
+    console.error('Webhook error:', error.message, error.stack);
     return new Response(`Webhook error: ${error.message}`, { status: 500 });
   }
 });
