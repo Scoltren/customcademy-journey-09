@@ -1,104 +1,86 @@
 
-import React from "react";
-import { Card } from "@/components/ui/card";
-import QuizHeader from "@/components/quiz/QuizHeader";
-import QuizContent from "@/components/quiz/QuizContent";
-import QuizFooter from "@/components/quiz/QuizFooter";
-import QuizLoading from "@/components/quiz/QuizLoading";
-import QuizNotAvailable from "@/components/quiz/QuizNotAvailable";
+import React from 'react';
+import { useNavigate } from 'react-router-dom';
+import { Card } from '@/components/ui/card';
+import { useAuth } from '@/contexts/AuthContext';
+import { useQuiz } from '@/hooks/quiz/useQuiz';
+import QuizContent from '@/components/quiz/QuizContent';
+import QuizLoading from '@/components/quiz/QuizLoading';
+import QuizNotAvailable from '@/components/quiz/QuizNotAvailable';
 
-interface CategoryQuizViewProps {
-  isLoading: boolean;
-  isCompleted: boolean;
-  hasQuestions: boolean;
-  currentQuizIndex: number;
-  totalQuizzes: number;
-  currentQuestionIndex: number;
-  totalQuestions: number;
-  categoryName?: string;
-  questionText?: string;
-  currentAnswers: any[];
-  selectedAnswerIds: number[];
-  showFeedback: boolean;
-  score: number;
-  isSaving: boolean;
-  isLastQuestion: boolean;
-  isLastQuiz: boolean;
-  handleSelectAnswer: (answerId: number) => void;
-  handleSubmitAnswer: () => void;
-  handleNextQuestion: () => void;
+interface Category {
+  id: number;
+  name: string;
+  description?: string;
+  quiz_id?: number | null;
 }
 
-const CategoryQuizView: React.FC<CategoryQuizViewProps> = ({
-  isLoading,
-  isCompleted,
-  hasQuestions,
-  currentQuizIndex,
-  totalQuizzes,
-  currentQuestionIndex,
-  totalQuestions,
-  categoryName,
-  questionText,
-  currentAnswers,
-  selectedAnswerIds,
-  showFeedback,
-  score,
-  isSaving,
-  isLastQuestion,
-  isLastQuiz,
-  handleSelectAnswer,
-  handleSubmitAnswer,
-  handleNextQuestion,
-}) => {
-  if (isLoading) {
-    return (
-      <div className="flex items-center justify-center min-h-screen bg-gradient-to-b from-blue-950 to-slate-950 p-4">
-        <QuizLoading />
-      </div>
-    );
-  }
+interface CategoryQuizViewProps {
+  quizIds: number[];
+  categories: Category[];
+}
+
+const CategoryQuizView: React.FC<CategoryQuizViewProps> = ({ quizIds, categories }) => {
+  const navigate = useNavigate();
+  const { user } = useAuth();
   
-  if (!hasQuestions && !isCompleted) {
-    return (
-      <div className="flex items-center justify-center min-h-screen bg-gradient-to-b from-blue-950 to-slate-950 p-4">
-        <QuizNotAvailable />
-      </div>
-    );
-  }
+  // Log received props
+  console.log("CategoryQuizView received props:", { quizIds, categories });
   
-  return (
-    <div className="flex items-center justify-center min-h-screen bg-gradient-to-b from-blue-950 to-slate-950 p-4">
-      <div className="w-full max-w-3xl">
-        <Card className="backdrop-blur-sm bg-slate-950 border-slate-800 shadow-xl transition-all duration-300">
-          <QuizHeader 
-            currentQuizIndex={currentQuizIndex}
-            totalQuizzes={totalQuizzes}
-            currentQuestionIndex={currentQuestionIndex}
-            totalQuestions={totalQuestions}
-            categoryName={categoryName}
-            questionText={questionText}
-          />
-          
-          <QuizContent
-            answers={currentAnswers}
-            selectedAnswerIds={selectedAnswerIds}
-            showFeedback={showFeedback}
-            handleSelectAnswer={handleSelectAnswer}
-          />
-          
-          <QuizFooter 
-            score={score}
-            showFeedback={showFeedback}
-            selectedAnswerIds={selectedAnswerIds}
-            isSaving={isSaving}
-            isLastQuestion={isLastQuestion}
-            isLastQuiz={isLastQuiz}
-            onSubmitAnswer={handleSubmitAnswer}
-            onNextQuestion={handleNextQuestion}
-          />
+  // Use the quiz hook to manage quiz state and logic
+  const {
+    currentQuestion,
+    currentAnswers,
+    selectedAnswerIds,
+    isLoading,
+    isCompleted,
+    currentCategory,
+    handleAnswerSelect,
+    handleSubmitAnswer,
+    handleFinishQuiz
+  } = useQuiz(quizIds, categories, [], user);
+
+  // Handle quiz completion
+  if (isCompleted) {
+    console.log("Quiz completed, redirecting to dashboard");
+    // We can add a success message here if needed
+    return (
+      <div className="container mx-auto p-4">
+        <Card className="p-8 text-center">
+          <h1 className="text-2xl font-bold mb-4">Quiz Completed!</h1>
+          <p className="mb-4">Your responses have been saved.</p>
+          <button
+            className="bg-blue-600 text-white px-4 py-2 rounded"
+            onClick={() => navigate('/')}
+          >
+            Go to Homepage
+          </button>
         </Card>
       </div>
-    </div>
+    );
+  }
+
+  // Handle loading state
+  if (isLoading) {
+    return <QuizLoading />;
+  }
+
+  // Handle no quiz available
+  if (!currentQuestion) {
+    return <QuizNotAvailable onBack={() => navigate('/')} />;
+  }
+
+  // Render the quiz content
+  return (
+    <QuizContent
+      currentQuestion={currentQuestion}
+      currentAnswers={currentAnswers}
+      selectedAnswerIds={selectedAnswerIds}
+      categoryName={currentCategory?.name || "Quiz"}
+      onSelectAnswer={handleAnswerSelect}
+      onSubmitAnswer={handleSubmitAnswer}
+      onFinish={handleFinishQuiz}
+    />
   );
 };
 

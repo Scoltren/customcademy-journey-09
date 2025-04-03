@@ -1,4 +1,3 @@
-
 import { Routes, Route } from "react-router-dom";
 import { Toaster } from "./components/ui/sonner";
 import Footer from "./components/Footer";
@@ -34,7 +33,6 @@ function App() {
           <Route path="/create-course" element={<CreateCourse />} />
           <Route path="/select-interests" element={<SelectInterests />} />
           <Route path="/category-quiz" element={<CategoryQuiz />} />
-          <Route path="/quiz/:category" element={<CategoryQuiz />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </main>

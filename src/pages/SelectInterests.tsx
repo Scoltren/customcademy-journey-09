@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -148,15 +149,18 @@ const SelectInterests = () => {
       );
       
       if (categoriesWithQuizzes.length > 0) {
-        const quizIds = categoriesWithQuizzes
-          .map(category => category.quiz_id)
-          .filter(id => id !== null) as number[];
-          
-        console.log("Navigating to quizzes with IDs:", quizIds, "categories:", categoriesWithQuizzes);
+        // Log the navigation attempt
+        console.log("Attempting to navigate to category quiz with state:", {
+          quizIds: categoriesWithQuizzes.map(c => c.quiz_id).filter(id => id !== null),
+          categories: categoriesWithQuizzes
+        });
         
+        // Use the correct route - use /category-quiz consistently
         navigate('/category-quiz', { 
           state: { 
-            quizIds,
+            quizIds: categoriesWithQuizzes
+              .map(category => category.quiz_id)
+              .filter(id => id !== null) as number[],
             categories: categoriesWithQuizzes
           }
         });
