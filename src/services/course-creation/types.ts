@@ -1,6 +1,6 @@
 
 // Storage bucket name for course assets
-export const BUCKET_NAME = "course-assets";
+export const BUCKET_NAME = "course-media";
 
 // User interface type (imported from Supabase)
 import { User } from "@supabase/supabase-js";
