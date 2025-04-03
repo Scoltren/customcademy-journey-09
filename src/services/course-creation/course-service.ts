@@ -1,4 +1,3 @@
-
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { CourseFormData } from "./types";
@@ -13,22 +12,33 @@ export class CourseService {
    */
   static async createCourse(courseData: CourseFormData, userId: string) {
     try {
+      console.log("Starting course creation with data:", { ...courseData, thumbnail: courseData.thumbnail ? "File present" : "No file" });
+      
       // Upload thumbnail if provided
       let thumbnailUrl = null;
       if (courseData.thumbnail && courseData.thumbnail instanceof File && courseData.thumbnail.size > 0) {
-        thumbnailUrl = await StorageService.uploadFile(courseData.thumbnail, 'thumbnails');
+        console.log("Uploading thumbnail:", {
+          name: courseData.thumbnail.name,
+          size: courseData.thumbnail.size,
+          type: courseData.thumbnail.type
+        });
+        
+        // Pass explicit folder name and use the default bucket name
+        thumbnailUrl = await StorageService.uploadFile(courseData.thumbnail, "thumbnails");
+        console.log("Thumbnail upload result URL:", thumbnailUrl);
       }
       
       // Make sure difficulty_level is one of the accepted values or null
       const validDifficultyLevels = ['beginner', 'intermediate', 'advanced', null];
-      if (courseData.difficulty_level && !validDifficultyLevels.includes(courseData.difficulty_level as any)) {
+      if (courseData.difficulty_level !== null && !validDifficultyLevels.includes(courseData.difficulty_level as any)) {
         throw new Error(`Invalid difficulty level: ${courseData.difficulty_level}. Must be one of: beginner, intermediate, advanced, or null`);
       }
       
-      console.log("Creating course with data:", {
+      console.log("Creating course with processed data:", {
         ...courseData,
         thumbnail: thumbnailUrl,
-        creator_id: userId
+        creator_id: userId,
+        difficulty_level: courseData.difficulty_level
       });
       
       // Create course record
@@ -56,11 +66,11 @@ export class CourseService {
       return data;
     } catch (error) {
       console.error('Course creation failed:', error);
-      toast.error(error instanceof Error ? error.message : 'Failed to create course. Please try again.');
+      toast.error(error instanceof Error ? error.message : 'Failed to create course');
       throw error;
     }
   }
-
+  
   /**
    * Gets courses created by a user
    * @param userId The ID of the user
@@ -69,19 +79,20 @@ export class CourseService {
   static async getCreatedCourses(userId: string) {
     try {
       const { data, error } = await supabase.from('courses')
-        .select('*, categories(name)')
-        .eq('creator_id', userId);
+        .select('*')
+        .eq('creator_id', userId)
+        .order('created_at', { ascending: false });
       
       if (error) {
         console.error('Error fetching created courses:', error);
-        toast.error('Failed to fetch your created courses. Please try again.');
+        toast.error('Failed to load your created courses');
         return [];
       }
       
-      return data;
+      return data || [];
     } catch (error) {
       console.error('Error fetching created courses:', error);
-      toast.error('Failed to fetch your created courses. Please try again.');
+      toast.error('Failed to load your created courses');
       return [];
     }
   }
@@ -113,7 +124,15 @@ export class CourseService {
       
       // Update course record
       const { data, error } = await supabase.from('courses')
-        .update(updateData)
+        .update({
+          title: updateData.title,
+          description: updateData.description,
+          difficulty_level: updateData.difficulty_level,
+          category_id: updateData.category_id,
+          course_time: updateData.course_time,
+          price: updateData.price,
+          thumbnail: updateData.thumbnail,
+        })
         .eq('id', courseId)
         .select()
         .single();
@@ -134,23 +153,11 @@ export class CourseService {
   }
 
   /**
-   * Deletes a course and all its chapters
+   * Deletes a course
    * @param courseId The ID of the course to delete
    */
   static async deleteCourse(courseId: number) {
     try {
-      // First, delete all chapters associated with the course
-      const { error: chaptersError } = await supabase.from('chapters')
-        .delete()
-        .eq('course_id', courseId);
-      
-      if (chaptersError) {
-        console.error('Error deleting course chapters:', chaptersError);
-        toast.error(`Failed to delete course chapters: ${chaptersError.message}`);
-        throw chaptersError;
-      }
-      
-      // Then delete the course itself
       const { error } = await supabase.from('courses')
         .delete()
         .eq('id', courseId);

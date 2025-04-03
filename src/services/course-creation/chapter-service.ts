@@ -1,4 +1,3 @@
-
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { ChapterFormData } from "./types";
@@ -16,7 +15,15 @@ export class ChapterService {
       // Upload video if provided
       let videoUrl = null;
       if (chapterData.video_file && chapterData.video_file instanceof File && chapterData.video_file.size > 0) {
-        videoUrl = await StorageService.uploadFile(chapterData.video_file, 'videos');
+        console.log("Uploading video file:", {
+          name: chapterData.video_file.name,
+          size: chapterData.video_file.size,
+          type: chapterData.video_file.type
+        });
+        
+        // Pass explicit folder name and use the default bucket name
+        videoUrl = await StorageService.uploadFile(chapterData.video_file, "videos");
+        console.log("Video upload result URL:", videoUrl);
       }
       
       console.log("Adding chapter with data:", {

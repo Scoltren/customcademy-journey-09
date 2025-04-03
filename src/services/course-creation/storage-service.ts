@@ -23,26 +23,16 @@ export class StorageService {
       const fileName = `${Date.now()}-${Math.random().toString(36).substring(2, 15)}.${fileExtension}`;
       const filePath = path ? `${path}/${fileName}` : fileName;
       
-      console.log(`Uploading file to ${bucket}/${filePath}`, file);
+      // Debugging: Log the bucket name and file details
+      console.log(`Attempting to upload file to bucket: ${bucket}`, {
+        fileName,
+        filePath,
+        fileType: file.type,
+        fileSize: file.size
+      });
       
-      // Check if bucket exists before uploading
-      const { data: buckets, error: bucketError } = await supabase.storage
-        .listBuckets();
-      
-      if (bucketError) {
-        console.error("Error listing buckets:", bucketError);
-        toast.error('Error checking storage bucket');
-        return null;
-      }
-      
-      const bucketExists = buckets?.some(b => b.name === bucket);
-      if (!bucketExists) {
-        console.error(`Bucket '${bucket}' does not exist`);
-        toast.error(`Upload failed: couldn't find bucket '${bucket}'`);
-        return null;
-      }
-      
-      // Upload the file
+      // Upload the file directly without checking bucket existence
+      // This simplifies the process and relies on proper error handling
       const { data, error } = await supabase.storage
         .from(bucket)
         .upload(filePath, file, {
@@ -53,7 +43,13 @@ export class StorageService {
       
       if (error) {
         console.error("Error uploading file:", error);
-        toast.error('Upload Failed: ' + error.message);
+        
+        // Provide more specific error messages
+        if (error.message.includes("does not exist")) {
+          toast.error(`Upload failed: The bucket '${bucket}' doesn't exist. Please contact support.`);
+        } else {
+          toast.error('Upload Failed: ' + error.message);
+        }
         return null;
       }
       
