@@ -124,9 +124,17 @@ export const useQuiz = (quizIds: number[], categories: any[], user: any) => {
     // Logic for submitting an answer would go here
     console.log("Submitting answer:", selectedAnswerIds);
     
-    // For now, just move to the next question
-    handleNextQuestion(user, activeQuizIds, activeCategories);
-  }, [handleNextQuestion, user, activeQuizIds, activeCategories, selectedAnswerIds]);
+    // For now, just update the score based on selected answers
+    // This would normally be handled by the backend
+    const correctAnswers = currentAnswers.filter(answer => 
+      selectedAnswerIds.includes(answer.id) && answer.points > 0
+    );
+    
+    const totalPoints = correctAnswers.reduce((sum, answer) => sum + answer.points, 0);
+    updateScore(totalPoints);
+    
+    return totalPoints;
+  }, [selectedAnswerIds, currentAnswers, updateScore]);
   
   // Handle finishing the quiz
   const handleFinishQuiz = useCallback(async () => {

@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Card } from '@/components/ui/card';
 import { useAuth } from '@/contexts/AuthContext';
@@ -25,6 +25,8 @@ interface CategoryQuizViewProps {
 const CategoryQuizView: React.FC<CategoryQuizViewProps> = ({ quizIds, categories }) => {
   const navigate = useNavigate();
   const { user } = useAuth();
+  const [isSaving, setIsSaving] = useState(false);
+  const [showFeedback, setShowFeedback] = useState(false);
   
   // Log received props
   console.log("CategoryQuizView received props:", { quizIds, categories });
@@ -36,24 +38,26 @@ const CategoryQuizView: React.FC<CategoryQuizViewProps> = ({ quizIds, categories
     currentQuestion,
     currentAnswers,
     selectedAnswerIds,
-    showFeedback,
-    isSaving,
-    score,
-    totalQuestions,
-    currentQuizIndex,
-    totalQuizzes,
-    currentQuestionIndex,
-    isLastQuestion,
-    isLastQuiz,
+    isCompleted,
     currentCategory,
     handleSelectAnswer,
     handleSubmitAnswer,
     handleNextQuestion,
-    saveQuizResults
+    saveQuizResults,
+    updateScore
   } = useQuiz(quizIds, categories, user);
 
+  // Computed values
+  const score = quizState.score;
+  const totalQuestions = quizState.questions.length;
+  const currentQuizIndex = quizState.currentQuizIndex;
+  const totalQuizzes = quizIds.length;
+  const currentQuestionIndex = quizState.currentQuestionIndex;
+  const isLastQuestion = currentQuestionIndex === totalQuestions - 1;
+  const isLastQuiz = currentQuizIndex === totalQuizzes - 1;
+
   // Handle quiz completion
-  if (quizState === 'completed') {
+  if (isCompleted) {
     console.log("Quiz completed, redirecting to dashboard");
     return (
       <div className="container mx-auto p-4">
@@ -81,6 +85,25 @@ const CategoryQuizView: React.FC<CategoryQuizViewProps> = ({ quizIds, categories
     return <QuizNotAvailable onBack={() => navigate('/')} />;
   }
 
+  // Event handlers with corrected signatures
+  const handleSubmitAnswerClick = () => {
+    setShowFeedback(true);
+    setIsSaving(true);
+    // In a real application, you might make API calls here
+    setTimeout(() => {
+      setIsSaving(false);
+    }, 500);
+  };
+
+  const handleNextQuestionClick = () => {
+    setShowFeedback(false);
+    setIsSaving(true);
+    handleNextQuestion(user, quizIds, categories);
+    setTimeout(() => {
+      setIsSaving(false);
+    }, 500);
+  };
+
   // Render the quiz content with header and footer
   return (
     <>
@@ -107,8 +130,8 @@ const CategoryQuizView: React.FC<CategoryQuizViewProps> = ({ quizIds, categories
         isSaving={isSaving}
         isLastQuestion={isLastQuestion}
         isLastQuiz={isLastQuiz}
-        onSubmitAnswer={handleSubmitAnswer}
-        onNextQuestion={handleNextQuestion}
+        onSubmitAnswer={handleSubmitAnswerClick}
+        onNextQuestion={handleNextQuestionClick}
       />
     </>
   );
