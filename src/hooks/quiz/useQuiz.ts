@@ -6,13 +6,13 @@ import { useQuizResults } from './useQuizResults';
 import { useQuizDataLoader } from './useQuizDataLoader';
 import { useQuizNavigation } from './useQuizNavigation';
 
-export const useQuiz = (user: any, initialQuizIds: number[], initialCategories: any[]) => {
+export const useQuiz = (quizIds: number[], categories: any[], user: any) => {
   // Track initial load
   const initialLoadRef = useRef(false);
   
   // Create state to manage the dynamic quiz and category arrays
-  const [quizIds, setQuizIds] = useState<number[]>(initialQuizIds);
-  const [categories, setCategories] = useState<any[]>(initialCategories);
+  const [activeQuizIds, setActiveQuizIds] = useState<number[]>(quizIds);
+  const [activeCategories, setActiveCategories] = useState<any[]>(categories);
   
   // Initialize quiz state
   const {
@@ -67,11 +67,11 @@ export const useQuiz = (user: any, initialQuizIds: number[], initialCategories: 
   
   // Load quiz data on first render or when quizIds change
   useEffect(() => {
-    if (quizIds.length > 0 && !initialLoadRef.current && !isCompleted) {
+    if (activeQuizIds.length > 0 && !initialLoadRef.current && !isCompleted) {
       initialLoadRef.current = true;
       console.log("Initial quiz load triggered", {
-        quizIds: quizIds.map(id => id),
-        categories: categories.map(c => c?.name || 'unknown'),
+        quizIds: activeQuizIds.map(id => id),
+        categories: activeCategories.map(c => c?.name || 'unknown'),
         initialLoadRef: initialLoadRef.current
       });
       
@@ -85,18 +85,18 @@ export const useQuiz = (user: any, initialQuizIds: number[], initialCategories: 
       
       // Load quiz data with a slight delay to ensure state is set
       setTimeout(() => {
-        console.log("Loading initial quiz data with quizIds:", quizIds);
-        loadQuizData(quizIds, categories);
+        console.log("Loading initial quiz data with quizIds:", activeQuizIds);
+        loadQuizData(activeQuizIds, activeCategories);
       }, 100);
     }
-  }, [quizIds, categories, isCompleted, loadQuizData, setQuizState]);
+  }, [activeQuizIds, activeCategories, isCompleted, loadQuizData, setQuizState]);
   
   // Reset initial load ref when we receive new quiz IDs
   useEffect(() => {
-    if (initialQuizIds.length > 0) {
+    if (quizIds.length > 0) {
       // Update our quiz state with new quiz IDs
-      setQuizIds(initialQuizIds);
-      setCategories(initialCategories);
+      setActiveQuizIds(quizIds);
+      setActiveCategories(categories);
       
       // Reset the load state
       initialLoadRef.current = false;
@@ -113,51 +113,32 @@ export const useQuiz = (user: any, initialQuizIds: number[], initialCategories: 
       });
       
       console.log("Quiz IDs updated from props:", { 
-        initialQuizIds: initialQuizIds.map(id => id),
+        quizIds: quizIds.map(id => id),
         initialLoadRef: initialLoadRef.current
       });
     }
-  }, [initialQuizIds, initialCategories, setIsCompleted, setQuizState]);
+  }, [quizIds, categories, setIsCompleted, setQuizState]);
   
-  // Create a wrapped next question handler
-  const handleNextQuestionWrapper = useCallback(() => {
-    // After handling the next question, the quizIds array will be updated
-    handleNextQuestion(user, quizIds, categories).then(() => {
-      // If moving to the next quiz, update our local arrays
-      if (quizState.currentQuestionIndex === quizState.questions.length - 1) {
-        // Remove the completed quiz from the local arrays
-        setQuizIds(prev => prev.slice(1));
-        setCategories(prev => prev.slice(1));
-        
-        console.log("Updated quiz IDs after navigation:", {
-          newQuizIds: quizIds.slice(1).map(id => id)
-        });
-      }
-    });
-  }, [handleNextQuestion, user, quizIds, categories, quizState, setQuizIds, setCategories]);
+  // Handle submitting an answer
+  const handleSubmitAnswer = useCallback(() => {
+    // Logic for submitting an answer would go here
+    console.log("Submitting answer:", selectedAnswerIds);
+    
+    // For now, just move to the next question
+    handleNextQuestion(user, activeQuizIds, activeCategories);
+  }, [handleNextQuestion, user, activeQuizIds, activeCategories, selectedAnswerIds]);
   
-  // Create a wrapped save results function
-  const saveQuizResultsWrapper = useCallback(async () => {
-    if (quizIds.length === 0) {
-      console.error("Cannot save results - no quizzes available");
-      return false;
-    }
-    
-    const currentQuizId = quizIds[0]; // Always use the first quiz in the array
-    const currentCategoryId = categories[0]?.id;
-    
-    return await saveQuizResults(
-      currentQuizId,
-      quizState.score,
-      currentCategoryId
-    );
-  }, [saveQuizResults, quizIds, categories, quizState.score]);
+  // Handle finishing the quiz
+  const handleFinishQuiz = useCallback(async () => {
+    console.log("Finishing quiz");
+    setIsCompleted(true);
+  }, [setIsCompleted]);
   
   // Debug logging
   const logQuizState = useCallback(() => {
     console.log("Current Quiz State:", {
-      quizIds: quizIds.map(id => id),
-      categories: categories.map(c => c?.name || 'unknown'),
+      quizIds: activeQuizIds.map(id => id),
+      categories: activeCategories.map(c => c?.name || 'unknown'),
       currentQuizIndex: quizState.currentQuizIndex,
       currentQuestionIndex: quizState.currentQuestionIndex,
       score: quizState.score,
@@ -166,7 +147,7 @@ export const useQuiz = (user: any, initialQuizIds: number[], initialCategories: 
       isLoading,
       initialLoadRef: initialLoadRef.current
     });
-  }, [quizState, quizIds, categories, isCompleted, isLoading]);
+  }, [quizState, activeQuizIds, activeCategories, isCompleted, isLoading]);
 
   return {
     quizState,
@@ -176,8 +157,10 @@ export const useQuiz = (user: any, initialQuizIds: number[], initialCategories: 
     currentAnswers,
     selectedAnswerIds,
     handleSelectAnswer,
-    handleNextQuestion: handleNextQuestionWrapper,
-    saveQuizResults: saveQuizResultsWrapper,
+    handleNextQuestion,
+    handleSubmitAnswer,
+    handleFinishQuiz,
+    saveQuizResults,
     isCompleted,
     updateScore,
     logQuizState

@@ -3,7 +3,7 @@ import React from "react";
 import { CardContent } from "@/components/ui/card";
 import QuizAnswerOption from "./QuizAnswerOption";
 
-type QuizContentProps = {
+export type QuizContentProps = {
   answers: any[];
   selectedAnswerIds: number[];
   showFeedback: boolean;

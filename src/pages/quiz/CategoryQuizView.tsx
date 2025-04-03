@@ -35,10 +35,10 @@ const CategoryQuizView: React.FC<CategoryQuizViewProps> = ({ quizIds, categories
     isLoading,
     isCompleted,
     currentCategory,
-    handleAnswerSelect,
-    handleSubmitAnswer,
-    handleFinishQuiz
-  } = useQuiz(quizIds, categories, [], user);
+    handleSelectAnswer,
+    handleNextQuestion,
+    saveQuizResults
+  } = useQuiz(quizIds, categories, user);
 
   // Handle quiz completion
   if (isCompleted) {
@@ -67,19 +67,16 @@ const CategoryQuizView: React.FC<CategoryQuizViewProps> = ({ quizIds, categories
 
   // Handle no quiz available
   if (!currentQuestion) {
-    return <QuizNotAvailable onBack={() => navigate('/')} />;
+    return <QuizNotAvailable />;
   }
 
   // Render the quiz content
   return (
     <QuizContent
-      currentQuestion={currentQuestion}
-      currentAnswers={currentAnswers}
+      answers={currentAnswers}
       selectedAnswerIds={selectedAnswerIds}
-      categoryName={currentCategory?.name || "Quiz"}
-      onSelectAnswer={handleAnswerSelect}
-      onSubmitAnswer={handleSubmitAnswer}
-      onFinish={handleFinishQuiz}
+      showFeedback={false}
+      handleSelectAnswer={handleSelectAnswer}
     />
   );
 };
