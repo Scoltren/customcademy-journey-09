@@ -19,10 +19,10 @@ export class CourseService {
         thumbnailUrl = await StorageService.uploadFile(courseData.thumbnail, 'thumbnails');
       }
       
-      // Make sure difficulty_level is one of the accepted values
-      const validDifficultyLevels = ['beginner', 'intermediate', 'advanced'];
-      if (courseData.difficulty_level && !validDifficultyLevels.includes(courseData.difficulty_level)) {
-        throw new Error(`Invalid difficulty level: ${courseData.difficulty_level}. Must be one of: ${validDifficultyLevels.join(', ')}`);
+      // Make sure difficulty_level is one of the accepted values or null
+      const validDifficultyLevels = ['beginner', 'intermediate', 'advanced', null];
+      if (courseData.difficulty_level && !validDifficultyLevels.includes(courseData.difficulty_level as any)) {
+        throw new Error(`Invalid difficulty level: ${courseData.difficulty_level}. Must be one of: beginner, intermediate, advanced, or null`);
       }
       
       console.log("Creating course with data:", {
@@ -36,7 +36,7 @@ export class CourseService {
         .insert({
           title: courseData.title,
           description: courseData.description,
-          difficulty_level: courseData.difficulty_level || null,
+          difficulty_level: courseData.difficulty_level,
           category_id: courseData.category_id,
           course_time: courseData.course_time,
           price: courseData.price,

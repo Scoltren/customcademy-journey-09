@@ -16,7 +16,7 @@ export interface Category {
 export interface CourseFormData {
   title: string;
   description: string;
-  difficulty_level: string;
+  difficulty_level: string | null;
   category_id: number;
   course_time: number;
   price: number;

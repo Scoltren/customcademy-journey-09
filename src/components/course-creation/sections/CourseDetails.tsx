@@ -62,7 +62,7 @@ export const CourseDetails = ({ form }: CourseDetailsProps) => {
       }
     } else {
       setCategoryHasQuiz(false);
-      // Reset difficulty level to null if category doesn't have a quiz
+      // Set difficulty level to null if category doesn't have a quiz
       form.setValue('difficulty_level', null);
     }
   }, [categoryId, categories, form]);
@@ -77,9 +77,9 @@ export const CourseDetails = ({ form }: CourseDetailsProps) => {
             <FormLabel>Difficulty Level</FormLabel>
             <Select 
               onValueChange={field.onChange} 
-              defaultValue={field.value}
+              defaultValue={field.value?.toString()}
               disabled={!categoryHasQuiz}
-              value={field.value || undefined}
+              value={field.value?.toString() || undefined}
             >
               <FormControl>
                 <SelectTrigger>
