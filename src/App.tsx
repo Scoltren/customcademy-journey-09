@@ -33,6 +33,7 @@ function App() {
           <Route path="/confirm-email" element={<ConfirmEmail />} />
           <Route path="/create-course" element={<CreateCourse />} />
           <Route path="/select-interests" element={<SelectInterests />} />
+          <Route path="/category-quiz" element={<CategoryQuiz />} />
           <Route path="/quiz/:category" element={<CategoryQuiz />} />
           <Route path="*" element={<NotFound />} />
         </Routes>

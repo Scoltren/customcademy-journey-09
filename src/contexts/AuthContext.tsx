@@ -8,7 +8,7 @@ type AuthContextType = {
   session: Session | null;
   isLoading: boolean;
   login: (email: string, password: string) => Promise<void>;
-  signup: (email: string, password: string, username: string) => Promise<void>;
+  signup: (email: string, password: string, username: string) => Promise<{ user: User | null }>;
   logout: () => Promise<void>;
   isEnrolled: (courseId: string | number) => Promise<boolean>;
 };
@@ -52,12 +52,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const signup = async (email: string, password: string, username: string) => {
-    const { error } = await supabase.auth.signUp({
+    // Sign up the user with Supabase Auth
+    const { data, error } = await supabase.auth.signUp({
       email,
       password,
       options: {
         data: {
-          username,
+          username, // Store username in user metadata
         },
       },
     });
@@ -65,6 +66,34 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     if (error) {
       throw error;
     }
+
+    // After signup, check if the user was created successfully
+    // The trigger should automatically create a record in public.users
+    if (data.user) {
+      try {
+        // Wait a moment for the trigger to complete
+        await new Promise(resolve => setTimeout(resolve, 500));
+        
+        // Verify the user exists in the public.users table
+        const { data: userData, error: userError } = await supabase
+          .from('users')
+          .select('*')
+          .eq('auth_user_id', data.user.id)
+          .single();
+          
+        if (userError) {
+          console.error('Error verifying user creation:', userError);
+          throw new Error('Failed to complete user registration');
+        }
+        
+        console.log('User successfully created:', userData);
+      } catch (err) {
+        console.error('Error in signup verification:', err);
+        throw err;
+      }
+    }
+
+    return { user: data.user };
   };
 
   const logout = async () => {

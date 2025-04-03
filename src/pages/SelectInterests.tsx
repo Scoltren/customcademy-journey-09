@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -22,15 +21,47 @@ const SelectInterests = () => {
   const [selectedCategories, setSelectedCategories] = useState<number[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [userDataLoading, setUserDataLoading] = useState(true);
+  const [userVerified, setUserVerified] = useState(false);
 
   useEffect(() => {
     if (!user && !isLoading) {
       navigate('/login');
     } else if (user) {
-      fetchCategories();
-      fetchUserInterests();
+      verifyUserRecord();
     }
   }, [user, isLoading, navigate]);
+
+  const verifyUserRecord = async () => {
+    if (!user) return;
+    
+    try {
+      setUserDataLoading(true);
+      
+      const { data, error } = await supabase
+        .from('users')
+        .select('*')
+        .eq('auth_user_id', user.id)
+        .single();
+        
+      if (error) {
+        console.error('Error verifying user record:', error);
+        toast.error('Unable to verify your account. Please try again later.');
+        navigate('/');
+        return;
+      }
+      
+      setUserVerified(true);
+      fetchCategories();
+      fetchUserInterests();
+    } catch (err) {
+      console.error('Error in user verification:', err);
+      toast.error('Something went wrong. Please try again.');
+      navigate('/');
+    } finally {
+      setUserDataLoading(false);
+    }
+  };
 
   const fetchCategories = async () => {
     try {
@@ -82,7 +113,6 @@ const SelectInterests = () => {
       setSaving(true);
       console.log("Saving interests for user:", user.id);
       
-      // First, delete all existing user interests
       const { error: deleteError } = await supabase
         .from('user_interest_categories')
         .delete()
@@ -93,7 +123,6 @@ const SelectInterests = () => {
         throw deleteError;
       }
       
-      // Then, insert new interests if any are selected
       if (selectedCategories.length > 0) {
         const interestsToInsert = selectedCategories.map(categoryId => ({
           user_id: user.id,
@@ -114,20 +143,17 @@ const SelectInterests = () => {
       
       toast.success('Your interests have been updated');
       
-      // Check if any selected categories have quizzes attached
       const categoriesWithQuizzes = categories.filter(
         category => selectedCategories.includes(category.id) && category.quiz_id
       );
       
       if (categoriesWithQuizzes.length > 0) {
-        // Prepare data for quiz page
         const quizIds = categoriesWithQuizzes
           .map(category => category.quiz_id)
           .filter(id => id !== null) as number[];
           
         console.log("Navigating to quizzes with IDs:", quizIds, "categories:", categoriesWithQuizzes);
         
-        // Navigate to the quiz page with the quiz IDs
         navigate('/category-quiz', { 
           state: { 
             quizIds,
@@ -135,7 +161,6 @@ const SelectInterests = () => {
           }
         });
       } else {
-        // If no categories with quizzes, go to the home page
         navigate('/');
       }
     } catch (error: any) {
@@ -146,10 +171,19 @@ const SelectInterests = () => {
     }
   };
 
-  if (isLoading || (loading && !categories.length)) {
+  if (isLoading || userDataLoading) {
     return (
       <div className="flex items-center justify-center min-h-screen bg-gradient-to-b from-blue-950 to-slate-950">
         <Loader2 className="w-8 h-8 animate-spin text-white" />
+      </div>
+    );
+  }
+
+  if (!userVerified) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-screen bg-gradient-to-b from-blue-950 to-slate-950">
+        <Loader2 className="w-8 h-8 animate-spin text-white mb-4" />
+        <p className="text-white text-lg">Verifying your account...</p>
       </div>
     );
   }

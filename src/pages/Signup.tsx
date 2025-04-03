@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext";
@@ -7,8 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { toast } from "sonner";
-import { ArrowLeft } from "lucide-react";
-import { supabase } from "@/integrations/supabase/client";
+import { ArrowLeft, Loader2 } from "lucide-react";
 
 const Signup = () => {
   const [email, setEmail] = useState("");
@@ -102,22 +100,13 @@ const Signup = () => {
     try {
       setIsLoading(true);
       
-      // Call the signup function with username in the metadata
-      const { error } = await supabase.auth.signUp({
-        email,
-        password,
-        options: {
-          data: {
-            username,
-          },
-        }
-      });
-      
-      if (error) throw error;
+      // Use the updated signup method from AuthContext
+      await signup(email, password, username);
       
       toast.success("Account created! Please check your email for confirmation.");
-      // Navigate to confirm-email page with the email as state
-      navigate("/confirm-email", { state: { email, password } });
+      
+      // Navigate directly to select interests page after successful signup
+      navigate("/select-interests");
     } catch (error) {
       console.error("Signup error:", error);
       if (error instanceof Error) {
