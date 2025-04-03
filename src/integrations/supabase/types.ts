@@ -259,13 +259,6 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "fk_payments_course_id"
-            columns: ["course_id"]
-            isOneToOne: false
-            referencedRelation: "courses"
-            referencedColumns: ["id"]
-          },
-          {
             foreignKeyName: "payments_course_id_fkey"
             columns: ["course_id"]
             isOneToOne: false
@@ -376,18 +369,18 @@ export type Database = {
         }
         Relationships: [
           {
+            foreignKeyName: "subscribed_courses_course_id_fkey"
+            columns: ["course_id"]
+            isOneToOne: false
+            referencedRelation: "courses"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "subscribed_courses_user_id_fkey"
             columns: ["user_id"]
             isOneToOne: false
             referencedRelation: "users"
             referencedColumns: ["auth_user_id"]
-          },
-          {
-            foreignKeyName: "user_courses_course_id_fkey"
-            columns: ["course_id"]
-            isOneToOne: false
-            referencedRelation: "courses"
-            referencedColumns: ["id"]
           },
         ]
       }
@@ -441,13 +434,6 @@ export type Database = {
           user_id?: string
         }
         Relationships: [
-          {
-            foreignKeyName: "fk_user_chapter_progress_course_id"
-            columns: ["course_id"]
-            isOneToOne: false
-            referencedRelation: "courses"
-            referencedColumns: ["id"]
-          },
           {
             foreignKeyName: "user_chapter_progress_chapter_id_fkey"
             columns: ["chapter_id"]

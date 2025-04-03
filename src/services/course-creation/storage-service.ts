@@ -1,14 +1,13 @@
 
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { BUCKET_NAME } from "./types";
 
 export class StorageService {
   /**
    * Uploads a file to Supabase storage
    * @param file The file to upload
    * @param path Optional path within the bucket
-   * @param bucket The storage bucket name, defaults to BUCKET_NAME
+   * @param bucket The storage bucket name, defaults to 'course-media'
    * @returns URL of the uploaded file or null if upload failed
    */
   static async uploadFile(file: File, path?: string, bucket: string = 'course-media'): Promise<string | null> {
@@ -23,7 +22,9 @@ export class StorageService {
       const fileName = `${Date.now()}-${Math.random().toString(36).substring(2, 15)}.${fileExtension}`;
       const filePath = path ? `${path}/${fileName}` : fileName;
       
-      // Upload the file
+      console.log(`Uploading file to ${bucket}/${filePath}`);
+      
+      // Upload the file directly without checking if bucket exists
       const { data, error } = await supabase.storage
         .from(bucket)
         .upload(filePath, file, {
@@ -44,7 +45,6 @@ export class StorageService {
         .getPublicUrl(data.path);
       
       console.log("File uploaded successfully, URL:", publicUrlData.publicUrl);
-      toast.success('File uploaded successfully');
       return publicUrlData.publicUrl;
     } catch (error) {
       console.error("Unexpected error during file upload:", error);
