@@ -30,7 +30,8 @@ export const useQuizDataLoader = (stateManager: QuizStateManager) => {
 
   // Load the current quiz questions and first question's answers
   const loadQuizData = useCallback(async (quizIds: number[], categories: any[]) => {
-    if (!quizIds.length) {
+    // Check if we have any quizzes left
+    if (!quizIds || !quizIds.length) {
       console.log("DATA LOADER - No quiz IDs provided, completing quiz");
       setIsCompleted(true);
       return;

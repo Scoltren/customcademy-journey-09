@@ -26,9 +26,12 @@ const CategoryQuizView: React.FC<CategoryQuizViewProps> = ({ quizIds, categories
   const { user } = useAuth();
   const [isSaving, setIsSaving] = useState(false);
   const [showFeedback, setShowFeedback] = useState(false);
+  const [activeQuizIds, setActiveQuizIds] = useState<number[]>(quizIds);
+  const [activeCategories, setActiveCategories] = useState<Category[]>(categories);
   
   // Log received props
   console.log("CategoryQuizView received props:", { quizIds, categories });
+  console.log("CategoryQuizView active state:", { activeQuizIds, activeCategories });
   
   // Use the quiz hook to manage quiz state and logic
   const {
@@ -45,13 +48,13 @@ const CategoryQuizView: React.FC<CategoryQuizViewProps> = ({ quizIds, categories
     saveQuizResults,
     updateScore,
     handleFinishQuiz
-  } = useQuiz(quizIds, categories, user);
+  } = useQuiz(activeQuizIds, activeCategories, user);
 
   // Computed values
   const score = quizState.score;
   const totalQuestions = quizState.questions.length;
   const currentQuizIndex = 0; // Always 0 since we're shifting arrays
-  const totalQuizzes = quizIds.length;
+  const totalQuizzes = activeQuizIds.length;
   const currentQuestionIndex = quizState.currentQuestionIndex;
   const isLastQuestion = currentQuestionIndex === totalQuestions - 1;
   const isLastQuiz = totalQuizzes === 1;
@@ -99,8 +102,19 @@ const CategoryQuizView: React.FC<CategoryQuizViewProps> = ({ quizIds, categories
         // We don't navigate here as the isCompleted state will trigger the completion UI in useEffect
       });
     } else {
+      // For the last question of non-last quiz, update our active quiz arrays
+      if (isLastQuestion) {
+        // Remove the current quiz from the array
+        setActiveQuizIds(prev => [...prev.slice(1)]);
+        setActiveCategories(prev => [...prev.slice(1)]);
+        console.log("CategoryQuizView: Moving to next quiz by updating active arrays", {
+          newQuizIds: [...activeQuizIds.slice(1)],
+          newCategories: [...activeCategories.slice(1)]
+        });
+      }
+      
       // Otherwise proceed to next question/quiz
-      handleNextQuestion(user, quizIds, categories);
+      handleNextQuestion(user, activeQuizIds, activeCategories);
       setTimeout(() => {
         setIsSaving(false);
       }, 500);

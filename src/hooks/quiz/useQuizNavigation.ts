@@ -25,7 +25,6 @@ export const useQuizNavigation = (
     console.log("NAVIGATION - Beginning navigation process with state:", {
       currentQuestionIndex: quizState.currentQuestionIndex,
       totalQuestions: quizState.questions.length,
-      currentQuizIndex: quizState.currentQuizIndex,
       remainingQuizzes: quizIds.length,
       currentQuizId: quizIds[0], // Always use first quiz in array
     });
@@ -70,7 +69,7 @@ export const useQuizNavigation = (
         
         console.log("NAVIGATION - Remaining quizzes:", remainingQuizIds, "Length:", remainingQuizIds.length);
         
-        // Check if there are more quizzes
+        // Check if there are more quizzes - if not, redirect to homepage
         if (remainingQuizIds.length === 0) {
           console.log("NAVIGATION - All quizzes completed, redirecting to homepage");
           setIsCompleted(true);
