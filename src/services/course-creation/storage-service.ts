@@ -11,7 +11,7 @@ export class StorageService {
    * @param bucket The storage bucket name, defaults to BUCKET_NAME
    * @returns URL of the uploaded file or null if upload failed
    */
-  static async uploadFile(file: File, path?: string, bucket: string = BUCKET_NAME): Promise<string | null> {
+  static async uploadFile(file: File, path?: string, bucket: string = 'course-media'): Promise<string | null> {
     try {
       if (!file) {
         console.log("No file provided for upload");
