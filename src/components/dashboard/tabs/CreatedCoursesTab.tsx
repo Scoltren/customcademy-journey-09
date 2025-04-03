@@ -188,7 +188,7 @@ const CreatedCoursesTab = () => {
                 <Button 
                   variant="ghost" 
                   size="sm"
-                  onClick={() => navigate(`/courses/${course.id}`)}
+                  onClick={() => navigate(`/course/${course.id}`)}
                 >
                   View
                 </Button>

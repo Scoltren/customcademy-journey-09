@@ -1,8 +1,9 @@
 
-import React from 'react';
-import { Play, CheckCircle } from 'lucide-react';
+import React, { useState } from 'react';
+import { Play, CheckCircle, ChevronDown, ChevronUp } from 'lucide-react';
 import { Chapter } from '@/types/course';
 import { Button } from '@/components/ui/button';
+import { AspectRatio } from '@/components/ui/aspect-ratio';
 
 interface ChapterItemProps {
   chapter: Chapter;
@@ -17,6 +18,12 @@ const ChapterItem: React.FC<ChapterItemProps> = ({
   completedChapters,
   onMarkAsDone
 }) => {
+  const [showVideo, setShowVideo] = useState(false);
+  
+  const toggleVideo = () => {
+    setShowVideo(!showVideo);
+  };
+  
   return (
     <div className="p-6">
       <div className="flex items-start gap-4">
@@ -31,20 +38,40 @@ const ChapterItem: React.FC<ChapterItemProps> = ({
             {chapter.chapter_text}
           </p>
           
-          <div className="flex flex-wrap items-center justify-between gap-3 mt-4">
-            <div className="flex flex-wrap items-center gap-3">
-              {chapter.video_link && (
-                <a 
-                  href={chapter.video_link} 
-                  target="_blank" 
-                  rel="noopener noreferrer"
-                  className="flex items-center gap-2 text-blue-light hover:text-blue transition-colors"
-                >
+          {chapter.video_link && (
+            <div className="space-y-3">
+              <Button 
+                variant="outline" 
+                className="flex items-center gap-2 w-full justify-between"
+                onClick={toggleVideo}
+              >
+                <div className="flex items-center gap-2">
                   <Play size={16} />
                   <span>Watch Video Lecture</span>
-                </a>
-              )}
+                </div>
+                {showVideo ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
+              </Button>
               
+              {showVideo && (
+                <div className="rounded-md overflow-hidden border border-slate-700 bg-slate-900">
+                  <div className="w-full">
+                    <AspectRatio ratio={16/9}>
+                      <video 
+                        src={chapter.video_link} 
+                        controls
+                        className="w-full h-full object-contain"
+                      >
+                        Your browser does not support the video tag.
+                      </video>
+                    </AspectRatio>
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+          
+          <div className="flex flex-wrap items-center justify-between gap-3 mt-4">
+            <div className="flex flex-wrap items-center gap-3">
               {!completedChapters.includes(chapter.id) && (
                 <Button 
                   variant="outline" 

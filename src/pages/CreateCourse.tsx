@@ -28,7 +28,8 @@ const CreateCourse = () => {
   };
   
   const handlePublishCourse = () => {
-    navigate(`/courses/${courseId}`);
+    // Fix: Change from '/courses/${courseId}' to '/course/${courseId}'
+    navigate(`/course/${courseId}`);
   };
   
   if (isLoading) {
