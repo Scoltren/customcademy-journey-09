@@ -64,7 +64,6 @@ const SelectInterests = () => {
       setSelectedCategories(categoryIds);
     } catch (error: any) {
       console.error('Error fetching user interests:', error.message);
-      toast.error('Failed to load your current interests');
     }
   };
 
@@ -81,6 +80,7 @@ const SelectInterests = () => {
     
     try {
       setSaving(true);
+      console.log("Saving interests for user:", user.id);
       
       // First, delete all existing user interests
       const { error: deleteError } = await supabase
@@ -88,7 +88,10 @@ const SelectInterests = () => {
         .delete()
         .eq('user_id', user.id);
       
-      if (deleteError) throw deleteError;
+      if (deleteError) {
+        console.error("Error deleting existing interests:", deleteError);
+        throw deleteError;
+      }
       
       // Then, insert new interests if any are selected
       if (selectedCategories.length > 0) {
@@ -97,11 +100,16 @@ const SelectInterests = () => {
           category_id: categoryId
         }));
         
+        console.log("Inserting interests:", interestsToInsert);
+        
         const { error: insertError } = await supabase
           .from('user_interest_categories')
           .insert(interestsToInsert);
         
-        if (insertError) throw insertError;
+        if (insertError) {
+          console.error("Error inserting interests:", insertError);
+          throw insertError;
+        }
       }
       
       toast.success('Your interests have been updated');

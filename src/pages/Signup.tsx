@@ -8,6 +8,7 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { toast } from "sonner";
 import { ArrowLeft } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
 
 const Signup = () => {
   const [email, setEmail] = useState("");
@@ -100,7 +101,20 @@ const Signup = () => {
     
     try {
       setIsLoading(true);
-      await signup(email, password, username);
+      
+      // Call the signup function with username in the metadata
+      const { error } = await supabase.auth.signUp({
+        email,
+        password,
+        options: {
+          data: {
+            username,
+          },
+        }
+      });
+      
+      if (error) throw error;
+      
       toast.success("Account created! Please check your email for confirmation.");
       // Navigate to confirm-email page with the email as state
       navigate("/confirm-email", { state: { email, password } });
