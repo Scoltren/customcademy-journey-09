@@ -48,7 +48,7 @@ const ProfileTab = ({ userInterests, handleEditInterests }: ProfileTabProps) => 
               setIsEditing(false);
               fetchUserProfile(); // Reset form
             }}
-            onSave={handleSaveProfile}
+            onSave={() => handleSaveProfile(profileData)} // Fix: Pass profileData to handleSaveProfile
           />
         </div>
       </div>

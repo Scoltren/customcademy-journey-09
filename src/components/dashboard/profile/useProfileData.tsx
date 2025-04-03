@@ -5,7 +5,8 @@ import { useFetchProfile } from '@/hooks/profile/useFetchProfile';
 import { useProfileUpdate } from '@/hooks/profile/useProfileUpdate';
 import { UserProfile } from '@/types/profile';
 
-export { UserProfile };
+// Change from export { UserProfile } to export type { UserProfile }
+export type { UserProfile };
 
 export const useProfileData = () => {
   const { user } = useAuth();
