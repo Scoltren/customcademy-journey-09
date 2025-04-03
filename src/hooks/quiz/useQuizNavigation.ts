@@ -22,8 +22,9 @@ export const useQuizNavigation = (
     console.log("NAVIGATION - Beginning navigation process with state:", {
       currentQuestionIndex: quizState.currentQuestionIndex,
       totalQuestions: quizState.questions.length,
+      currentQuizIndex: quizState.currentQuizIndex,
       remainingQuizzes: quizIds.length,
-      currentQuizId: quizIds[0], // Always use the first quiz in the array
+      currentQuizId: quizIds[quizState.currentQuizIndex], 
     });
     
     try {
@@ -48,8 +49,8 @@ export const useQuizNavigation = (
         
       } else {
         // Current quiz is finished, save results first
-        const currentQuizId = quizIds[0]; // Always use the first quiz
-        const currentCategory = categories[0]; // Use the category matching the first quiz
+        const currentQuizId = quizIds[quizState.currentQuizIndex];
+        const currentCategory = categories[quizState.currentQuizIndex];
         
         console.log(`NAVIGATION - Saving quiz ${currentQuizId} results with score ${quizState.score}, category: ${currentCategory?.name}`);
         
@@ -60,41 +61,36 @@ export const useQuizNavigation = (
           currentCategory?.id
         );
         
-        // Remove the completed quiz from the array
-        const updatedQuizIds = [...quizIds.slice(1)];
-        const updatedCategories = [...categories.slice(1)];
-        
-        console.log(`NAVIGATION - Current quiz finished. Removing quiz ID ${currentQuizId} from list`);
-        console.log(`NAVIGATION - Remaining quizzes: ${updatedQuizIds.length}`);
-        
         // Check if there are more quizzes
-        if (updatedQuizIds.length === 0) {
+        const nextQuizIndex = quizState.currentQuizIndex + 1;
+        
+        if (nextQuizIndex >= quizIds.length) {
           console.log("NAVIGATION - All quizzes completed, no more quizzes available");
           setIsCompleted(true);
           return;
         }
+        
+        console.log(`NAVIGATION - Moving to next quiz at index ${nextQuizIndex}`);
         
         // Reset state for the next quiz
         setCurrentQuestion(null);
         setCurrentAnswers([]);
         setSelectedAnswerIds([]);
         
-        // Reset quiz state completely for the next quiz
-        console.log(`NAVIGATION - Resetting state before loading next quiz ID: ${updatedQuizIds[0]}`);
-        
+        // Update quiz state with next quiz index
         setQuizState({
-          currentQuizIndex: 0, // Always stay at index 0
+          currentQuizIndex: nextQuizIndex,
           currentQuestionIndex: 0,
           questions: [],
-          score: 0
+          score: 0 // Reset score for the next quiz
         });
         
         // Force the component to re-render before loading the next quiz
         setTimeout(() => {
-          console.log("NAVIGATION - Now loading quiz data for next quiz. Updated Quiz IDs:", updatedQuizIds);
+          console.log("NAVIGATION - Now loading quiz data for next quiz. Updated Quiz index:", nextQuizIndex);
           
           // Load the next quiz data with the updated quiz ID array
-          loadQuizData(updatedQuizIds, updatedCategories)
+          loadQuizData(quizIds, categories)
             .catch(error => {
               console.error("NAVIGATION - Error loading next quiz:", error);
               toast.error("Failed to load next quiz");

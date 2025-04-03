@@ -18,6 +18,7 @@ export interface QuizStateManager {
 
 export const useQuizDataLoader = (stateManager: QuizStateManager) => {
   const {
+    quizState,
     setQuizState, 
     setIsLoading, 
     setCurrentQuestion, 
@@ -39,14 +40,15 @@ export const useQuizDataLoader = (stateManager: QuizStateManager) => {
     setIsLoading(true);
     
     try {
-      // Always use the first quiz in the array
-      const currentQuizId = quizIds[0];
+      // Use the quiz at the current quiz index
+      const currentQuizIndex = quizState.currentQuizIndex;
+      const currentQuizId = quizIds[currentQuizIndex];
       
-      console.log(`DATA LOADER - Loading quiz 1/${quizIds.length}: Quiz ID ${currentQuizId}`);
+      console.log(`DATA LOADER - Loading quiz ${currentQuizIndex + 1}/${quizIds.length}: Quiz ID ${currentQuizId}`);
       console.log(`DATA LOADER - Available quiz IDs: ${JSON.stringify(quizIds)}`);
       
-      // Set current category to match the first quiz
-      const currentCategory = categories[0] || null;
+      // Set current category to match the current quiz
+      const currentCategory = categories[currentQuizIndex] || null;
       setCurrentCategory(currentCategory);
       console.log(`DATA LOADER - Set current category to:`, currentCategory);
       
@@ -66,29 +68,29 @@ export const useQuizDataLoader = (stateManager: QuizStateManager) => {
         toast.error("No questions available for this quiz");
         console.log(`DATA LOADER - No questions found for quiz ID ${currentQuizId}`);
         
-        // Remove the quiz without questions and try the next one
-        const updatedQuizIds = [...quizIds.slice(1)];
-        const updatedCategories = [...categories.slice(1)];
+        // Update the quiz index and try the next quiz if available
+        const nextQuizIndex = currentQuizIndex + 1;
         
-        if (updatedQuizIds.length === 0) {
+        if (nextQuizIndex >= quizIds.length) {
           setIsCompleted(true);
           setIsLoading(false);
           return;
         }
         
-        // Reset state and try the next quiz
-        setQuizState({
-          currentQuizIndex: 0,
+        // Update the quiz index and try again
+        setQuizState(prev => ({
+          ...prev,
+          currentQuizIndex: nextQuizIndex,
           currentQuestionIndex: 0,
           questions: [],
           score: 0
-        });
+        }));
         
         setIsLoading(false);
         
         // Try to load the next quiz with a small delay
         setTimeout(() => {
-          loadQuizData(updatedQuizIds, updatedCategories);
+          loadQuizData(quizIds, categories);
         }, 300);
         
         return;
@@ -97,12 +99,11 @@ export const useQuizDataLoader = (stateManager: QuizStateManager) => {
       console.log(`DATA LOADER - Loaded ${questions.length} questions for quiz ${currentQuizId}`);
       
       // Update quiz state with questions and reset the question index
-      setQuizState({
-        currentQuizIndex: 0, // Always stay at index 0
-        currentQuestionIndex: 0,
+      setQuizState(prev => ({
+        ...prev,
         questions: questions,
-        score: 0 // Reset score for new quiz
-      });
+        currentQuestionIndex: 0
+      }));
       
       console.log(`DATA LOADER - Setting current question to:`, questions[0]);
       setCurrentQuestion(questions[0]);
@@ -120,6 +121,7 @@ export const useQuizDataLoader = (stateManager: QuizStateManager) => {
       setIsLoading(false);
     }
   }, [
+    quizState,
     setQuizState, 
     setIsLoading, 
     setCurrentQuestion, 

@@ -5,6 +5,7 @@ import { useCurrentAnswers } from './answers/useCurrentAnswers';
 import { useQuizResults } from './useQuizResults';
 import { useQuizDataLoader } from './useQuizDataLoader';
 import { useQuizNavigation } from './useQuizNavigation';
+import { toast } from 'sonner';
 
 export const useQuiz = (quizIds: number[], categories: any[], user: any) => {
   // Track initial load
@@ -131,6 +132,7 @@ export const useQuiz = (quizIds: number[], categories: any[], user: any) => {
     );
     
     const totalPoints = correctAnswers.reduce((sum, answer) => sum + answer.points, 0);
+    console.log(`Points earned: ${totalPoints} from ${correctAnswers.length} correct answers`);
     updateScore(totalPoints);
     
     return totalPoints;
@@ -139,8 +141,27 @@ export const useQuiz = (quizIds: number[], categories: any[], user: any) => {
   // Handle finishing the quiz
   const handleFinishQuiz = useCallback(async () => {
     console.log("Finishing quiz");
-    setIsCompleted(true);
-  }, [setIsCompleted]);
+    
+    try {
+      // Save results for the last quiz
+      if (user && activeQuizIds.length > 0) {
+        const currentQuizId = activeQuizIds[quizState.currentQuizIndex];
+        const currentCategoryId = activeCategories[quizState.currentQuizIndex]?.id;
+        
+        console.log(`Saving final quiz results for quiz ${currentQuizId}`);
+        await saveQuizResults(currentQuizId, quizState.score, currentCategoryId);
+        toast.success("Quiz results saved successfully!");
+      }
+      
+      // Mark as completed
+      setIsCompleted(true);
+      return true;
+    } catch (error) {
+      console.error("Error finishing quiz:", error);
+      toast.error("Failed to save quiz results");
+      return false;
+    }
+  }, [quizState, activeQuizIds, activeCategories, user, saveQuizResults, setIsCompleted]);
   
   // Debug logging
   const logQuizState = useCallback(() => {

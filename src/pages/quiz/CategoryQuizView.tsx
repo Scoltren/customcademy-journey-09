@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Card } from '@/components/ui/card';
@@ -9,6 +8,7 @@ import QuizHeader from '@/components/quiz/QuizHeader';
 import QuizFooter from '@/components/quiz/QuizFooter';
 import QuizLoading from '@/components/quiz/QuizLoading';
 import QuizNotAvailable from '@/components/quiz/QuizNotAvailable';
+import { toast } from 'sonner';
 
 interface Category {
   id: number;
@@ -44,7 +44,8 @@ const CategoryQuizView: React.FC<CategoryQuizViewProps> = ({ quizIds, categories
     handleSubmitAnswer,
     handleNextQuestion,
     saveQuizResults,
-    updateScore
+    updateScore,
+    handleFinishQuiz
   } = useQuiz(quizIds, categories, user);
 
   // Computed values
@@ -89,7 +90,15 @@ const CategoryQuizView: React.FC<CategoryQuizViewProps> = ({ quizIds, categories
   const handleSubmitAnswerClick = () => {
     setShowFeedback(true);
     setIsSaving(true);
-    // In a real application, you might make API calls here
+    
+    // Call handleSubmitAnswer to calculate points and update score
+    const points = handleSubmitAnswer();
+    
+    // Add a toast message showing points earned
+    if (points > 0) {
+      toast.success(`You earned ${points} points!`);
+    }
+    
     setTimeout(() => {
       setIsSaving(false);
     }, 500);
@@ -98,10 +107,21 @@ const CategoryQuizView: React.FC<CategoryQuizViewProps> = ({ quizIds, categories
   const handleNextQuestionClick = () => {
     setShowFeedback(false);
     setIsSaving(true);
-    handleNextQuestion(user, quizIds, categories);
-    setTimeout(() => {
-      setIsSaving(false);
-    }, 500);
+    
+    // Check if this is the last question of the last quiz
+    if (isLastQuestion && isLastQuiz) {
+      // Call handleFinishQuiz instead of handleNextQuestion
+      handleFinishQuiz().then(() => {
+        setIsSaving(false);
+        // We don't navigate here as the isCompleted state will trigger the completion UI
+      });
+    } else {
+      // Otherwise proceed to next question/quiz
+      handleNextQuestion(user, quizIds, categories);
+      setTimeout(() => {
+        setIsSaving(false);
+      }, 500);
+    }
   };
 
   // Render the quiz content with header and footer
