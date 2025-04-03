@@ -13,6 +13,7 @@ import {
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { User } from "lucide-react";
+import { toast } from "sonner";
 
 interface UserMenuProps {
   user: any;
@@ -30,7 +31,10 @@ const UserMenu = ({ user }: UserMenuProps) => {
   useEffect(() => {
     const fetchUserProfile = async () => {
       try {
-        if (!user?.id) return;
+        if (!user?.id) {
+          setLoading(false);
+          return;
+        }
         
         const { data, error } = await supabase
           .from('users')
@@ -38,7 +42,10 @@ const UserMenu = ({ user }: UserMenuProps) => {
           .eq('auth_user_id', user.id)
           .single();
         
-        if (data && data.profile_picture) {
+        if (error) {
+          console.error('Error fetching profile picture:', error);
+          toast.error('Failed to load profile picture');
+        } else if (data && data.profile_picture) {
           setProfilePicture(data.profile_picture);
         }
       } catch (error) {
@@ -58,8 +65,10 @@ const UserMenu = ({ user }: UserMenuProps) => {
     try {
       await logout();
       navigate("/");
+      toast.success("Logged out successfully");
     } catch (error) {
-      // Error handled silently
+      console.error("Error logging out:", error);
+      toast.error("Failed to log out");
     }
   };
 
@@ -89,6 +98,10 @@ const UserMenu = ({ user }: UserMenuProps) => {
         <DropdownMenuItem onClick={() => navigate("/dashboard")}>
           Dashboard
         </DropdownMenuItem>
+        <DropdownMenuItem onClick={() => navigate("/profile")}>
+          Profile
+        </DropdownMenuItem>
+        <DropdownMenuSeparator />
         <DropdownMenuItem onClick={handleLogout}>
           Logout
         </DropdownMenuItem>
