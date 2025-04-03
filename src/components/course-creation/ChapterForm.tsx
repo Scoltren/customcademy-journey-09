@@ -89,6 +89,12 @@ export const ChapterForm = ({ courseId, onPublishCourse }: ChapterFormProps) => 
         video_file: videoFile
       };
       
+      console.log("Sending chapter data with video:", videoFile ? {
+        name: videoFile.name,
+        size: videoFile.size,
+        type: videoFile.type
+      } : 'No video');
+      
       const chapter = await CourseCreationService.addChapter(chapterData, courseId);
       
       setChapters([...chapters, chapter]);

@@ -83,6 +83,30 @@ export class ChapterService {
   }
 
   /**
+   * Deletes a chapter
+   * @param chapterId The ID of the chapter to delete
+   */
+  static async deleteChapter(chapterId: number) {
+    try {
+      const { error } = await supabase.from('chapters')
+        .delete()
+        .eq('id', chapterId);
+      
+      if (error) {
+        console.error('Error deleting chapter:', error);
+        toast.error(`Failed to delete chapter: ${error.message}`);
+        throw error;
+      }
+      
+      toast.success('Chapter deleted successfully');
+    } catch (error) {
+      console.error('Chapter deletion failed:', error);
+      toast.error(error instanceof Error ? error.message : 'Failed to delete chapter');
+      throw error;
+    }
+  }
+
+  /**
    * Updates an existing chapter
    * @param chapterId The ID of the chapter to update
    * @param chapterData The updated chapter data
@@ -94,6 +118,7 @@ export class ChapterService {
       let videoUrl = null;
       if (chapterData.video_file && chapterData.video_file instanceof File && chapterData.video_file.size > 0) {
         videoUrl = await StorageService.uploadFile(chapterData.video_file, 'videos');
+        console.log("Updated video URL:", videoUrl);
       }
       
       // Prepare update data
@@ -125,30 +150,6 @@ export class ChapterService {
     } catch (error) {
       console.error('Chapter update failed:', error);
       toast.error(error instanceof Error ? error.message : 'Failed to update chapter');
-      throw error;
-    }
-  }
-
-  /**
-   * Deletes a chapter
-   * @param chapterId The ID of the chapter to delete
-   */
-  static async deleteChapter(chapterId: number) {
-    try {
-      const { error } = await supabase.from('chapters')
-        .delete()
-        .eq('id', chapterId);
-      
-      if (error) {
-        console.error('Error deleting chapter:', error);
-        toast.error(`Failed to delete chapter: ${error.message}`);
-        throw error;
-      }
-      
-      toast.success('Chapter deleted successfully');
-    } catch (error) {
-      console.error('Chapter deletion failed:', error);
-      toast.error(error instanceof Error ? error.message : 'Failed to delete chapter');
       throw error;
     }
   }
