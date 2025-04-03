@@ -6,7 +6,7 @@ import { toast } from 'sonner';
 import { Course } from '@/types/course';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { PaymentService } from '@/services/PaymentService';
 import { Dialog, DialogContent, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 
@@ -21,6 +21,7 @@ const CourseHeader: React.FC<CourseHeaderProps> = ({ course }) => {
   const [isProcessingPayment, setIsProcessingPayment] = useState<boolean>(false);
   const [isLoadingDialog, setIsLoadingDialog] = useState<boolean>(false);
   const navigate = useNavigate();
+  const location = useLocation();
 
   useEffect(() => {
     const checkEnrollment = async () => {
@@ -32,6 +33,34 @@ const CourseHeader: React.FC<CourseHeaderProps> = ({ course }) => {
 
     checkEnrollment();
   }, [user, course.id, isEnrolled]);
+
+  // Check for payment success query parameter
+  useEffect(() => {
+    const searchParams = new URLSearchParams(location.search);
+    const paymentSuccess = searchParams.get('payment_success');
+    const paymentCancelled = searchParams.get('payment_cancelled');
+    
+    if (paymentSuccess === 'true') {
+      // Clear the query parameter by replacing the URL
+      const newUrl = location.pathname;
+      window.history.replaceState({}, '', newUrl);
+      
+      // Show success message
+      toast.success('Payment successful! You are now enrolled in this course.');
+      
+      // Refresh enrollment status
+      if (user && course.id) {
+        isEnrolled(course.id).then(status => setEnrollmentStatus(status));
+      }
+    } else if (paymentCancelled === 'true') {
+      // Clear the query parameter
+      const newUrl = location.pathname;
+      window.history.replaceState({}, '', newUrl);
+      
+      // Show cancelled message
+      toast.info('Payment was cancelled.');
+    }
+  }, [location, user, course.id, isEnrolled]);
 
   const handleFreeEnrollment = async () => {
     if (!user) {

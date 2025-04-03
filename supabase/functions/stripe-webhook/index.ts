@@ -76,44 +76,27 @@ serve(async (req) => {
             console.error('Failed to record payment:', await paymentResponse.text());
           }
           
-          // Enroll user in the course
-          console.log('Checking if user is already enrolled');
-          const enrollmentCheckResponse = await fetch(
-            `${supabaseUrl}/rest/v1/subscribed_courses?user_id=eq.${userId}&course_id=eq.${courseId}`,
-            {
-              headers: {
-                'Authorization': `Bearer ${supabaseKey}`,
-                'apikey': supabaseKey,
-              },
-            }
-          );
+          // Enroll user in the course - ALWAYS create this record regardless of existing enrollment
+          console.log('Creating user enrollment record for course');
+          const enrollResponse = await fetch(`${supabaseUrl}/rest/v1/subscribed_courses`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${supabaseKey}`,
+              'apikey': supabaseKey,
+              'Prefer': 'resolution=merge-duplicates', // Handle potential duplicates with an upsert approach
+            },
+            body: JSON.stringify({
+              user_id: userId,
+              course_id: parseInt(courseId),
+              progress: 0,
+            }),
+          });
           
-          const enrollmentData = await enrollmentCheckResponse.json();
-          
-          if (enrollmentData.length === 0) {
-            console.log('User not enrolled yet, creating enrollment');
-            const enrollResponse = await fetch(`${supabaseUrl}/rest/v1/subscribed_courses`, {
-              method: 'POST',
-              headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${supabaseKey}`,
-                'apikey': supabaseKey,
-                'Prefer': 'return=minimal',
-              },
-              body: JSON.stringify({
-                user_id: userId,
-                course_id: parseInt(courseId),
-                progress: 0,
-              }),
-            });
-            
-            if (!enrollResponse.ok) {
-              console.error('Failed to enroll user:', await enrollResponse.text());
-            } else {
-              console.log('Successfully enrolled user in course');
-            }
+          if (!enrollResponse.ok) {
+            console.error('Failed to enroll user:', await enrollResponse.text());
           } else {
-            console.log('User already enrolled in course');
+            console.log('Successfully enrolled user in course');
           }
         }
         break;

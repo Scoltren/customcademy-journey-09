@@ -42,8 +42,8 @@ serve(async (req) => {
         },
       ],
       mode: 'payment',
-      success_url: `${req.headers.get('origin')}/course/${courseId}`,
-      cancel_url: `${req.headers.get('origin')}/course/${courseId}`,
+      success_url: `${req.headers.get('origin')}/course/${courseId}?payment_success=true`,
+      cancel_url: `${req.headers.get('origin')}/course/${courseId}?payment_cancelled=true`,
       metadata: {
         userId,
         courseId: courseId.toString(),
