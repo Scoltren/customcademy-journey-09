@@ -8,6 +8,7 @@ import Footer from '@/components/Footer';
 import { PaymentService } from '@/services/PaymentService';
 import { toast } from 'sonner';
 import { useAuth } from '@/contexts/AuthContext';
+import { supabase } from '@/integrations/supabase/client';
 
 const PaymentSuccess = () => {
   const [isVerifying, setIsVerifying] = useState(true);
@@ -39,8 +40,40 @@ const PaymentSuccess = () => {
         const result = await PaymentService.verifyPaymentStatus({ sessionId });
         
         if (result.status === 'paid') {
-          toast.success('Payment successful! You have been enrolled in the course.');
-          setCourseId(courseIdParam || result.courseId);
+          // Get the course ID, either from URL params or from the verification result
+          const finalCourseId = courseIdParam || result.courseId;
+          setCourseId(finalCourseId);
+          
+          // Ensure the user is enrolled in the course
+          if (finalCourseId && user.id) {
+            // Check if already enrolled
+            const { data: existingEnrollment } = await supabase
+              .from('subscribed_courses')
+              .select('*')
+              .eq('user_id', user.id)
+              .eq('course_id', finalCourseId)
+              .maybeSingle();
+              
+            // If not enrolled, create enrollment
+            if (!existingEnrollment) {
+              const { error: enrollError } = await supabase
+                .from('subscribed_courses')
+                .insert({
+                  user_id: user.id,
+                  course_id: parseInt(finalCourseId),
+                  progress: 0
+                });
+                
+              if (enrollError) {
+                console.error('Error enrolling in course:', enrollError);
+                toast.error('Failed to enroll in the course. Please contact support.');
+              } else {
+                toast.success('Payment successful! You have been enrolled in the course.');
+              }
+            } else {
+              toast.success('Payment successful! You are enrolled in the course.');
+            }
+          }
         } else {
           toast.warning('Payment is still processing. You will be enrolled once payment is confirmed.');
         }

@@ -78,15 +78,7 @@ function App() {
               <Footer />
             </>
           } />
-          <Route path="/payment/success" element={
-            <>
-              <Navbar />
-              <main className="flex-grow pt-16">
-                <PaymentSuccess />
-              </main>
-              <Footer />
-            </>
-          } />
+          <Route path="/payment/success" element={<PaymentSuccess />} />
           <Route path="/confirm-email" element={
             <>
               <Navbar />
