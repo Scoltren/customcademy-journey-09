@@ -20,9 +20,14 @@ const ConfirmEmail = () => {
   useEffect(() => {
     // If user is already logged in, redirect to the interests page
     if (user) {
+      console.log("User is already logged in, redirecting to select interests");
       navigate("/select-interests");
+    } else if (!email) {
+      // If there's no email in the state, redirect to login
+      console.log("No email in state, redirecting to login");
+      navigate("/login");
     }
-  }, [user, navigate]);
+  }, [user, navigate, email]);
 
   useEffect(() => {
     // Set up a polling mechanism to check auth status
@@ -30,6 +35,8 @@ const ConfirmEmail = () => {
     let countdownInterval: NodeJS.Timeout;
     
     if (!user && email) {
+      console.log("Setting up polling for email confirmation check");
+      
       // Poll every 5 seconds to check if email was confirmed
       interval = setInterval(async () => {
         try {
@@ -43,6 +50,7 @@ const ConfirmEmail = () => {
             clearInterval(interval);
             clearInterval(countdownInterval);
             toast.success("Email confirmed successfully!");
+            console.log("Email confirmed, redirecting to select interests");
             navigate("/select-interests");
           }
         } catch (error) {

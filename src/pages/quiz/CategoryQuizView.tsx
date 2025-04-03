@@ -67,7 +67,7 @@ const CategoryQuizView: React.FC<CategoryQuizViewProps> = ({ quizIds, categories
 
   // Handle no quiz available
   if (!currentQuestion) {
-    return <QuizNotAvailable />;
+    return <QuizNotAvailable onBack={() => navigate('/')} />;
   }
 
   // Render the quiz content

@@ -105,8 +105,8 @@ const Signup = () => {
       
       toast.success("Account created! Please check your email for confirmation.");
       
-      // Navigate directly to select interests page after successful signup
-      navigate("/select-interests");
+      // Navigate to confirm email page with email as state
+      navigate("/confirm-email", { state: { email, password } });
     } catch (error) {
       console.error("Signup error:", error);
       if (error instanceof Error) {
@@ -239,7 +239,12 @@ const Signup = () => {
                 className="w-full h-11 bg-blue-600 text-white hover:bg-blue-700 transition-all duration-300"
                 disabled={isLoading}
               >
-                {isLoading ? "Creating Account..." : "Sign Up"}
+                {isLoading ? (
+                  <div className="flex items-center justify-center">
+                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                    Creating Account...
+                  </div>
+                ) : "Sign Up"}
               </Button>
             </form>
           </CardContent>

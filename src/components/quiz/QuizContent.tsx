@@ -8,6 +8,11 @@ export type QuizContentProps = {
   selectedAnswerIds: number[];
   showFeedback: boolean;
   handleSelectAnswer: (answerId: number) => void;
+  currentQuestion?: any; // Added this prop
+  categoryName?: string; // Added this prop
+  onSelectAnswer?: (answerId: number) => void; // Added for compatibility
+  onSubmitAnswer?: () => void; // Added for compatibility
+  onFinish?: () => void; // Added for compatibility
 };
 
 const QuizContent: React.FC<QuizContentProps> = ({
@@ -15,7 +20,17 @@ const QuizContent: React.FC<QuizContentProps> = ({
   selectedAnswerIds,
   showFeedback,
   handleSelectAnswer,
+  onSelectAnswer, // For compatibility with other components
 }) => {
+  // Use the provided callback or the default one
+  const handleSelect = (answerId: number) => {
+    if (onSelectAnswer) {
+      onSelectAnswer(answerId);
+    } else {
+      handleSelectAnswer(answerId);
+    }
+  };
+
   return (
     <CardContent className="py-6">
       <div className="space-y-3">
@@ -28,7 +43,7 @@ const QuizContent: React.FC<QuizContentProps> = ({
             isSelected={selectedAnswerIds.includes(answer.id)}
             isCorrect={answer.points > 0}
             showFeedback={showFeedback}
-            onSelect={handleSelectAnswer}
+            onSelect={handleSelect}
           />
         ))}
       </div>

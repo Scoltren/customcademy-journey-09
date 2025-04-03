@@ -8,7 +8,7 @@ type AuthContextType = {
   session: Session | null;
   isLoading: boolean;
   login: (email: string, password: string) => Promise<void>;
-  signup: (email: string, password: string, username: string) => Promise<{ user: User | null }>;
+  signup: (email: string, password: string, username: string) => Promise<{ user: User | null, needsEmailConfirmation: boolean }>;
   logout: () => Promise<void>;
   isEnrolled: (courseId: string | number) => Promise<boolean>;
 };
@@ -67,6 +67,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       throw error;
     }
 
+    // Check if the user needs email confirmation
+    const needsEmailConfirmation = !data?.session;
+
     // After signup, check if the user was created successfully
     // The trigger should automatically create a record in public.users
     if (data.user) {
@@ -93,7 +96,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       }
     }
 
-    return { user: data.user };
+    return { user: data.user, needsEmailConfirmation };
   };
 
   const logout = async () => {
