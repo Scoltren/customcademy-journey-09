@@ -8,7 +8,6 @@ import QuizHeader from '@/components/quiz/QuizHeader';
 import QuizFooter from '@/components/quiz/QuizFooter';
 import QuizLoading from '@/components/quiz/QuizLoading';
 import QuizNotAvailable from '@/components/quiz/QuizNotAvailable';
-import { toast } from 'sonner';
 
 interface Category {
   id: number;
@@ -51,11 +50,11 @@ const CategoryQuizView: React.FC<CategoryQuizViewProps> = ({ quizIds, categories
   // Computed values
   const score = quizState.score;
   const totalQuestions = quizState.questions.length;
-  const currentQuizIndex = quizState.currentQuizIndex;
+  const currentQuizIndex = 0; // Always 0 since we're shifting arrays
   const totalQuizzes = quizIds.length;
   const currentQuestionIndex = quizState.currentQuestionIndex;
   const isLastQuestion = currentQuestionIndex === totalQuestions - 1;
-  const isLastQuiz = currentQuizIndex === totalQuizzes - 1;
+  const isLastQuiz = totalQuizzes === 1;
 
   // Handle quiz completion
   if (isCompleted) {
@@ -94,10 +93,7 @@ const CategoryQuizView: React.FC<CategoryQuizViewProps> = ({ quizIds, categories
     // Call handleSubmitAnswer to calculate points and update score
     const points = handleSubmitAnswer();
     
-    // Add a toast message showing points earned
-    if (points > 0) {
-      toast.success(`You earned ${points} points!`);
-    }
+    // No more toast message for points
     
     setTimeout(() => {
       setIsSaving(false);

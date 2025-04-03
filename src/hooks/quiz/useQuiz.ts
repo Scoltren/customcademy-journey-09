@@ -5,7 +5,6 @@ import { useCurrentAnswers } from './answers/useCurrentAnswers';
 import { useQuizResults } from './useQuizResults';
 import { useQuizDataLoader } from './useQuizDataLoader';
 import { useQuizNavigation } from './useQuizNavigation';
-import { toast } from 'sonner';
 
 export const useQuiz = (quizIds: number[], categories: any[], user: any) => {
   // Track initial load
@@ -145,12 +144,11 @@ export const useQuiz = (quizIds: number[], categories: any[], user: any) => {
     try {
       // Save results for the last quiz
       if (user && activeQuizIds.length > 0) {
-        const currentQuizId = activeQuizIds[quizState.currentQuizIndex];
-        const currentCategoryId = activeCategories[quizState.currentQuizIndex]?.id;
+        const currentQuizId = activeQuizIds[0]; // Always use first quiz in array
+        const currentCategoryId = activeCategories[0]?.id;
         
         console.log(`Saving final quiz results for quiz ${currentQuizId}`);
         await saveQuizResults(currentQuizId, quizState.score, currentCategoryId);
-        toast.success("Quiz results saved successfully!");
       }
       
       // Mark as completed
@@ -158,7 +156,6 @@ export const useQuiz = (quizIds: number[], categories: any[], user: any) => {
       return true;
     } catch (error) {
       console.error("Error finishing quiz:", error);
-      toast.error("Failed to save quiz results");
       return false;
     }
   }, [quizState, activeQuizIds, activeCategories, user, saveQuizResults, setIsCompleted]);
