@@ -107,6 +107,7 @@ export const useProfileData = () => {
           await deleteOldProfilePicture(profileData.avatar_url);
         }
         
+        // Explicitly use 'profile-pictures' as the bucket name, without a folder path
         avatar_url = await StorageService.uploadFile(profilePicture, 'avatars', 'profile-pictures');
         console.log("Profile picture upload result:", avatar_url);
       }
