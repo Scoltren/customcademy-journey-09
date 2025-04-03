@@ -31,7 +31,7 @@ export const useQuizDataLoader = (stateManager: QuizStateManager) => {
   // Load the current quiz questions and first question's answers
   const loadQuizData = useCallback(async (quizIds: number[], categories: any[]) => {
     if (!quizIds.length) {
-      console.log("DATA LOADER - No quiz IDs provided");
+      console.log("DATA LOADER - No quiz IDs provided, completing quiz");
       setIsCompleted(true);
       return;
     }
@@ -71,6 +71,7 @@ export const useQuizDataLoader = (stateManager: QuizStateManager) => {
         const remainingCategories = [...categories.slice(1)];
         
         if (remainingQuizIds.length === 0) {
+          console.log("DATA LOADER - No remaining quizzes, completing");
           setIsCompleted(true);
           setIsLoading(false);
           return;

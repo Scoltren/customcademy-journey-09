@@ -68,7 +68,7 @@ export const useQuizNavigation = (
         const remainingQuizIds = [...quizIds.slice(1)];
         const remainingCategories = [...categories.slice(1)];
         
-        console.log("NAVIGATION - Remaining quizzes:", remainingQuizIds);
+        console.log("NAVIGATION - Remaining quizzes:", remainingQuizIds, "Length:", remainingQuizIds.length);
         
         // Check if there are more quizzes
         if (remainingQuizIds.length === 0) {
