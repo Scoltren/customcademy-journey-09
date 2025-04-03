@@ -35,6 +35,24 @@ export const PaymentService = {
       toast.error('Failed to initiate payment. Please try again.');
       throw error;
     }
+  },
+
+  verifyPaymentStatus: async (sessionId: string) => {
+    try {
+      const { data, error } = await supabase.functions.invoke('verify-payment-status', {
+        body: { sessionId }
+      });
+      
+      if (error) {
+        console.error('Error verifying payment status:', error);
+        throw error;
+      }
+      
+      return data;
+    } catch (error) {
+      console.error('Error verifying payment:', error);
+      throw error;
+    }
   }
 };
 
