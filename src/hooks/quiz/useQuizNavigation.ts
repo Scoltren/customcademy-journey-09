@@ -1,6 +1,7 @@
 
 import { useCallback } from 'react';
 import { toast } from 'sonner';
+import { useNavigate } from 'react-router-dom';
 
 export const useQuizNavigation = (
   stateManager: any,
@@ -16,6 +17,8 @@ export const useQuizNavigation = (
     setIsCompleted,
     loadAnswersForQuestion
   } = stateManager;
+  
+  const navigate = useNavigate();
 
   // Handle moving to the next question or quiz
   const handleNextQuestion = useCallback(async (user: any, quizIds: number[], categories: any[]) => {
@@ -69,8 +72,14 @@ export const useQuizNavigation = (
         
         // Check if there are more quizzes
         if (remainingQuizIds.length === 0) {
-          console.log("NAVIGATION - All quizzes completed, no more quizzes available");
+          console.log("NAVIGATION - All quizzes completed, redirecting to homepage");
           setIsCompleted(true);
+          
+          // Short delay to ensure state updates before navigation
+          setTimeout(() => {
+            navigate('/');
+          }, 500);
+          
           return;
         }
         
@@ -114,7 +123,8 @@ export const useQuizNavigation = (
     setIsCompleted,
     loadAnswersForQuestion,
     saveQuizResults,
-    loadQuizData
+    loadQuizData,
+    navigate
   ]);
 
   return {

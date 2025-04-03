@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Card } from '@/components/ui/card';
 import { useAuth } from '@/contexts/AuthContext';
@@ -56,24 +56,13 @@ const CategoryQuizView: React.FC<CategoryQuizViewProps> = ({ quizIds, categories
   const isLastQuestion = currentQuestionIndex === totalQuestions - 1;
   const isLastQuiz = totalQuizzes === 1;
 
-  // Handle quiz completion
-  if (isCompleted) {
-    console.log("Quiz completed, redirecting to dashboard");
-    return (
-      <div className="container mx-auto p-4">
-        <Card className="p-8 text-center">
-          <h1 className="text-2xl font-bold mb-4">Quiz Completed!</h1>
-          <p className="mb-4">Your responses have been saved.</p>
-          <button
-            className="bg-blue-600 text-white px-4 py-2 rounded"
-            onClick={() => navigate('/')}
-          >
-            Go to Homepage
-          </button>
-        </Card>
-      </div>
-    );
-  }
+  // Handle quiz completion - redirect to homepage
+  useEffect(() => {
+    if (isCompleted) {
+      console.log("Quiz completed, redirecting to homepage");
+      navigate('/');
+    }
+  }, [isCompleted, navigate]);
 
   // Handle loading state
   if (isLoading) {
@@ -91,9 +80,7 @@ const CategoryQuizView: React.FC<CategoryQuizViewProps> = ({ quizIds, categories
     setIsSaving(true);
     
     // Call handleSubmitAnswer to calculate points and update score
-    const points = handleSubmitAnswer();
-    
-    // No more toast message for points
+    handleSubmitAnswer();
     
     setTimeout(() => {
       setIsSaving(false);
@@ -109,7 +96,7 @@ const CategoryQuizView: React.FC<CategoryQuizViewProps> = ({ quizIds, categories
       // Call handleFinishQuiz instead of handleNextQuestion
       handleFinishQuiz().then(() => {
         setIsSaving(false);
-        // We don't navigate here as the isCompleted state will trigger the completion UI
+        // We don't navigate here as the isCompleted state will trigger the completion UI in useEffect
       });
     } else {
       // Otherwise proceed to next question/quiz

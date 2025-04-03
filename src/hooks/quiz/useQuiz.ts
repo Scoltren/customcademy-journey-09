@@ -124,8 +124,7 @@ export const useQuiz = (quizIds: number[], categories: any[], user: any) => {
     // Logic for submitting an answer would go here
     console.log("Submitting answer:", selectedAnswerIds);
     
-    // For now, just update the score based on selected answers
-    // This would normally be handled by the backend
+    // Calculate the score based on selected answers
     const correctAnswers = currentAnswers.filter(answer => 
       selectedAnswerIds.includes(answer.id) && answer.points > 0
     );
@@ -151,7 +150,8 @@ export const useQuiz = (quizIds: number[], categories: any[], user: any) => {
         await saveQuizResults(currentQuizId, quizState.score, currentCategoryId);
       }
       
-      // Mark as completed
+      // Make sure we properly mark as completed
+      console.log("Setting isCompleted to true to trigger navigation to homepage");
       setIsCompleted(true);
       return true;
     } catch (error) {
