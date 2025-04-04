@@ -54,8 +54,8 @@ export const useRecommendedCourses = (userId: string, userInterests: number[]) =
       // Transform the data to match Course type
       const courses: Course[] = coursesData?.map(course => ({
         ...course,
-        category_name: course.category_name ? (typeof course.category_name === 'string' ? 
-          course.category_name : course.category_name.name) : undefined
+        category_name: course.category_name ? 
+          (typeof course.category_name === 'string' ? course.category_name : course.category_name) : undefined
       })) || [];
       
       // Set fetched courses to state

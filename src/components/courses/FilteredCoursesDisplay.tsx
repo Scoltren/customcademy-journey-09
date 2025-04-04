@@ -1,4 +1,3 @@
-
 import React from 'react';
 import CourseCard from '@/components/CourseCard';
 import { Course } from '@/types/course';
@@ -19,6 +18,30 @@ const FilteredCoursesDisplay: React.FC<FilteredCoursesDisplayProps> = ({
   resetFilters,
   validateDifficultyLevel
 }) => {
+  /**
+   * Get the category name string regardless of whether it's a string or an object
+   * @param course The course object
+   * @returns The category name as a string
+   */
+  const getCategoryName = (course: Course): string => {
+    // Try to get category name from categories object first
+    if (course.categories && course.categories.name) {
+      return course.categories.name;
+    }
+    
+    // Otherwise try from category_name property
+    if (course.category_name) {
+      if (typeof course.category_name === 'string') {
+        return course.category_name;
+      } else {
+        return course.category_name.name;
+      }
+    }
+    
+    // Fallback
+    return 'Development';
+  };
+
   // Show loading skeleton state while courses are being fetched
   if (loading) {
     return (
@@ -60,7 +83,7 @@ const FilteredCoursesDisplay: React.FC<FilteredCoursesDisplayProps> = ({
             description: course.description || "",
             instructor: 'Instructor',
             image: course.thumbnail || '',
-            category: course.categories?.name || course.category_name || 'Development',
+            category: getCategoryName(course),
             level: validateDifficultyLevel(course.difficulty_level),
             duration: course.course_time ? `${course.course_time} hours` : '30 hours',
             students: 0,

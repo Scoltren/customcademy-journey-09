@@ -41,6 +41,17 @@ const CourseGridDisplay: React.FC<CourseGridDisplayProps> = ({
     return null; // Return null for invalid levels
   };
 
+  /**
+   * Get the category name string regardless of whether it's a string or an object
+   * @param category The category_name value from the course
+   * @returns The category name as a string
+   */
+  const getCategoryName = (category: string | { name: string } | undefined): string => {
+    if (!category) return 'Development';
+    if (typeof category === 'string') return category;
+    return category.name || 'Development';
+  };
+
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
       {/* Map through courses and render course cards */}
@@ -53,7 +64,7 @@ const CourseGridDisplay: React.FC<CourseGridDisplayProps> = ({
             description: course.description || 'No description available',
             instructor: 'Instructor', 
             image: course.thumbnail || '',
-            category: course.category_name || 'Development',
+            category: getCategoryName(course.category_name),
             level: validateDifficultyLevel(course.difficulty_level),
             duration: `${course.course_time || 0} hours`,
             students: 0,

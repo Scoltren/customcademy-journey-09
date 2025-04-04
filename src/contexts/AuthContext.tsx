@@ -1,3 +1,4 @@
+
 // This file would need to be created with comments if it doesn't exist
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { User, Session } from '@supabase/supabase-js';
@@ -15,7 +16,7 @@ interface AuthContextType {
   logout: () => Promise<any>; // Added logout alias
   login: (email: string, password: string) => Promise<any>; // Added login alias
   signup: (email: string, password: string, username: string) => Promise<any>; // Added signup alias
-  isEnrolled: (courseId: string | number) => Promise<boolean>; // Changed to accept only string or number type
+  isEnrolled: (courseId: string | number) => Promise<boolean>; // Changed to accept both string and number type
 }
 
 // Create context with default values
