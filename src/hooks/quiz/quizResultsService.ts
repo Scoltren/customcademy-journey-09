@@ -2,7 +2,15 @@
 import { supabase } from '@/integrations/supabase/client';
 import { calculateDifficultyLevel } from './utils/calculateDifficultyLevel';
 
-// Save quiz results and update difficulty level
+/**
+ * Saves quiz results and updates user difficulty level in their interests
+ * 
+ * @param user User object from auth context
+ * @param quizId ID of the completed quiz
+ * @param score User's score on the quiz
+ * @param categoryId Category ID associated with the quiz
+ * @returns Boolean indicating success or failure
+ */
 export const saveQuizResults = async (
   user: any,
   quizId: number,

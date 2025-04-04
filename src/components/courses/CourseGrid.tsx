@@ -11,7 +11,15 @@ interface CourseGridProps {
   hasUserInterests?: boolean;
 }
 
+/**
+ * Component that displays a grid of course cards
+ */
 const CourseGrid: React.FC<CourseGridProps> = ({ courses, isUserLoggedIn, hasUserInterests }) => {
+  /**
+   * Validates and normalizes difficulty level strings
+   * @param level The difficulty level to validate
+   * @returns Standardized difficulty level or null if invalid
+   */
   const validateDifficultyLevel = (level: string | null): 'Beginner' | 'Intermediate' | 'Advanced' | null => {
     if (level === null) return null;
     
@@ -24,6 +32,9 @@ const CourseGrid: React.FC<CourseGridProps> = ({ courses, isUserLoggedIn, hasUse
     return null; // Return null if not a valid level
   };
 
+  /**
+   * Renders message when user needs to select interests for recommendations
+   */
   const renderNoInterestsMessage = () => (
     <div className="bg-slate-800/50 p-8 rounded-xl text-center space-y-4">
       <h3 className="text-xl text-white font-medium">No recommended courses</h3>
@@ -34,10 +45,12 @@ const CourseGrid: React.FC<CourseGridProps> = ({ courses, isUserLoggedIn, hasUse
     </div>
   );
 
+  // Show message prompting user to select interests
   if (isUserLoggedIn && hasUserInterests === false) {
     return renderNoInterestsMessage();
   }
 
+  // Show message when no courses are available
   if (courses.length === 0) {
     return (
       <div className="text-center text-slate-400 py-8">
@@ -46,6 +59,7 @@ const CourseGrid: React.FC<CourseGridProps> = ({ courses, isUserLoggedIn, hasUse
     );
   }
 
+  // Render grid of courses
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-8 w-full">
       {courses.map((course) => {

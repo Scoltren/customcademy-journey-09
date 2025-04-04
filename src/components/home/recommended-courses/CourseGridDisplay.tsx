@@ -9,14 +9,23 @@ interface CourseGridDisplayProps {
   userSkillLevels: {[key: number]: string};
 }
 
+/**
+ * Component that displays a grid of course cards for recommended courses
+ */
 const CourseGridDisplay: React.FC<CourseGridDisplayProps> = ({ 
   courses, 
   chapterCounts,
   userSkillLevels
 }) => {
+  /**
+   * Validates and normalizes difficulty level strings
+   * @param level The difficulty level string to validate
+   * @returns Normalized difficulty level or null if invalid
+   */
   const validateDifficultyLevel = (level: string | null): 'Beginner' | 'Intermediate' | 'Advanced' | null => {
     if (level === null) return null;
     
+    // Check if level is already in valid format
     if (level === 'Beginner' || level === 'Intermediate' || level === 'Advanced') {
       return level;
     }
@@ -24,6 +33,7 @@ const CourseGridDisplay: React.FC<CourseGridDisplayProps> = ({
     // Capitalize the first letter if it's lowercase
     const formattedLevel = level.charAt(0).toUpperCase() + level.slice(1).toLowerCase();
     
+    // Return formatted level if valid, otherwise null
     if (formattedLevel === 'Beginner' || formattedLevel === 'Intermediate' || formattedLevel === 'Advanced') {
       return formattedLevel as 'Beginner' | 'Intermediate' | 'Advanced';
     }
@@ -33,6 +43,7 @@ const CourseGridDisplay: React.FC<CourseGridDisplayProps> = ({
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+      {/* Map through courses and render course cards */}
       {courses.map((course) => (
         <CourseCard
           key={course.id}

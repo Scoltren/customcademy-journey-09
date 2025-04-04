@@ -8,7 +8,9 @@ interface EnrollmentRequiredProps {
   type: 'login' | 'enroll';
 }
 
+// Component shown when content access requires login or enrollment
 const EnrollmentRequired: React.FC<EnrollmentRequiredProps> = ({ onEnrollClick, type }) => {
+  // Determine message content based on required action type
   const title = type === 'login' ? 'Login Required' : 'Enrollment Required';
   const description = type === 'login' 
     ? 'You need to be logged in to view course content.' 

@@ -19,10 +19,15 @@ interface CourseEditFormProps {
   onSuccess?: () => void;
 }
 
+/**
+ * Form component to edit an existing course
+ */
 const CourseEditForm: React.FC<CourseEditFormProps> = ({ course, onSuccess }) => {
+  // State for tracking file uploads and form submission
   const [thumbnailFile, setThumbnailFile] = useState<File | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   
+  // Initialize form with existing course data
   const form = useForm<CourseFormValues>({
     resolver: zodResolver(courseFormSchema),
     defaultValues: {
@@ -35,12 +40,16 @@ const CourseEditForm: React.FC<CourseEditFormProps> = ({ course, onSuccess }) =>
     },
   });
   
+  /**
+   * Handle form submission to update course
+   */
   const onSubmit = async (values: CourseFormValues) => {
     if (isSubmitting) return;
     
     try {
       setIsSubmitting(true);
       
+      // Prepare course data for update
       const courseData: Partial<CourseFormData> = {
         title: values.title,
         description: values.description,
@@ -51,12 +60,13 @@ const CourseEditForm: React.FC<CourseEditFormProps> = ({ course, onSuccess }) =>
         thumbnail: thumbnailFile
       };
       
+      // Call service to update course in database
       await CourseCreationService.updateCourse(course.id, courseData);
       
       if (onSuccess) {
         onSuccess();
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error('Course update error:', error);
     } finally {
       setIsSubmitting(false);
@@ -67,15 +77,20 @@ const CourseEditForm: React.FC<CourseEditFormProps> = ({ course, onSuccess }) =>
     <div className="space-y-6">
       <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+          {/* Course basic information section (title, description) */}
           <CourseBasicInfo form={form} />
+          {/* Course details section (category, difficulty, duration) */}
           <CourseDetails form={form} />
+          {/* Course pricing section */}
           <CoursePricing form={form} />
+          {/* Course thumbnail upload section */}
           <CourseThumbnail 
             form={form} 
             onThumbnailChange={setThumbnailFile}
             existingThumbnail={course.thumbnail}
           />
           
+          {/* Submit button */}
           <Button 
             type="submit" 
             className="w-full" 

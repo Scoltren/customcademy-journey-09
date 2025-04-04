@@ -12,9 +12,11 @@ interface ProfileTabProps {
 }
 
 /**
- * Profile tab component for the dashboard
+ * Profile tab component for the user dashboard
+ * Displays and allows editing of user profile information
  */
 const ProfileTab = ({ userInterests, handleEditInterests }: ProfileTabProps) => {
+  // Use custom hook to manage profile data and interactions
   const {
     profileData, 
     setProfileData,
@@ -28,10 +30,13 @@ const ProfileTab = ({ userInterests, handleEditInterests }: ProfileTabProps) => 
   
   return (
     <div>
+      {/* Profile header with title */}
       <ProfileHeader title="Profile" />
       
+      {/* Profile information card with picture and form */}
       <div className="glass-card p-6 mb-8">
         <div className="flex flex-col md:flex-row gap-8 items-start">
+          {/* Profile picture upload component */}
           <ProfilePictureUploader 
             avatarUrl={profileData.avatar_url}
             isEditing={isEditing}
@@ -39,6 +44,7 @@ const ProfileTab = ({ userInterests, handleEditInterests }: ProfileTabProps) => 
             onEdit={() => setIsEditing(true)}
           />
           
+          {/* Profile information form */}
           <ProfileForm 
             isEditing={isEditing}
             loading={loading}
@@ -48,11 +54,12 @@ const ProfileTab = ({ userInterests, handleEditInterests }: ProfileTabProps) => 
               setIsEditing(false);
               fetchUserProfile(); // Reset form
             }}
-            onSave={() => handleSaveProfile(profileData)} // Fix: Pass profileData to handleSaveProfile
+            onSave={() => handleSaveProfile(profileData)} // Pass profileData to handleSaveProfile
           />
         </div>
       </div>
       
+      {/* Display of user's selected interest categories */}
       <UserInterestsDisplay 
         userInterests={userInterests} 
         handleEditInterests={handleEditInterests} 

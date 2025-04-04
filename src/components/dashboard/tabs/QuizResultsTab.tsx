@@ -29,7 +29,11 @@ interface QuizResultsTabProps {
   isLoading: boolean;
 }
 
+/**
+ * Component that displays user's quiz results in a table
+ */
 const QuizResultsTab: React.FC<QuizResultsTabProps> = ({ quizResults, isLoading }) => {
+  // Show loading state while fetching quiz results
   if (isLoading) {
     return (
       <div className="flex justify-center items-center py-12">
@@ -38,6 +42,7 @@ const QuizResultsTab: React.FC<QuizResultsTabProps> = ({ quizResults, isLoading 
     );
   }
 
+  // Show empty state when no quiz results exist
   if (!quizResults || quizResults.length === 0) {
     return (
       <div className="py-8 text-center bg-slate-800/50 rounded-lg">
@@ -64,7 +69,9 @@ const QuizResultsTab: React.FC<QuizResultsTabProps> = ({ quizResults, isLoading 
             </TableRow>
           </TableHeader>
           <TableBody>
+            {/* Map through quiz results to display in table */}
             {quizResults.map(result => {
+              // Calculate skill level based on quiz score
               const skillLevel = calculateDifficultyLevel(result.score);
               const categoryName = result.quiz?.category?.name || 'Unknown';
               
@@ -80,6 +87,7 @@ const QuizResultsTab: React.FC<QuizResultsTabProps> = ({ quizResults, isLoading 
                     {result.score}
                   </TableCell>
                   <TableCell className="pl-3">
+                    {/* Apply color based on skill level */}
                     <span className={`text-base font-semibold ${
                       skillLevel === 'Beginner' ? 'text-green-400' :
                       skillLevel === 'Intermediate' ? 'text-yellow-400' : 'text-red-400'

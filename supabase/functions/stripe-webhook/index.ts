@@ -2,33 +2,37 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import Stripe from "https://esm.sh/stripe@14.21.0";
 
+// Supabase Edge Function to handle Stripe webhook events
+// This function processes payment notifications from Stripe after checkout completion
 serve(async (req) => {
   try {
-    // Retrieve the request body as text
+    // Retrieve the request body as text from the webhook request
     const body = await req.text();
     
-    // Get the signature from the header
+    // Get the signature from the header for verification
     const signature = req.headers.get('stripe-signature');
     
+    // Validate that signature exists in header
     if (!signature) {
       console.error('Webhook error: Missing stripe-signature header');
       return new Response('Webhook signature missing', { status: 400 });
     }
     
-    // Get the webhook secret from environment
+    // Get the webhook secret from environment variables
     const webhookSecret = Deno.env.get('STRIPE_WEBHOOK_SECRET') || '';
     
+    // Validate webhook secret is configured
     if (!webhookSecret) {
       console.error('Webhook error: STRIPE_WEBHOOK_SECRET not configured');
       return new Response('Webhook secret not configured', { status: 500 });
     }
     
-    // Setup Stripe with the secret key
+    // Initialize Stripe with the secret key
     const stripe = new Stripe(Deno.env.get('STRIPE_SECRET_KEY') || '', {
       apiVersion: '2023-10-16',
     });
     
-    // Verify the event using the signature
+    // Verify the event using the signature to prevent unauthorized requests
     let event;
     try {
       event = stripe.webhooks.constructEvent(body, signature, webhookSecret);
@@ -39,18 +43,20 @@ serve(async (req) => {
     
     console.log(`Processing webhook event: ${event.type}`, { event_id: event.id });
     
-    // Setup supabase connection
+    // Setup supabase connection to record payment and enrollment
     const supabaseUrl = Deno.env.get('SUPABASE_URL') || '';
     const supabaseKey = Deno.env.get('SUPABASE_ANON_KEY') || '';
     
+    // Validate Supabase configuration exists
     if (!supabaseUrl || !supabaseKey) {
       console.error('Webhook error: Missing Supabase configuration');
       return new Response('Server configuration error', { status: 500 });
     }
     
-    // Handle the event
+    // Handle different webhook event types
     switch (event.type) {
       case 'checkout.session.completed': {
+        // Extract data from the completed checkout session
         const session = event.data.object;
         const userId = session.metadata?.userId;
         const courseId = session.metadata?.courseId;
@@ -62,8 +68,9 @@ serve(async (req) => {
           sessionId: session.id
         });
         
+        // Only process paid sessions with valid user and course IDs
         if (session.payment_status === 'paid' && userId && courseId) {
-          // Record the payment in our database
+          // Record the payment in the database
           const paymentResponse = await fetch(`${supabaseUrl}/rest/v1/payments`, {
             method: 'POST',
             headers: {
@@ -81,6 +88,7 @@ serve(async (req) => {
             }),
           });
           
+          // Handle payment record creation response
           if (!paymentResponse.ok) {
             const errorText = await paymentResponse.text();
             console.error('Failed to record payment:', errorText);
@@ -106,6 +114,7 @@ serve(async (req) => {
             }),
           });
           
+          // Handle enrollment response
           if (!enrollResponse.ok) {
             const errorText = await enrollResponse.text();
             console.error('Failed to enroll user:', errorText);
@@ -126,12 +135,14 @@ serve(async (req) => {
         console.log(`Unhandled event type: ${event.type}`);
     }
     
+    // Return success response to Stripe
     return new Response(JSON.stringify({ received: true }), {
       headers: { 'Content-Type': 'application/json' },
       status: 200,
     });
     
   } catch (error) {
+    // Handle any unexpected errors
     console.error('Webhook error:', error.message, error.stack);
     return new Response(`Webhook error: ${error.message}`, { status: 500 });
   }

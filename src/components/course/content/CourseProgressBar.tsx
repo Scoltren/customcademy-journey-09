@@ -7,6 +7,7 @@ interface CourseProgressBarProps {
   progress: number;
 }
 
+// Component that displays a visual representation of course completion progress
 const CourseProgressBar: React.FC<CourseProgressBarProps> = ({ progress }) => {
   // Ensure progress is a valid number between 0-100
   const validProgress = isNaN(progress) ? 0 : Math.min(Math.max(progress, 0), 100);
@@ -26,6 +27,7 @@ const CourseProgressBar: React.FC<CourseProgressBarProps> = ({ progress }) => {
     <div className="flex items-center gap-3">
       <span className="text-sm text-slate-400">Progress:</span>
       <div className="w-64 relative">
+        {/* Progress bar with color based on completion status */}
         <Progress 
           value={validProgress} 
           className={`h-2.5 ${
@@ -38,6 +40,7 @@ const CourseProgressBar: React.FC<CourseProgressBarProps> = ({ progress }) => {
         />
       </div>
       <div className="flex items-center gap-1">
+        {/* Icon based on completion status */}
         {status === 'completed' ? (
           <CheckCircle2 size={16} className="text-green-500" />
         ) : status === 'advanced' ? (

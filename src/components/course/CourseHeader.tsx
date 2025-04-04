@@ -14,8 +14,11 @@ interface CourseHeaderProps {
   course: Course;
 }
 
+// Component that displays course header information and enrollment options
 const CourseHeader: React.FC<CourseHeaderProps> = ({ course }) => {
+  // Access authentication context to check user login and enrollment status
   const { user, isEnrolled } = useAuth();
+  // State for tracking enrollment and payment processing
   const [enrollmentStatus, setEnrollmentStatus] = useState<boolean>(false);
   const [isEnrolling, setIsEnrolling] = useState<boolean>(false);
   const [isProcessingPayment, setIsProcessingPayment] = useState<boolean>(false);
@@ -23,6 +26,7 @@ const CourseHeader: React.FC<CourseHeaderProps> = ({ course }) => {
   const navigate = useNavigate();
   const location = useLocation();
 
+  // Check if user is already enrolled in the course when component mounts
   useEffect(() => {
     const checkEnrollment = async () => {
       if (user && course.id) {
@@ -34,7 +38,7 @@ const CourseHeader: React.FC<CourseHeaderProps> = ({ course }) => {
     checkEnrollment();
   }, [user, course.id, isEnrolled]);
 
-  // Check for payment success query parameter
+  // Check for payment success or cancellation from URL parameters
   useEffect(() => {
     const searchParams = new URLSearchParams(location.search);
     const paymentSuccess = searchParams.get('payment_success');
@@ -62,6 +66,7 @@ const CourseHeader: React.FC<CourseHeaderProps> = ({ course }) => {
     }
   }, [location, user, course.id, isEnrolled]);
 
+  // Handler for free course enrollment
   const handleFreeEnrollment = async () => {
     if (!user) {
       toast.info('Please log in to enroll in this course');
@@ -78,6 +83,7 @@ const CourseHeader: React.FC<CourseHeaderProps> = ({ course }) => {
         throw new Error("Invalid ID format");
       }
       
+      // Insert enrollment record in database
       const { error } = await supabase
         .from('subscribed_courses')
         .insert({
@@ -98,6 +104,7 @@ const CourseHeader: React.FC<CourseHeaderProps> = ({ course }) => {
     }
   };
 
+  // Handler for paid course enrollment
   const handlePaidEnrollment = async () => {
     if (!user) {
       toast.info('Please log in to purchase this course');
@@ -105,6 +112,7 @@ const CourseHeader: React.FC<CourseHeaderProps> = ({ course }) => {
       return;
     }
 
+    // If course is free, use free enrollment flow
     if (!course.price) {
       handleFreeEnrollment();
       return;
@@ -122,6 +130,7 @@ const CourseHeader: React.FC<CourseHeaderProps> = ({ course }) => {
 
       console.log('Initiating checkout for course:', courseIdNumber);
       
+      // Call Stripe edge function to create checkout session
       const response = await PaymentService.createCheckoutSession({
         courseId: courseIdNumber,
         price: course.price,
@@ -212,7 +221,7 @@ const CourseHeader: React.FC<CourseHeaderProps> = ({ course }) => {
         </div>
       </div>
       
-      {/* Loading Dialog */}
+      {/* Loading Dialog displayed when processing payment */}
       <Dialog open={isLoadingDialog} onOpenChange={setIsLoadingDialog}>
         <DialogContent className="sm:max-w-md">
           <DialogTitle>Processing Payment</DialogTitle>

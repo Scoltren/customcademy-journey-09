@@ -10,12 +10,16 @@ interface FilteredCoursesDisplayProps {
   validateDifficultyLevel: (level: string | null) => 'Beginner' | 'Intermediate' | 'Advanced' | null;
 }
 
+/**
+ * Component that displays courses after filtering
+ */
 const FilteredCoursesDisplay: React.FC<FilteredCoursesDisplayProps> = ({ 
   filteredCourses, 
   loading, 
   resetFilters,
   validateDifficultyLevel
 }) => {
+  // Show loading skeleton state while courses are being fetched
   if (loading) {
     return (
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
@@ -28,6 +32,7 @@ const FilteredCoursesDisplay: React.FC<FilteredCoursesDisplayProps> = ({
     );
   }
 
+  // Show empty state when no courses match filters
   if (filteredCourses.length === 0) {
     return (
       <div className="glass-card p-12 text-center">
@@ -43,6 +48,7 @@ const FilteredCoursesDisplay: React.FC<FilteredCoursesDisplayProps> = ({
     );
   }
 
+  // Render grid of course cards
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
       {filteredCourses.map((course) => (

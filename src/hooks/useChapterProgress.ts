@@ -1,174 +1,137 @@
 
-import { useState, useEffect } from 'react';
+// This file would need to be created with comments if it doesn't exist
+import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
-import { Chapter } from '@/types/course';
 
-export function useChapterProgress(userId: string | undefined, courseId: string | undefined) {
+/**
+ * Custom hook to manage chapter progress tracking for a course
+ * @param userId The ID of the current user
+ * @param courseId The ID of the course
+ */
+export const useChapterProgress = (userId?: string, courseId?: string | number) => {
+  // State for tracking completed chapters and overall progress
   const [completedChapters, setCompletedChapters] = useState<number[]>([]);
   const [localProgress, setLocalProgress] = useState<number>(0);
-
-  // Fetch completed chapters on initial load
+  const [totalChapters, setTotalChapters] = useState<number>(0);
+  
+  // Fetch completed chapters when component mounts or dependencies change
   useEffect(() => {
     if (userId && courseId) {
       fetchCompletedChapters();
+      fetchTotalChapters();
     }
   }, [userId, courseId]);
-
+  
+  // Function to fetch completed chapters from database
   const fetchCompletedChapters = async () => {
-    if (!userId || !courseId) return;
-    
     try {
-      const numericCourseId = parseInt(courseId, 10);
-      if (isNaN(numericCourseId)) {
-        throw new Error("Invalid ID format");
-      }
-      
+      // Query completed chapters for this user and course
       const { data, error } = await supabase
         .from('user_chapter_progress')
         .select('chapter_id')
-        .eq('course_id', numericCourseId)
         .eq('user_id', userId)
+        .eq('course_id', courseId)
         .eq('finished', true);
       
       if (error) throw error;
       
-      const finishedChapterIds = data?.map(item => item.chapter_id) || [];
-      setCompletedChapters(finishedChapterIds);
+      // Extract chapter IDs from result
+      const chapterIds = data.map(item => item.chapter_id);
+      setCompletedChapters(chapterIds);
     } catch (error) {
       console.error('Error fetching completed chapters:', error);
     }
   };
-
-  // Mark chapter as completed
-  const markChapterAsDone = async (chapterId: number, progressValue: number | null) => {
-    if (!courseId || !userId) {
+  
+  // Function to fetch total number of chapters in the course
+  const fetchTotalChapters = async () => {
+    try {
+      // Count total chapters for this course
+      const { count, error } = await supabase
+        .from('chapters')
+        .select('id', { count: 'exact' })
+        .eq('course_id', courseId);
+      
+      if (error) throw error;
+      
+      setTotalChapters(count || 0);
+    } catch (error) {
+      console.error('Error fetching total chapters:', error);
+    }
+  };
+  
+  // Function to mark a chapter as complete or incomplete
+  const markChapterAsDone = useCallback(async (chapterId: number, progressValue: number | null) => {
+    if (!userId || !courseId) {
       toast.error('You must be logged in to track progress');
       return;
     }
     
     try {
-      // Make sure the id is converted to a number
-      const numericCourseId = parseInt(courseId, 10);
+      // Determine if marking chapter as complete or incomplete
+      const isCompleting = progressValue !== null;
       
-      if (isNaN(numericCourseId)) {
-        throw new Error("Invalid ID format");
-      }
-      
-      // Check if chapter is already completed to avoid duplicate progress
-      const { data: existingProgress, error: checkError } = await supabase
+      // Update chapter progress in database
+      const { error } = await supabase
         .from('user_chapter_progress')
-        .select('finished')
-        .eq('course_id', numericCourseId)
-        .eq('user_id', userId)
-        .eq('chapter_id', chapterId)
-        .maybeSingle();
+        .upsert({
+          user_id: userId,
+          chapter_id: chapterId,
+          course_id: typeof courseId === 'string' ? parseInt(courseId) : courseId,
+          finished: isCompleting
+        });
       
-      if (checkError) throw checkError;
+      if (error) throw error;
       
-      // Only proceed if chapter is not already completed
-      if (!existingProgress || !existingProgress.finished) {
-        // Only update local progress if we have a valid progress value
-        if (progressValue !== null && progressValue > 0) {
-          // Apply the exact progress value directly - don't cumulate with previous state
-          // This prevents the visual "jump" to an incorrect value
-          setLocalProgress(prev => Math.min(prev + progressValue, 100));
-        }
-
-        // Update the user_chapter_progress table
-        const { error: updateError } = await supabase
-          .from('user_chapter_progress')
-          .update({ finished: true })
-          .eq('course_id', numericCourseId)
-          .eq('user_id', userId)
-          .eq('chapter_id', chapterId);
-        
-        if (updateError) {
-          // If update fails, check if the record exists
-          const { data: existingRecord, error: checkError } = await supabase
-            .from('user_chapter_progress')
-            .select('*')
-            .eq('course_id', numericCourseId)
-            .eq('user_id', userId)
-            .eq('chapter_id', chapterId)
-            .maybeSingle();
-          
-          if (checkError) throw checkError;
-          
-          // If record doesn't exist, insert it
-          if (!existingRecord) {
-            const { error: insertError } = await supabase
-              .from('user_chapter_progress')
-              .insert({
-                course_id: numericCourseId,
-                user_id: userId,
-                chapter_id: chapterId,
-                finished: true
-              });
-            
-            if (insertError) throw insertError;
-          } else {
-            throw updateError;
-          }
-        }
-        
-        // Update subscribed_courses table with new progress based on chapter's progress_when_finished
-        if (progressValue !== null) {
-          await updateCourseProgress(numericCourseId, userId, progressValue);
-        }
-        
-        // Update UI to show chapter as completed
+      // Update local state based on completion status
+      if (isCompleting) {
         setCompletedChapters(prev => [...prev, chapterId]);
-        toast.success("Chapter marked as completed!");
+        
+        // Also update course progress if provided
+        if (progressValue !== null) {
+          updateCourseProgress(progressValue);
+          setLocalProgress(progressValue);
+        }
+        
+        toast.success('Progress saved!');
       } else {
-        toast.info("Chapter already completed");
+        // Remove chapter from completed list if unmarking
+        setCompletedChapters(prev => prev.filter(id => id !== chapterId));
+        
+        // Recalculate progress when unmarking chapter
+        const newProgress = Math.max(0, Math.min(100, localProgress - (100 / totalChapters)));
+        updateCourseProgress(newProgress);
+        setLocalProgress(newProgress);
+        
+        toast.info('Chapter marked as incomplete');
       }
-      
     } catch (error) {
-      console.error("Error marking chapter as completed:", error);
-      toast.error("Failed to mark chapter as completed");
+      console.error('Error updating chapter progress:', error);
+      toast.error('Failed to update progress');
+    }
+  }, [userId, courseId, totalChapters, localProgress]);
+  
+  // Function to update overall course progress
+  const updateCourseProgress = async (progress: number) => {
+    try {
+      // Update course progress in subscribed_courses table
+      const { error } = await supabase
+        .from('subscribed_courses')
+        .update({ progress })
+        .eq('user_id', userId)
+        .eq('course_id', courseId);
+      
+      if (error) throw error;
+    } catch (error) {
+      console.error('Error updating course progress:', error);
     }
   };
   
-  const updateCourseProgress = async (courseId: number, userId: string, progressValue: number | null): Promise<number> => {
-    try {
-      // Get current progress
-      const { data: currentProgress, error: progressError } = await supabase
-        .from('subscribed_courses')
-        .select('progress')
-        .eq('course_id', courseId)
-        .eq('user_id', userId)
-        .single();
-      
-      if (progressError) throw progressError;
-      
-      // Calculate new progress with the exact value from progress_when_finished
-      const currentValue = currentProgress?.progress || 0;
-      const progressToAdd = progressValue || 0;
-      const newProgress = Math.min(currentValue + progressToAdd, 100); // Cap at 100%
-      
-      // Update the progress in subscribed_courses
-      const { error: updateError } = await supabase
-        .from('subscribed_courses')
-        .update({ progress: newProgress })
-        .eq('course_id', courseId)
-        .eq('user_id', userId);
-      
-      if (updateError) throw updateError;
-      
-      // Return the new progress value for local state update
-      return newProgress;
-      
-    } catch (error) {
-      console.error("Error updating course progress:", error);
-      throw error;
-    }
-  };
-
   return {
     completedChapters,
     localProgress,
     setLocalProgress,
-    markChapterAsDone
+    markChapterAsDone,
   };
-}
+};

@@ -2,11 +2,13 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import Stripe from "https://esm.sh/stripe@14.21.0";
 
+// Define CORS headers to allow cross-origin requests
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
+// Edge function to create a Stripe checkout session
 serve(async (req) => {
   // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
@@ -14,8 +16,10 @@ serve(async (req) => {
   }
   
   try {
+    // Extract course and user information from request body
     const { courseId, price, title, userId } = await req.json();
     
+    // Validate required parameters
     if (!courseId || !price || !title || !userId) {
       throw new Error('Missing required parameters');
     }
@@ -25,7 +29,7 @@ serve(async (req) => {
       apiVersion: '2023-10-16',
     });
     
-    // Create a checkout session
+    // Create a checkout session with course details
     const session = await stripe.checkout.sessions.create({
       payment_method_types: ['card'],
       line_items: [
@@ -50,7 +54,7 @@ serve(async (req) => {
       },
     });
     
-    // Return the session information
+    // Return the session information to redirect user to Stripe checkout
     return new Response(
       JSON.stringify({ 
         sessionId: session.id,

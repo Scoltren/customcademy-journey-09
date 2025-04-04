@@ -10,11 +10,13 @@ interface ChapterListProps {
   onMarkAsDone: (chapterId: number, progressValue: number | null) => void;
 }
 
+// Component that displays the list of chapters for a course
 const ChapterList: React.FC<ChapterListProps> = ({
   chapters,
   completedChapters,
   onMarkAsDone
 }) => {
+  // Show empty state when there are no chapters
   if (!Array.isArray(chapters) || chapters.length === 0) {
     return (
       <div className="glass-card p-8">
@@ -27,6 +29,7 @@ const ChapterList: React.FC<ChapterListProps> = ({
     );
   }
 
+  // Render list of chapters with completion tracking
   return (
     <div className="glass-card divide-y divide-slate-700/50">
       {chapters.map((chapter, index) => (

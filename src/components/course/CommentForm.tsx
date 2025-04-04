@@ -11,7 +11,11 @@ interface CommentFormProps {
   courseProgress: number;
 }
 
+/**
+ * Component for submitting course reviews/comments with star rating
+ */
 const CommentForm: React.FC<CommentFormProps> = ({ onCommentAdded, courseProgress }) => {
+  // Custom hook to manage form state and submissions
   const {
     form,
     onSubmit,
@@ -30,8 +34,10 @@ const CommentForm: React.FC<CommentFormProps> = ({ onCommentAdded, courseProgres
   return (
     <div className="glass-card my-8 p-6">
       <h3 className="text-xl font-bold mb-4">Write a Review</h3>
+      {/* Form using react-hook-form for validation */}
       <Form {...form}>
         <form onSubmit={onSubmit} className="space-y-4">
+          {/* Star rating selection */}
           <div className="mb-4">
             <FormLabel className="block mb-2 text-center">Rating <span className="text-red-500">*</span></FormLabel>
             <StarRating 
@@ -43,6 +49,7 @@ const CommentForm: React.FC<CommentFormProps> = ({ onCommentAdded, courseProgres
             </div>
           </div>
           
+          {/* Comment text area */}
           <FormField
             control={form.control}
             name="comment"
@@ -60,6 +67,7 @@ const CommentForm: React.FC<CommentFormProps> = ({ onCommentAdded, courseProgres
             )}
           />
           
+          {/* Submit button */}
           <Button 
             type="submit" 
             className="w-full button-primary"

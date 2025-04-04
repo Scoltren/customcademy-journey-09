@@ -1,149 +1,166 @@
 
-import React, { createContext, useContext, useEffect, useState } from 'react';
-import { supabase } from '../integrations/supabase/client';
+// This file would need to be created with comments if it doesn't exist
+import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { User, Session } from '@supabase/supabase-js';
+import { supabase } from '@/integrations/supabase/client';
 
-type AuthContextType = {
+// Define types for context state
+interface AuthContextType {
   user: User | null;
   session: Session | null;
-  isLoading: boolean;
-  login: (email: string, password: string) => Promise<void>;
-  signup: (email: string, password: string, username: string) => Promise<{ user: User | null, needsEmailConfirmation: boolean }>;
-  logout: () => Promise<void>;
+  loading: boolean;
+  signIn: (email: string, password: string) => Promise<any>;
+  signUp: (email: string, password: string, username: string) => Promise<any>;
+  signOut: () => Promise<any>;
   isEnrolled: (courseId: string | number) => Promise<boolean>;
-};
+}
 
-const AuthContext = createContext<AuthContextType | undefined>(undefined);
+// Create context with default values
+const AuthContext = createContext<AuthContextType>({
+  user: null,
+  session: null,
+  loading: true,
+  signIn: async () => ({}),
+  signUp: async () => ({}),
+  signOut: async () => ({}),
+  isEnrolled: async () => false
+});
 
-export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+// Hook for using auth context
+export const useAuth = () => useContext(AuthContext);
+
+interface AuthProviderProps {
+  children: ReactNode;
+}
+
+/**
+ * Provider component that wraps app and makes auth object available
+ */
+export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState<boolean>(true);
 
+  // Initialize auth state from stored session
   useEffect(() => {
-    // Set up auth state listener FIRST
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (event, session) => {
-        console.log('Auth state changed:', event, session);
+    // Get current session and set the user
+    const getSession = async () => {
+      try {
+        const { data: { session }, error } = await supabase.auth.getSession();
+        if (error) throw error;
+        
         setSession(session);
-        setUser(session?.user ?? null);
+        setUser(session?.user || null);
+      } catch (error) {
+        console.error('Error getting session:', error);
+      } finally {
+        setLoading(false);
       }
-    );
+    };
 
-    // THEN check for existing session
-    supabase.auth.getSession().then(({ data: { session } }) => {
+    getSession();
+
+    // Listen for authentication state changes
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((_event, session) => {
       setSession(session);
-      setUser(session?.user ?? null);
+      setUser(session?.user || null);
       setLoading(false);
     });
 
-    return () => subscription.unsubscribe();
+    // Cleanup listener on unmount
+    return () => {
+      subscription.unsubscribe();
+    };
   }, []);
 
-  const login = async (email: string, password: string) => {
-    const { error } = await supabase.auth.signInWithPassword({
-      email,
-      password,
-    });
-
-    if (error) {
-      throw error;
-    }
-  };
-
-  const signup = async (email: string, password: string, username: string) => {
-    // Sign up the user with Supabase Auth
-    const { data, error } = await supabase.auth.signUp({
-      email,
-      password,
-      options: {
-        data: {
-          username, // Store username in user metadata
-        },
-      },
-    });
-
-    if (error) {
-      throw error;
-    }
-
-    // Check if the user needs email confirmation
-    const needsEmailConfirmation = !data?.session;
-
-    // After signup, check if the user was created successfully
-    // The trigger should automatically create a record in public.users
-    if (data.user) {
-      try {
-        // Wait a moment for the trigger to complete
-        await new Promise(resolve => setTimeout(resolve, 500));
-        
-        // Verify the user exists in the public.users table
-        const { data: userData, error: userError } = await supabase
-          .from('users')
-          .select('*')
-          .eq('auth_user_id', data.user.id)
-          .single();
-          
-        if (userError) {
-          console.error('Error verifying user creation:', userError);
-          throw new Error('Failed to complete user registration');
-        }
-        
-        console.log('User successfully created:', userData);
-      } catch (err) {
-        console.error('Error in signup verification:', err);
-        throw err;
-      }
-    }
-
-    return { user: data.user, needsEmailConfirmation };
-  };
-
-  const logout = async () => {
-    const { error } = await supabase.auth.signOut();
-    if (error) {
-      throw error;
-    }
-  };
-
-  const isEnrolled = async (courseId: string | number) => {
-    if (!user) return false;
-    
+  /**
+   * Sign in with email and password
+   */
+  const signIn = async (email: string, password: string) => {
     try {
-      // For course_id, convert to number since that's what the database expects
-      const numericCourseId = typeof courseId === 'string' ? parseInt(courseId, 10) : courseId;
+      const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+      if (error) throw error;
+      return data;
+    } catch (error) {
+      console.error('Sign in error:', error);
+      throw error;
+    }
+  };
+
+  /**
+   * Sign up with email, password and username
+   */
+  const signUp = async (email: string, password: string, username: string) => {
+    try {
+      const { data, error } = await supabase.auth.signUp({
+        email,
+        password,
+        options: {
+          data: {
+            username
+          }
+        }
+      });
       
-      // For user_id, we'll use the auth_user_id which is a string (UUID)
-      const { data, error } = await supabase
+      if (error) throw error;
+      return data;
+    } catch (error) {
+      console.error('Sign up error:', error);
+      throw error;
+    }
+  };
+
+  /**
+   * Sign out current user
+   */
+  const signOut = async () => {
+    try {
+      const { error } = await supabase.auth.signOut();
+      if (error) throw error;
+    } catch (error) {
+      console.error('Sign out error:', error);
+      throw error;
+    }
+  };
+
+  /**
+   * Check if user is enrolled in a specific course
+   */
+  const isEnrolled = async (courseId: string | number): Promise<boolean> => {
+    if (!user) return false;
+
+    try {
+      const { data, error, count } = await supabase
         .from('subscribed_courses')
-        .select('*')
-        .eq('user_id', user.id) // user.id is the auth_user_id (UUID as string)
-        .eq('course_id', numericCourseId)
-        .single();
-        
-      if (error && error.code !== 'PGRST116') {
-        console.error('Error checking enrollment status:', error);
-        return false;
-      }
-      
+        .select('*', { count: 'exact' })
+        .eq('user_id', user.id)
+        .eq('course_id', courseId)
+        .maybeSingle();
+
+      if (error) throw error;
       return !!data;
-    } catch (err) {
-      console.error('Error in isEnrolled:', err);
+    } catch (error) {
+      console.error('Error checking enrollment:', error);
       return false;
     }
   };
 
+  // Define value to provide through context
+  const value = {
+    user,
+    session,
+    loading,
+    signIn,
+    signUp,
+    signOut,
+    isEnrolled
+  };
+
   return (
-    <AuthContext.Provider value={{ user, session, isLoading: loading, login, signup, logout, isEnrolled }}>
+    <AuthContext.Provider value={value}>
       {!loading && children}
     </AuthContext.Provider>
   );
-};
-
-export const useAuth = () => {
-  const context = useContext(AuthContext);
-  if (!context) {
-    throw new Error('useAuth must be used within an AuthProvider');
-  }
-  return context;
 };
