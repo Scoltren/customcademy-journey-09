@@ -31,7 +31,7 @@ export const useChapterProgress = (userId?: string, courseId?: string | number) 
         .from('user_chapter_progress')
         .select('chapter_id')
         .eq('user_id', userId)
-        .eq('course_id', courseId)
+        .eq('course_id', typeof courseId === 'string' ? parseInt(courseId) : courseId)
         .eq('finished', true);
       
       if (error) throw error;
@@ -51,7 +51,7 @@ export const useChapterProgress = (userId?: string, courseId?: string | number) 
       const { count, error } = await supabase
         .from('chapters')
         .select('id', { count: 'exact' })
-        .eq('course_id', courseId);
+        .eq('course_id', typeof courseId === 'string' ? parseInt(courseId) : courseId);
       
       if (error) throw error;
       
@@ -120,7 +120,7 @@ export const useChapterProgress = (userId?: string, courseId?: string | number) 
         .from('subscribed_courses')
         .update({ progress })
         .eq('user_id', userId)
-        .eq('course_id', courseId);
+        .eq('course_id', typeof courseId === 'string' ? parseInt(courseId) : courseId);
       
       if (error) throw error;
     } catch (error) {

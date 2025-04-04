@@ -41,22 +41,28 @@ export const useRecommendedCourses = (userId: string, userInterests: number[]) =
         : '';
       
       // Query courses from database
-      const { data: courses, error } = await supabase
+      const { data: coursesData, error } = await supabase
         .from('courses')
         .select(`
           *,
           category_name:categories(name)
         `)
-        .or(`${categoryFilter}`)
-        .order('created_at', { ascending: false });
+        .or(`${categoryFilter}`);
       
       if (error) throw error;
       
+      // Transform the data to match Course type
+      const courses: Course[] = coursesData?.map(course => ({
+        ...course,
+        category_name: course.category_name ? (typeof course.category_name === 'string' ? 
+          course.category_name : course.category_name.name) : undefined
+      })) || [];
+      
       // Set fetched courses to state
-      setRecommendedCourses(courses || []);
+      setRecommendedCourses(courses);
       
       // Fetch chapter counts for each course
-      await fetchChapterCounts(courses || []);
+      await fetchChapterCounts(courses);
     } catch (error) {
       console.error('Error fetching recommended courses:', error);
     } finally {
@@ -74,16 +80,16 @@ export const useRecommendedCourses = (userId: string, userInterests: number[]) =
       // Count chapters for each course
       const { data, error } = await supabase
         .from('chapters')
-        .select('course_id, count')
-        .in('course_id', courseIds)
-        .group('course_id');
+        .select('course_id')
+        .in('course_id', courseIds);
       
       if (error) throw error;
       
-      // Convert results to object with course ID as key
+      // Count occurrences of each course_id
       const counts: {[key: string]: number} = {};
       data?.forEach(item => {
-        counts[item.course_id] = parseInt(item.count);
+        const courseId = item.course_id.toString();
+        counts[courseId] = (counts[courseId] || 0) + 1;
       });
       
       setChapterCounts(counts);

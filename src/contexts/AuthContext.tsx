@@ -1,4 +1,3 @@
-
 // This file would need to be created with comments if it doesn't exist
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { User, Session } from '@supabase/supabase-js';
@@ -9,10 +8,14 @@ interface AuthContextType {
   user: User | null;
   session: Session | null;
   loading: boolean;
+  isLoading: boolean; // Added isLoading property
   signIn: (email: string, password: string) => Promise<any>;
   signUp: (email: string, password: string, username: string) => Promise<any>;
   signOut: () => Promise<any>;
-  isEnrolled: (courseId: string | number) => Promise<boolean>;
+  logout: () => Promise<any>; // Added logout alias
+  login: (email: string, password: string) => Promise<any>; // Added login alias
+  signup: (email: string, password: string, username: string) => Promise<any>; // Added signup alias
+  isEnrolled: (courseId: string | number) => Promise<boolean>; // Changed to accept only string or number type
 }
 
 // Create context with default values
@@ -20,9 +23,13 @@ const AuthContext = createContext<AuthContextType>({
   user: null,
   session: null,
   loading: true,
+  isLoading: true, // Added isLoading property
   signIn: async () => ({}),
   signUp: async () => ({}),
   signOut: async () => ({}),
+  logout: async () => ({}), // Added logout alias
+  login: async () => ({}), // Added login alias
+  signup: async () => ({}), // Added signup alias
   isEnrolled: async () => false
 });
 
@@ -136,7 +143,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         .from('subscribed_courses')
         .select('*', { count: 'exact' })
         .eq('user_id', user.id)
-        .eq('course_id', courseId)
+        .eq('course_id', typeof courseId === 'string' ? parseInt(courseId) : courseId)
         .maybeSingle();
 
       if (error) throw error;
@@ -152,9 +159,14 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     user,
     session,
     loading,
+    isLoading: loading, // Added isLoading as alias to loading
     signIn,
     signUp,
     signOut,
+    // Add aliases for compatibility with existing code
+    login: signIn,
+    signup: signUp,
+    logout: signOut,
     isEnrolled
   };
 
