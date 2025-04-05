@@ -1,7 +1,6 @@
 
-// This file would need to be created with comments if it doesn't exist
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import { User, Session } from '@supabase/supabase-js';
+import { User, Session, AuthError, AuthResponse } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
 
 // Define types for context state
@@ -10,12 +9,12 @@ interface AuthContextType {
   session: Session | null;
   loading: boolean;
   isLoading: boolean; // Added isLoading property
-  signIn: (email: string, password: string) => Promise<any>;
-  signUp: (email: string, password: string, username: string) => Promise<any>;
-  signOut: () => Promise<any>;
-  logout: () => Promise<any>; // Added logout alias
-  login: (email: string, password: string) => Promise<any>; // Added login alias
-  signup: (email: string, password: string, username: string) => Promise<any>; // Added signup alias
+  signIn: (email: string, password: string) => Promise<AuthResponse>;
+  signUp: (email: string, password: string, username: string) => Promise<AuthResponse>;
+  signOut: () => Promise<{ error: AuthError | null }>;
+  logout: () => Promise<{ error: AuthError | null }>; // Added logout alias
+  login: (email: string, password: string) => Promise<AuthResponse>; // Added login alias
+  signup: (email: string, password: string, username: string) => Promise<AuthResponse>; // Added signup alias
   isEnrolled: (courseId: string | number) => Promise<boolean>; // Changed to accept both string and number type
 }
 
@@ -25,12 +24,12 @@ const AuthContext = createContext<AuthContextType>({
   session: null,
   loading: true,
   isLoading: true, // Added isLoading property
-  signIn: async () => ({}),
-  signUp: async () => ({}),
-  signOut: async () => ({}),
-  logout: async () => ({}), // Added logout alias
-  login: async () => ({}), // Added login alias
-  signup: async () => ({}), // Added signup alias
+  signIn: async () => ({ data: { user: null, session: null }, error: null }),
+  signUp: async () => ({ data: { user: null, session: null }, error: null }),
+  signOut: async () => ({ error: null }),
+  logout: async () => ({ error: null }), // Added logout alias
+  login: async () => ({ data: { user: null, session: null }, error: null }), // Added login alias
+  signup: async () => ({ data: { user: null, session: null }, error: null }), // Added signup alias
   isEnrolled: async () => false
 });
 
@@ -86,11 +85,11 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   /**
    * Sign in with email and password
    */
-  const signIn = async (email: string, password: string) => {
+  const signIn = async (email: string, password: string): Promise<AuthResponse> => {
     try {
-      const { data, error } = await supabase.auth.signInWithPassword({ email, password });
-      if (error) throw error;
-      return data;
+      const response = await supabase.auth.signInWithPassword({ email, password });
+      if (response.error) throw response.error;
+      return response;
     } catch (error) {
       console.error('Sign in error:', error);
       throw error;
@@ -100,9 +99,9 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   /**
    * Sign up with email, password and username
    */
-  const signUp = async (email: string, password: string, username: string) => {
+  const signUp = async (email: string, password: string, username: string): Promise<AuthResponse> => {
     try {
-      const { data, error } = await supabase.auth.signUp({
+      const response = await supabase.auth.signUp({
         email,
         password,
         options: {
@@ -112,8 +111,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         }
       });
       
-      if (error) throw error;
-      return data;
+      if (response.error) throw response.error;
+      return response;
     } catch (error) {
       console.error('Sign up error:', error);
       throw error;
@@ -123,10 +122,11 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   /**
    * Sign out current user
    */
-  const signOut = async () => {
+  const signOut = async (): Promise<{ error: AuthError | null }> => {
     try {
-      const { error } = await supabase.auth.signOut();
-      if (error) throw error;
+      const response = await supabase.auth.signOut();
+      if (response.error) throw response.error;
+      return response;
     } catch (error) {
       console.error('Sign out error:', error);
       throw error;
