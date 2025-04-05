@@ -10,15 +10,6 @@ import { toast } from 'sonner';
  * Hook to fetch course details
  */
 export const useCourseDetails = () => {
-  // Check if we're in a browser environment before using hooks
-  if (typeof window === 'undefined') {
-    return {
-      course: null,
-      isLoading: false,
-      error: null
-    };
-  }
-
   const { id } = useParams<{ id: string }>();
   
   // Fetch course data
@@ -58,7 +49,7 @@ export const useCourseDetails = () => {
   }, [error]);
 
   return {
-    course,
+    course: course ?? null,
     isLoading,
     error,
   };
