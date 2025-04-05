@@ -96,7 +96,7 @@ const CourseHeader: React.FC<CourseHeaderProps> = ({ course }) => {
       
       setEnrollmentStatus(true);
       toast.success('Successfully enrolled in the course');
-    } catch (error: any) {
+    } catch (error) {
       console.error('Error enrolling in course:', error);
       toast.error('Failed to enroll in the course');
     } finally {
