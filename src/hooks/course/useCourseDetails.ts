@@ -12,7 +12,7 @@ import { toast } from 'sonner';
 export const useCourseDetails = () => {
   const { id } = useParams<{ id: string }>();
   
-  // Fetch course data
+  // Fetch course data - moved the query outside the conditional
   const { 
     data: course, 
     isLoading, 
@@ -38,6 +38,7 @@ export const useCourseDetails = () => {
       // Ensure the data matches our Course type
       return data as unknown as Course;
     },
+    // Using enabled to prevent query execution when id is not available
     enabled: !!id,
   });
 

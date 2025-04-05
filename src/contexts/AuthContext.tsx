@@ -1,4 +1,3 @@
-
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { User, Session, AuthError, AuthResponse } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
@@ -8,14 +7,14 @@ interface AuthContextType {
   user: User | null;
   session: Session | null;
   loading: boolean;
-  isLoading: boolean; // Added isLoading property
+  isLoading: boolean; 
   signIn: (email: string, password: string) => Promise<AuthResponse>;
   signUp: (email: string, password: string, username: string) => Promise<AuthResponse>;
   signOut: () => Promise<{ error: AuthError | null }>;
-  logout: () => Promise<{ error: AuthError | null }>; // Added logout alias
-  login: (email: string, password: string) => Promise<AuthResponse>; // Added login alias
-  signup: (email: string, password: string, username: string) => Promise<AuthResponse>; // Added signup alias
-  isEnrolled: (courseId: string | number) => Promise<boolean>; // Changed to accept both string and number type
+  logout: () => Promise<{ error: AuthError | null }>; 
+  login: (email: string, password: string) => Promise<AuthResponse>; 
+  signup: (email: string, password: string, username: string) => Promise<AuthResponse>; 
+  isEnrolled: (courseId: string | number) => Promise<boolean>; 
 }
 
 // Create context with default values
@@ -23,13 +22,13 @@ const AuthContext = createContext<AuthContextType>({
   user: null,
   session: null,
   loading: true,
-  isLoading: true, // Added isLoading property
+  isLoading: true,
   signIn: async () => ({ data: { user: null, session: null }, error: null }),
   signUp: async () => ({ data: { user: null, session: null }, error: null }),
   signOut: async () => ({ error: null }),
-  logout: async () => ({ error: null }), // Added logout alias
-  login: async () => ({ data: { user: null, session: null }, error: null }), // Added login alias
-  signup: async () => ({ data: { user: null, session: null }, error: null }), // Added signup alias
+  logout: async () => ({ error: null }),
+  login: async () => ({ data: { user: null, session: null }, error: null }),
+  signup: async () => ({ data: { user: null, session: null }, error: null }),
   isEnrolled: async () => false
 });
 
@@ -140,7 +139,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     if (!user) return false;
 
     try {
-      const { data, error, count } = await supabase
+      const { data, error } = await supabase
         .from('subscribed_courses')
         .select('*', { count: 'exact' })
         .eq('user_id', user.id)
