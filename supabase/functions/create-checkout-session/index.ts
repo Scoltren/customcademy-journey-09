@@ -66,10 +66,14 @@ serve(async (req) => {
       }
     );
     
-  } catch (error) {
+  } catch (error: unknown) {
+    // Type the error appropriately
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
+    console.error('Checkout session error:', errorMessage);
+    
     // Return error response
     return new Response(
-      JSON.stringify({ error: error.message }),
+      JSON.stringify({ error: errorMessage }),
       { 
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         status: 500,

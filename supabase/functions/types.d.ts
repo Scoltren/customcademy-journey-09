@@ -18,3 +18,12 @@ declare namespace Deno {
   
   export const env: Env;
 }
+
+// Add any additional Stripe-specific types that might be needed
+interface StripeWebhookEvent {
+  id: string;
+  type: string;
+  data: {
+    object: any;
+  };
+}

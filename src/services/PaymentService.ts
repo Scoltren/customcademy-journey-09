@@ -34,9 +34,10 @@ export const PaymentService = {
       }
       
       return data;
-    } catch (error) {
-      console.error('Payment service error:', error);
-      throw error;
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
+      console.error('Payment service error:', errorMessage);
+      throw error; // Re-throw to let the caller handle it
     }
   },
   
@@ -47,19 +48,20 @@ export const PaymentService = {
    */
   verifyPayment: async (sessionId: string) => {
     try {
-      // Function to verify payment status (would be implemented)
-      // const { data, error } = await supabase.functions.invoke('verify-payment-status', {
-      //   body: { sessionId }
-      // });
+      // Function to verify payment status
+      const { data, error } = await supabase.functions.invoke('verify-payment-status', {
+        body: { sessionId }
+      });
       
-      // if (error) throw error;
-      // return data;
-      
-      // Placeholder implementation
-      return { verified: true };
-    } catch (error) {
-      console.error('Payment verification error:', error);
-      throw error;
+      if (error) {
+        const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
+        throw new Error(`Payment verification failed: ${errorMessage}`);
+      }
+      return data;
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
+      console.error('Payment verification error:', errorMessage);
+      throw error; // Re-throw to let the caller handle it
     }
   }
 };
