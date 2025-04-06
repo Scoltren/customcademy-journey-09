@@ -63,5 +63,30 @@ export const PaymentService = {
       console.error('Payment verification error:', errorMessage);
       throw error; // Re-throw to let the caller handle it
     }
+  },
+  
+  /**
+   * Process a refund for a course purchase
+   * @param paymentId The ID of the payment to refund
+   * @param reason Optional reason for the refund
+   * @returns Refund status
+   */
+  processRefund: async (paymentId: string, reason?: string) => {
+    try {
+      const { data, error } = await supabase.functions.invoke('process-refund', {
+        body: { paymentId, reason }
+      });
+      
+      if (error) {
+        throw new Error(`Refund processing failed: ${error.message}`);
+      }
+      
+      return data;
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
+      console.error('Refund processing error:', errorMessage);
+      throw error;
+    }
   }
 };
+
