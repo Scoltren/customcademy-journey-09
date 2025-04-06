@@ -73,7 +73,6 @@ export type Database = {
           course_id: number | null
           id: number
           progress_when_finished: number | null
-          quiz_id: number | null
           title: string | null
           video_link: string | null
         }
@@ -82,7 +81,6 @@ export type Database = {
           course_id?: number | null
           id?: never
           progress_when_finished?: number | null
-          quiz_id?: number | null
           title?: string | null
           video_link?: string | null
         }
@@ -91,7 +89,6 @@ export type Database = {
           course_id?: number | null
           id?: never
           progress_when_finished?: number | null
-          quiz_id?: number | null
           title?: string | null
           video_link?: string | null
         }
@@ -101,13 +98,6 @@ export type Database = {
             columns: ["course_id"]
             isOneToOne: false
             referencedRelation: "courses"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "chapters_quiz_id_fkey"
-            columns: ["quiz_id"]
-            isOneToOne: false
-            referencedRelation: "quizzes"
             referencedColumns: ["id"]
           },
         ]
