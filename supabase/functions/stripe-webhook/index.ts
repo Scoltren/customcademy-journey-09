@@ -1,6 +1,7 @@
 
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import Stripe from "https://esm.sh/stripe@14.21.0";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2.38.4";
 
 // Supabase Edge Function to handle Stripe webhook events
 // This function processes payment notifications from Stripe after checkout completion
@@ -44,15 +45,18 @@ serve(async (req) => {
     
     console.log(`Processing webhook event: ${event.type}`, { event_id: event.id });
     
-    // Setup supabase connection to record payment and enrollment
+    // Initialize Supabase client
     const supabaseUrl = Deno.env.get('SUPABASE_URL') || '';
-    const supabaseKey = Deno.env.get('SUPABASE_ANON_KEY') || '';
+    const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') || '';
     
     // Validate Supabase configuration exists
     if (!supabaseUrl || !supabaseKey) {
       console.error('Webhook error: Missing Supabase configuration');
       return new Response('Server configuration error', { status: 500 });
     }
+
+    // Create Supabase client with service role key for admin access
+    const supabase = createClient(supabaseUrl, supabaseKey);
     
     // Handle different webhook event types
     switch (event.type) {
@@ -71,56 +75,46 @@ serve(async (req) => {
         
         // Only process paid sessions with valid user and course IDs
         if (session.payment_status === 'paid' && userId && courseId) {
-          // Record the payment in the database
-          const paymentResponse = await fetch(`${supabaseUrl}/rest/v1/payments`, {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-              'Authorization': `Bearer ${supabaseKey}`,
-              'apikey': supabaseKey,
-            },
-            body: JSON.stringify({
-              user_id: userId,
-              course_id: parseInt(courseId),
-              amount: session.amount_total ? session.amount_total / 100 : 0,
-              status: 'completed',
-              stripe_checkout_id: session.id,
-              stripe_payment_id: session.payment_intent,
-            }),
-          });
-          
-          // Handle payment record creation response
-          if (!paymentResponse.ok) {
-            const errorText = await paymentResponse.text();
-            console.error('Failed to record payment:', errorText);
-            // Continue processing despite the error
-          } else {
-            console.log('Payment record created successfully');
-          }
-          
-          // Enroll user in the course - ALWAYS create this record regardless of existing enrollment
-          console.log('Creating user enrollment record for course');
-          const enrollResponse = await fetch(`${supabaseUrl}/rest/v1/subscribed_courses`, {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-              'Authorization': `Bearer ${supabaseKey}`,
-              'apikey': supabaseKey,
-              'Prefer': 'resolution=merge-duplicates', // Handle potential duplicates with an upsert approach
-            },
-            body: JSON.stringify({
-              user_id: userId,
-              course_id: parseInt(courseId),
-              progress: 0,
-            }),
-          });
-          
-          // Handle enrollment response
-          if (!enrollResponse.ok) {
-            const errorText = await enrollResponse.text();
-            console.error('Failed to enroll user:', errorText);
-          } else {
-            console.log('Successfully enrolled user in course');
+          try {
+            // Record the payment in the database using the Supabase client
+            const { data: paymentData, error: paymentError } = await supabase
+              .from('payments')
+              .insert({
+                user_id: userId,
+                course_id: parseInt(courseId),
+                amount: session.amount_total ? session.amount_total / 100 : 0,
+                status: 'completed',
+                stripe_checkout_id: session.id,
+                stripe_payment_id: session.payment_intent,
+              })
+              .select();
+              
+            // Handle payment record creation response
+            if (paymentError) {
+              console.error('Failed to record payment:', paymentError);
+            } else {
+              console.log('Payment record created successfully:', paymentData);
+            }
+            
+            // Enroll user in the course
+            console.log('Creating user enrollment record for course');
+            const { data: enrollData, error: enrollError } = await supabase
+              .from('subscribed_courses')
+              .insert({
+                user_id: userId,
+                course_id: parseInt(courseId),
+                progress: 0,
+              })
+              .select();
+            
+            // Handle enrollment response
+            if (enrollError) {
+              console.error('Failed to enroll user:', enrollError);
+            } else {
+              console.log('Successfully enrolled user in course:', enrollData);
+            }
+          } catch (dbError) {
+            console.error('Database operation failed:', dbError);
           }
         } else {
           console.log('Skipping enrollment: conditions not met', {
